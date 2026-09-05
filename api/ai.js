@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { prompt, maxTokens } = req.body || {};
+  const { prompt, maxTokens, jsonMode } = req.body || {};
   if (!prompt) {
     return res.status(400).json({ error: "Missing prompt" });
   }
@@ -37,6 +37,13 @@ export default async function handler(req, res) {
   const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
   try {
+    const generationConfig = { maxOutputTokens: maxTokens || 1000 };
+    if (jsonMode) {
+      // Forces Gemini to return valid JSON only, no conversational preamble
+      // like "Let's adjust..." wrapped around it.
+      generationConfig.responseMimeType = "application/json";
+    }
+
     const upstream = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
@@ -47,7 +54,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens || 1000 },
+          generationConfig,
         }),
       }
     );
