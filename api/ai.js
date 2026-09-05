@@ -19,7 +19,13 @@
 //   working, check the current model list at https://ai.google.dev/models
 //   and update GEMINI_MODEL below (or set it as its own env var).
 
+import { readSession } from "./_session.js";
+
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  if (!readSession(req)) {
+    return res.status(401).json({ error: "Sign-in required" });
+  }
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

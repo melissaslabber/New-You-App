@@ -1,33 +1,26 @@
-// Vercel serverless function — stores each member's own app data (goals,
-// weight/body fat log, food log, favorites, liked foods) in Vercel KV, keyed
-// by their access code. This is what makes a member's data follow them
-// across devices, and lets staff view any member's progress from the admin
-// panel using the same code.
+import { Redis } from "@upstash/redis";
+import { readSession } from "./_session.js";
 
-import { kv } from "@vercel/kv";
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
-  const code = (req.method === "GET" ? req.query.code : req.body?.code);
-  if (!code) {
-    return res.status(400).json({ error: "Missing code" });
+  res.setHeader("Cache-Control", "no-store");
+  const session = readSession(req);
+  if (!session) return res.status(401).json({ error: "Sign-in required" });
+  const requestedCode = String(req.query?.code || "").trim().toUpperCase();
+  const code = session.role === "staff" ? requestedCode : session.code;
+  if (!code) return res.status(400).json({ error: "Missing member code" });
+  const key = `nyf:data:${code}`;
+  if (req.method === "GET") {
+    const value = await redis.get(key);
+    return res.status(200).json(!value ? {} : typeof value === "string" ? JSON.parse(value) : value);
   }
-  const key = `data:${String(code).toUpperCase()}`;
-
-  try {
-    if (req.method === "GET") {
-      const data = (await kv.get(key)) || {};
-      return res.status(200).json(data);
-    }
-
-    if (req.method === "POST") {
-      const { data } = req.body || {};
-      if (!data) return res.status(400).json({ error: "Missing data" });
-      await kv.set(key, data);
-      return res.status(200).json({ saved: true });
-    }
-
-    return res.status(405).json({ error: "Method not allowed" });
-  } catch (e) {
-    return res.status(500).json({ error: `KV request failed — is a KV store connected to this project? (${e.message})` });
+  if (req.method === "POST") {
+    if (session.role !== "member" || session.code !== code) return res.status(403).json({ error: "Members may only update their own data" });
+    const data = req.body?.data;
+    if (!data || typeof data !== "object") return res.status(400).json({ error: "Missing data" });
+    await redis.set(key, JSON.stringify({ ...data, updatedAt: new Date().toISOString() }));
+    return res.status(200).json({ saved: true });
   }
+  return res.status(405).json({ error: "Method not allowed" });
 }
