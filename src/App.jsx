@@ -6,20 +6,20 @@ const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 .nyf {
-  --bg: #FAF8F2;
+  --bg: #F2F5F9;
   --surface: #FFFFFF;
-  --ink: #1E241F;
-  --ink-soft: #55604F;
-  --forest: #2F4B3C;
-  --forest-deep: #1B2D23;
-  --gold: #B98A2E;
-  --gold-soft: #E9D9AE;
-  --sand: #EFE8D6;
-  --clay: #A8472C;
-  --clay-soft: #F3DCD3;
-  --success: #3E7A4C;
-  --success-soft: #DCEBDD;
-  --line: #E3DCC9;
+  --ink: #0B1F33;
+  --ink-soft: #5B6B7D;
+  --forest: #072952;
+  --forest-deep: #04182F;
+  --gold: #D9A441;
+  --gold-soft: #F3E3C0;
+  --sand: #E6ECF3;
+  --clay: #C0392B;
+  --clay-soft: #F5DCD8;
+  --success: #2E7D5B;
+  --success-soft: #DCEFE5;
+  --line: #DCE3EC;
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--ink);
@@ -416,32 +416,47 @@ function MainApp({ onLogout }) {
   }
   async function callAI(prompt, maxTokens) {
     // Try the app's own backend first (works once deployed with /api/ai.js + an
-    // ANTHROPIC_API_KEY set in Vercel). Falls back to calling Anthropic directly,
-    // which is what makes this work inside Claude's own preview.
+    // ANTHROPIC_API_KEY set in Vercel).
+    let backendReachable = true;
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, maxTokens }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.text) return data.text;
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        // non-JSON response (e.g. a 404 HTML page) — endpoint likely doesn't exist at this path
       }
+      if (res.ok && data && data.text) return data.text;
+      // The route exists and responded, but something's misconfigured server-side
+      // (e.g. missing ANTHROPIC_API_KEY) — surface that exact reason instead of
+      // silently falling through to a call that will fail anyway on a real domain.
+      throw new Error(data?.error || `/api/ai responded with status ${res.status}`);
     } catch (e) {
-      // fall through to direct call
+      if (e instanceof TypeError) {
+        // A genuine network-level failure to reach /api/ai at all — this is the
+        // situation inside Claude's own preview, where there's no /api backend.
+        backendReachable = false;
+      } else {
+        throw e;
+      }
     }
-    const res2 = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: maxTokens || 1000,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    const data2 = await res2.json();
-    return (data2.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+    if (!backendReachable) {
+      const res2 = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: maxTokens || 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data2 = await res2.json();
+      return (data2.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+    }
   }
 
   async function getAiInsight() {
@@ -465,7 +480,7 @@ ${trend}`;
       const text = await callAI(prompt, 1000);
       setAiText(text || "Couldn't generate an insight right now — try again in a moment.");
     } catch (e) {
-      setAiText("Couldn't reach the coach right now — check your connection and try again.");
+      setAiText(`Couldn't reach the coach right now. (Details: ${e.message})`);
     }
     setAiLoading(false);
   }
@@ -495,7 +510,7 @@ The "ingredients" array should list each ingredient with a practical shopping qu
         setMealsError("Couldn't read the suggestions — try again.");
       }
     } catch (e) {
-      setMealsError("Couldn't generate meal ideas right now — check your connection and try again.");
+      setMealsError(`Couldn't generate meal ideas right now. (Details: ${e.message})`);
     }
     setMealsLoading(false);
   }
@@ -971,14 +986,14 @@ function MealsTab({
   );
 }
 
-function GoalsCalculator({ onApply }) {
+function GoalsCalculator({ onApply, initialGoalWeight }) {
   const [sex, setSex] = useState("woman");
   const [weight, setWeight] = useState("");
+  const [goalWeight, setGoalWeight] = useState(initialGoalWeight || "");
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
   const [activity, setActivity] = useState("1.35");
   const [deficit, setDeficit] = useState("15");
-  const [proteinPerKg, setProteinPerKg] = useState("1.8");
   const [result, setResult] = useState(null);
 
   function calculate() {
@@ -987,14 +1002,14 @@ function GoalsCalculator({ onApply }) {
     const bmr = sex === "woman" ? 10 * w + 6.25 * h - 5 * a - 161 : 10 * w + 6.25 * h - 5 * a + 5;
     const maintenance = bmr * Number(activity);
     const target = maintenance * (1 - Number(deficit) / 100);
-    const proteinG = Math.round(w * Number(proteinPerKg));
+    const proteinG = Math.round(w * 2); // fixed at 2g per kg of current body weight
     const proteinCal = proteinG * 4;
     const fatCal = target * 0.25;
     const fatG = Math.round(fatCal / 9);
     const carbCal = Math.max(target - proteinCal - fatCal, 0);
     const carbG = Math.round(carbCal / 4);
     setResult({
-      maintenance: Math.round(maintenance),
+      maintenance: Math.round(maintenance / 10) * 10,
       target: Math.round(target / 10) * 10,
       proteinG,
       fatG,
@@ -1008,7 +1023,7 @@ function GoalsCalculator({ onApply }) {
         <Calculator size={16} color="var(--gold)" /> Not sure where to start?
       </div>
       <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 10 }}>
-        Get a starting estimate based on the New You Fitness weight-loss method. This is a starting point to test over 2–4 weeks, not a fixed prescription.
+        Get a starting estimate based on the New You Fitness weight-loss method. This is a starting point to test over 2–4 weeks, not a fixed prescription — you can always come back and recalculate as your weight changes.
       </p>
 
       <div className="nyf-grid2">
@@ -1026,7 +1041,7 @@ function GoalsCalculator({ onApply }) {
       </div>
       <div className="nyf-grid2">
         <div>
-          <label className="nyf-field-label">Weight (kg)</label>
+          <label className="nyf-field-label">Current weight (kg)</label>
           <input className="nyf-input" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} />
         </div>
         <div>
@@ -1034,6 +1049,8 @@ function GoalsCalculator({ onApply }) {
           <input className="nyf-input" type="number" value={height} onChange={(e) => setHeight(e.target.value)} />
         </div>
       </div>
+      <label className="nyf-field-label">Goal weight (kg)</label>
+      <input className="nyf-input" type="number" value={goalWeight} onChange={(e) => setGoalWeight(e.target.value)} placeholder="What are you working towards?" />
 
       <label className="nyf-field-label">Activity level</label>
       <select className="nyf-select" value={activity} onChange={(e) => setActivity(e.target.value)}>
@@ -1043,36 +1060,32 @@ function GoalsCalculator({ onApply }) {
         <option value="1.70">High — physically demanding work and/or heavy training</option>
       </select>
 
-      <label className="nyf-field-label">Starting deficit</label>
+      <label className="nyf-field-label">Starting deficit (to work toward your goal weight)</label>
       <select className="nyf-select" value={deficit} onChange={(e) => setDeficit(e.target.value)}>
         <option value="10">10% — gentler, easier to sustain</option>
         <option value="15">15% — moderate starting option for many people</option>
         <option value="20">20% — faster on paper, harder on hunger and recovery</option>
       </select>
-
-      <label className="nyf-field-label">Protein target (g per kg body weight)</label>
-      <select className="nyf-select" value={proteinPerKg} onChange={(e) => setProteinPerKg(e.target.value)}>
-        <option value="1.6">1.6 g/kg</option>
-        <option value="1.8">1.8 g/kg</option>
-        <option value="2.0">2.0 g/kg</option>
-        <option value="2.2">2.2 g/kg</option>
-      </select>
+      <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "-6px 0 12px" }}>
+        Protein is set automatically at 2g per kg of your current weight — the New You default for protecting muscle while losing fat.
+      </p>
 
       <button className="nyf-btn full" onClick={calculate} disabled={!weight || !height || !age} style={{ marginTop: 4 }}>
-        Calculate my targets
+        Calculate my numbers
       </button>
 
       {result && (
         <>
           <div className="nyf-product-card" style={{ marginTop: 12 }}>
-            Estimated maintenance: <strong>{result.maintenance} kcal/day</strong>. Starting target: <strong>{result.target} kcal/day</strong>.
-            <br />Protein <strong>{result.proteinG}g</strong> · Carbs <strong>{result.carbG}g</strong> · Fat <strong>{result.fatG}g</strong>
-            <br />(Fat is set at roughly 25% of calories, carbs fill the rest — adjust anytime in Goals below.)
+            To <strong>maintain</strong> your current weight: <strong>{result.maintenance} kcal/day</strong>.
+            <br />To work toward <strong>{goalWeight ? `${goalWeight}kg` : "your goal weight"}</strong>: <strong>{result.target} kcal/day</strong>.
+            <br /><br />Protein <strong>{result.proteinG}g</strong> · Carbs <strong>{result.carbG}g</strong> · Fat <strong>{result.fatG}g</strong>
+            <br />(Fat is set at roughly 25% of calories, carbs fill the rest.)
           </div>
           <button
             className="nyf-btn gold full"
             style={{ marginTop: 10 }}
-            onClick={() => onApply({ calorieGoal: result.target, proteinGoal: result.proteinG, carbGoal: result.carbG, fatGoal: result.fatG })}
+            onClick={() => onApply({ calorieGoal: result.target, proteinGoal: result.proteinG, carbGoal: result.carbG, fatGoal: result.fatG, goalWeight })}
           >
             <Check size={15} /> Use these as my goals
           </button>
@@ -1105,11 +1118,13 @@ function ProfileTab({ profile, setProfile, setTab, onLogout }) {
   }
   return (
     <>
-      <GoalsCalculator onApply={applyFromCalculator} />
+      <GoalsCalculator onApply={applyFromCalculator} initialGoalWeight={local.goalWeight} />
       <div className="nyf-card">
       <div className="nyf-section-title">Your goals</div>
       <label className="nyf-field-label">Name</label>
       <input className="nyf-input" value={local.name} onChange={(e) => setLocal({ ...local, name: e.target.value })} placeholder="Your name" />
+      <label className="nyf-field-label">Goal weight (kg)</label>
+      <input className="nyf-input" type="number" value={local.goalWeight || ""} onChange={(e) => setLocal({ ...local, goalWeight: e.target.value })} placeholder="What are you working towards?" />
       <label className="nyf-field-label">Daily calorie goal (kcal)</label>
       <input className="nyf-input" type="number" value={local.calorieGoal} onChange={(e) => setLocal({ ...local, calorieGoal: e.target.value })} />
       <div className="nyf-grid2">
