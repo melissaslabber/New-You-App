@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
@@ -143,6 +144,13 @@ const STYLE = `
   background: var(--success-soft); border-radius: 4px; padding: 10px 12px; margin: 10px 0 4px;
   font-size: 12.5px; color: var(--forest-deep);
 }
+.nyf-food-results { display: grid; gap: 8px; margin: 8px 0 14px; }
+.nyf-food-option {
+  width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 4px;
+  padding: 10px 12px; background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.nyf-food-option strong { display: block; font-size: 13px; margin-bottom: 3px; }
+.nyf-food-option span { display: block; color: var(--ink-soft); font-size: 11.5px; line-height: 1.4; }
 .nyf-lookup-error { background: var(--clay-soft); color: var(--clay); border-radius: 4px; padding: 10px 12px; margin: 10px 0 4px; font-size: 12.5px; }
 
 .nyf-login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 22px; }
@@ -1197,12 +1205,15 @@ function FoodModal({ onAdd, onClose }) {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
   const [product, setProduct] = useState(null); // per-100 macros from Open Food Facts
+  const [foodQuery, setFoodQuery] = useState("");
+  const [foodResults, setFoodResults] = useState([]);
+  const [foodSearchLoading, setFoodSearchLoading] = useState(false);
+  const [foodSearchError, setFoodSearchError] = useState("");
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const rafRef = useRef(null);
-  const cameraSupported = typeof window !== "undefined" && "BarcodeDetector" in window && !!navigator.mediaDevices;
+  const scannerControlsRef = useRef(null);
+  const cameraSupported = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   const valid = form.name && form.cal;
 
   useEffect(() => {
@@ -1211,51 +1222,69 @@ function FoodModal({ onAdd, onClose }) {
 
   async function startScan() {
     setCameraError("");
+    setScanning(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setScanning(true);
-      const detector = new window.BarcodeDetector({
-        formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39"],
-      });
-      const tick = async () => {
-        if (!videoRef.current || videoRef.current.readyState < 2) {
-          rafRef.current = requestAnimationFrame(tick);
-          return;
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      if (!videoRef.current) throw new Error("Camera preview did not start");
+      const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 150 });
+      const controls = await reader.decodeFromConstraints(
+        { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        videoRef.current,
+        (result) => {
+          if (!result) return;
+          const value = result.getText();
+          stopScan();
+          setBarcode(value);
+          lookupBarcode(value);
         }
-        try {
-          const codes = await detector.detect(videoRef.current);
-          if (codes.length > 0) {
-            const value = codes[0].rawValue;
-            stopScan();
-            setBarcode(value);
-            lookupBarcode(value);
-            return;
-          }
-        } catch (err) {
-          // detector hiccup, keep trying
-        }
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      rafRef.current = requestAnimationFrame(tick);
+      );
+      scannerControlsRef.current = controls;
     } catch (e) {
-      setCameraError("Couldn't access the camera — check your browser's camera permission, or type the barcode number below instead.");
+      setCameraError("The camera opened but couldn't start the scanner. Close other camera apps, reload this page and try again, or type the barcode below.");
       setScanning(false);
     }
   }
 
   function stopScan() {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
+    const stream = videoRef.current?.srcObject;
+    if (stream?.getTracks) stream.getTracks().forEach((track) => track.stop());
     setScanning(false);
+  }
+
+  async function searchFoods() {
+    const query = foodQuery.trim();
+    if (query.length < 2) return;
+    setFoodSearchLoading(true);
+    setFoodSearchError("");
+    setFoodResults([]);
+    try {
+      const response = await fetch(`/api/foods?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Food search failed");
+      setFoodResults(data.results || []);
+      if (!data.results?.length) setFoodSearchError("No matching foods found. You can still enter the nutrition values manually.");
+    } catch (error) {
+      setFoodSearchError("Couldn't search the food database right now. You can still enter the values manually.");
+    }
+    setFoodSearchLoading(false);
+  }
+
+  function chooseFood(item) {
+    const per100 = { cal: item.cal, protein: item.protein, carb: item.carb, fat: item.fat };
+    setProduct({ name: item.name, per100 });
+    setForm({
+      name: item.name,
+      qty: "100",
+      unit: item.unit || "g",
+      cal: String(item.cal),
+      protein: String(item.protein),
+      carb: String(item.carb),
+      fat: String(item.fat),
+    });
+    setFoodResults([]);
+    setFoodSearchError("");
   }
 
   async function lookupBarcode(codeOverride) {
@@ -1265,23 +1294,22 @@ function FoodModal({ onAdd, onClose }) {
     setLookupError("");
     setProduct(null);
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
+      const res = await fetch(`/api/foods?barcode=${encodeURIComponent(code)}`);
       const data = await res.json();
-      if (data.status !== 1 || !data.product) {
+      if (!res.ok || !data.product) {
         setLookupError("No product found for that barcode. You can enter it manually below.");
       } else {
         const p = data.product;
-        const n = p.nutriments || {};
         const per100 = {
-          cal: Math.round(n["energy-kcal_100g"] ?? n["energy-kcal"] ?? 0),
-          protein: Math.round(n["proteins_100g"] ?? 0),
-          carb: Math.round(n["carbohydrates_100g"] ?? 0),
-          fat: Math.round(n["fat_100g"] ?? 0),
+          cal: p.cal,
+          protein: p.protein,
+          carb: p.carb,
+          fat: p.fat,
         };
-        setProduct({ name: p.product_name || "Unnamed product", per100 });
+        setProduct({ name: p.name || "Unnamed product", per100 });
         const qty = 100;
         setForm({
-          name: p.product_name || "Unnamed product",
+          name: p.name || "Unnamed product",
           qty: String(qty),
           unit: "g",
           cal: String(per100.cal),
@@ -1382,6 +1410,34 @@ function FoodModal({ onAdd, onClose }) {
         {(mode === "manual" || product || lookupError) && (
           <>
             <div style={{ height: mode === "barcode" ? 4 : 0 }} />
+            {mode === "manual" && (
+              <>
+                <label className="nyf-field-label">Search for a food or product</label>
+                <div className="nyf-lookup-row">
+                  <input
+                    className="nyf-input"
+                    value={foodQuery}
+                    onChange={(e) => setFoodQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && searchFoods()}
+                    placeholder="e.g. chicken breast, yoghurt or Weet-Bix"
+                  />
+                  <button className="nyf-btn" onClick={searchFoods} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
+                    {foodSearchLoading ? "…" : <Search size={15} />}
+                  </button>
+                </div>
+                {foodSearchError && <div className="nyf-lookup-error">{foodSearchError}</div>}
+                {foodResults.length > 0 && (
+                  <div className="nyf-food-results">
+                    {foodResults.map((item) => (
+                      <button className="nyf-food-option" key={item.id} onClick={() => chooseFood(item)}>
+                        <strong>{item.name}</strong>
+                        <span>{item.brand ? `${item.brand} · ` : ""}per 100{item.unit}: {item.cal} kcal · P{item.protein}g · C{item.carb}g · F{item.fat}g</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
             <label className="nyf-field-label">Meal or food name</label>
             <input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Chicken & rice bowl" />
 
