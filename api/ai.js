@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server is missing GEMINI_API_KEY" });
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
   try {
     const upstream = await fetch(
