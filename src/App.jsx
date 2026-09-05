@@ -35,12 +35,12 @@ const STYLE = `
 .nyf-scroll { flex: 1; overflow-y: auto; padding: 20px 18px 90px; }
 
 .nyf-header {
-  padding: 22px 18px 16px;
+  padding: 14px 18px 16px;
   background: var(--forest);
   color: #fff;
   border-bottom: 3px solid var(--gold);
 }
-.nyf-wordmark { font-size: 12px; letter-spacing: 0.14em; color: var(--gold-soft); font-weight: 600; }
+.nyf-header-logo { display: block; width: 96px; height: 96px; object-fit: contain; margin-bottom: 8px; border-radius: 4px; }
 .nyf-greeting { font-size: 24px; font-weight: 700; margin-top: 4px; }
 .nyf-sub { color: #C9D6C9; font-size: 13px; margin-top: 3px; }
 
@@ -114,7 +114,13 @@ const STYLE = `
 .nyf-accordion-body p:last-child { margin-bottom: 0; }
 
 .nyf-ai-box { background: var(--forest); color: #fff; border-radius: 4px; padding: 14px 16px; }
-.nyf-ai-box p { font-size: 13.5px; line-height: 1.55; margin: 0; }
+.nyf-ai-box p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 .nyf-empty { text-align: center; padding: 24px 12px; color: var(--ink-soft); font-size: 13px; }
 .nyf-stat-big { font-size: 30px; font-weight: 800; font-family: 'Outfit', sans-serif; }
@@ -141,7 +147,7 @@ const STYLE = `
 
 .nyf-login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 22px; }
 .nyf-login-logo { text-align: center; margin-bottom: 30px; }
-.nyf-login-logo .mark { font-size: 13px; letter-spacing: 0.14em; color: var(--gold); font-weight: 700; }
+.nyf-login-logo img { display: block; width: 190px; height: 190px; object-fit: contain; margin: 0 auto 12px; border-radius: 6px; }
 .nyf-login-logo h1 { font-size: 26px; margin-top: 6px; color: var(--forest); }
 .nyf-link-btn { background: none; border: none; color: var(--forest); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px 0; text-decoration: underline; }
 .nyf-member-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); gap: 8px; }
@@ -333,12 +339,10 @@ const FOOD_PREFERENCE_LIST = [
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
-const ADMIN_PIN = "1412";
-
-function MainApp({ onLogout }) {
+function MainApp({ onLogout, memberName }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
-  const [profile, setProfile] = useState({ name: "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55 });
+  const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55 });
   const [weightLogs, setWeightLogs] = useState([]);
   const [foodLogs, setFoodLogs] = useState([]);
   const [showFoodModal, setShowFoodModal] = useState(false);
@@ -352,19 +356,23 @@ function MainApp({ onLogout }) {
   const [favoriteMeals, setFavoriteMeals] = useState([]);
   const [checkedGroceryItems, setCheckedGroceryItems] = useState([]);
   const [likedFoods, setLikedFoods] = useState([]);
+  const saveTimer = useRef(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage.get("nyf-data");
-        if (r && r.value) {
-          const d = JSON.parse(r.value);
+        const r = await fetch("/api/data", { credentials: "same-origin" });
+        if (!r.ok) throw new Error("Could not load member data");
+        const d = await r.json();
+        if (d && Object.keys(d).length) {
           if (d.profile) setProfile(d.profile);
           if (d.weightLogs) setWeightLogs(d.weightLogs);
           if (d.foodLogs) setFoodLogs(d.foodLogs);
           if (d.favoriteMeals) setFavoriteMeals(d.favoriteMeals);
           if (d.checkedGroceryItems) setCheckedGroceryItems(d.checkedGroceryItems);
           if (d.likedFoods) setLikedFoods(d.likedFoods);
+        } else if (memberName) {
+          setProfile((current) => ({ ...current, name: memberName }));
         }
       } catch (e) {
         // no saved data yet
@@ -375,13 +383,21 @@ function MainApp({ onLogout }) {
 
   useEffect(() => {
     if (!loaded) return;
-    (async () => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
       try {
-        await window.storage.set("nyf-data", JSON.stringify({ profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods }));
+        const response = await fetch("/api/data", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods } }),
+        });
+        if (!response.ok) throw new Error("Save failed");
       } catch (e) {
         console.error("save failed", e);
       }
-    })();
+    }, 500);
+    return () => clearTimeout(saveTimer.current);
   }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
@@ -468,7 +484,7 @@ function MainApp({ onLogout }) {
       sortedWeights.length >= 2
         ? `Weight trend: started at ${sortedWeights[0].weight}kg, now ${latestWeight.weight}kg over ${sortedWeights.length} entries.`
         : "Not enough weight entries yet for a trend.";
-    const prompt = `You are a supportive, knowledgeable fitness coach at New You Fitness, a gym whose tone is warm and non-intimidating (brand line: "YOU vs YOU"). Give the member a short, specific, encouraging insight (3-4 sentences max, no headers, no bullet points) based on today's nutrition data below. If they are over their calorie or carb goal, gently flag it and give one practical, non-judgmental suggestion for tomorrow. If they are on track, affirm it briefly and offer one useful tip. Never mention that you are an AI model.
+    const prompt = `You are a supportive, knowledgeable fitness coach at New You Fitness, a gym whose tone is warm and non-intimidating (brand line: "YOU vs YOU"). Give the member a complete, short, specific and encouraging insight in exactly 3 concise sentences, with no headers or bullet points, based on today's nutrition data below. Finish every sentence fully. If they are over their calorie or carb goal, gently flag it and give one practical, non-judgmental suggestion for tomorrow. If they are on track, affirm it briefly and offer one useful tip. Never mention that you are an AI model.
 
 Calorie goal: ${profile.calorieGoal} kcal. Consumed today: ${totals.cal} kcal (${overCal > 0 ? `${overCal} over` : `${Math.abs(overCal)} under`}).
 Protein goal: ${profile.proteinGoal}g. Consumed: ${totals.protein}g.
@@ -477,7 +493,9 @@ Fat goal: ${profile.fatGoal}g. Consumed: ${totals.fat}g.
 ${trend}`;
 
     try {
-      const text = await callAI(prompt, 1000);
+      // Gemini thinking models can use part of the output allowance internally,
+      // so leave enough room to ensure the visible answer finishes cleanly.
+      const text = await callAI(prompt, 4096);
       setAiText(text || "Couldn't generate an insight right now — try again in a moment.");
     } catch (e) {
       setAiText(`Couldn't reach the coach right now. (Details: ${e.message})`);
@@ -496,28 +514,36 @@ ${trend}`;
 Suggest 6 simple, realistic meals/snacks (mix of breakfast, lunch, dinner, snack) that fit sensibly within these daily targets when combined (a full day should roughly add up to the goals, not each meal individually). Use everyday ingredients available in South African supermarkets. Keep descriptions practical, no fancy techniques. Keep the "description" field to one short sentence (under 15 words) and each ingredient string brief — this needs to stay compact.${likedLine}
 
 Respond ONLY with a JSON array, no markdown fences, no preamble, in this exact shape:
-[{"mealType": "Breakfast", "name": "short name", "description": "one short sentence, plain language", "cal": 000, "protein": 00, "carb": 00, "fat": 00, "ingredients": ["120g chicken breast", "1 cup cooked rice", "1 tsp olive oil"]}]
+[{"mealType":"Breakfast","name":"Berry Protein Oats","description":"Warm oats with yoghurt and berries.","cal":340,"protein":26,"carb":46,"fat":6,"ingredients":["40g oats","150g plain yoghurt","100g blueberries"]}]
 
-The "ingredients" array should list each ingredient with a practical shopping quantity (grams, ml, cups, or count) — 3 to 6 items per meal, no method or instructions, just what to buy.`;
+Use ordinary whole numbers without leading zeroes for every nutrition value. The "ingredients" array should list each ingredient with a practical shopping quantity (grams, ml, cups, or count) — 3 to 6 items per meal, no method or instructions, just what to buy.`;
 
     try {
+      const parseMeals = (value) => {
+        let clean = value.replace(/```json|```/g, "").trim();
+        const start = clean.indexOf("[");
+        const end = clean.lastIndexOf("]");
+        if (start !== -1 && end !== -1 && end > start) clean = clean.slice(start, end + 1);
+        return JSON.parse(clean);
+      };
+
       const text = await callAI(prompt, 6000, true);
-      let clean = text.replace(/```json|```/g, "").trim();
-      // Defensive: if the model wraps the array in any conversational text
-      // despite JSON mode, extract just the [...] portion.
-      const start = clean.indexOf("[");
-      const end = clean.lastIndexOf("]");
-      if (start !== -1 && end !== -1 && end > start) {
-        clean = clean.slice(start, end + 1);
+      let parsed;
+      try {
+        parsed = parseMeals(text);
+      } catch {
+        // Repair a rare malformed response automatically instead of exposing a
+        // technical JSON error to the member.
+        const repairPrompt = `Repair the JSON below. Return only one valid JSON array. Keep the same meal information, use whole numbers without leading zeroes, and do not add markdown or commentary.\n\n${text}`;
+        parsed = parseMeals(await callAI(repairPrompt, 6000, true));
       }
-      const parsed = JSON.parse(clean);
       if (Array.isArray(parsed)) {
         setMealSuggestions(parsed);
       } else {
         setMealsError("Couldn't read the suggestions — try again.");
       }
-    } catch (e) {
-      setMealsError(`Couldn't generate meal ideas right now. (Details: ${e.message})`);
+    } catch {
+      setMealsError("Couldn't generate meal ideas right now. Please tap New suggestions to try again.");
     }
     setMealsLoading(false);
   }
@@ -555,7 +581,7 @@ The "ingredients" array should list each ingredient with a practical shopping qu
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <div className="nyf-wordmark">NEW YOU FITNESS · YOU vs YOU</div>
+        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
         <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
       </div>
@@ -1442,7 +1468,7 @@ function WeightModal({ onAdd, onClose }) {
 
 // ---- Access control: gates the member app behind a code Melissa issues/revokes ----
 
-export default function App() {
+function LegacyApp() {
   const [authLoaded, setAuthLoaded] = useState(false);
   const [accessList, setAccessList] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -1560,7 +1586,7 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <div className="mark">NEW YOU FITNESS · YOU vs YOU</div>
+          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
           <h1>Member access</h1>
         </div>
         <div className="nyf-card">
@@ -1611,7 +1637,7 @@ function AdminPinScreen({ onBack, onUnlock }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <div className="mark">NEW YOU FITNESS</div>
+          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
           <h1>Staff access</h1>
         </div>
         <div className="nyf-card">
@@ -1660,7 +1686,7 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <div className="nyf-wordmark">NEW YOU FITNESS · STAFF</div>
+        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
         <div className="nyf-greeting">Member access</div>
       </div>
       <div className="nyf-scroll">
@@ -1710,6 +1736,251 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
       </div>
       <div style={{ padding: "12px 18px 20px" }}>
         <button className="nyf-btn ghost full" onClick={onBack}>Back to member login</button>
+      </div>
+    </div>
+  );
+}
+
+// Central, database-backed access used by the deployed member app.
+export default function App() {
+  const [ready, setReady] = useState(false);
+  const [view, setView] = useState("login");
+  const [memberName, setMemberName] = useState("");
+  const [pausedNotice, setPausedNotice] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch("/api/auth?action=session", { credentials: "same-origin" });
+        const session = await response.json();
+        setPausedNotice(Boolean(session.paused));
+        if (session.authenticated && session.role === "member") {
+          setMemberName(session.name || "");
+          setView("app");
+        } else if (session.authenticated && session.role === "staff") {
+          setView("admin");
+        }
+      } catch {
+        // Show login if the service is temporarily unavailable.
+      }
+      setReady(true);
+    })();
+  }, []);
+
+  async function memberLogin(code) {
+    const response = await fetch("/api/auth", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "memberLogin", code }),
+    });
+    const result = await response.json();
+    if (!response.ok) return result.error || "Could not sign in.";
+    setMemberName(result.name || "");
+    setPausedNotice(false);
+    setView("app");
+    return null;
+  }
+
+  async function staffLogin(pin) {
+    const response = await fetch("/api/auth", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "staffLogin", pin }),
+    });
+    const result = await response.json();
+    if (!response.ok) return result.error || "Could not sign in.";
+    setView("admin");
+    return null;
+  }
+
+  async function logout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    setMemberName("");
+    setView("login");
+  }
+
+  if (!ready) return <div className="nyf"><style>{STYLE}</style><div className="nyf-empty">Loading…</div></div>;
+  if (view === "app") return <MainApp onLogout={logout} memberName={memberName} />;
+  if (view === "admin") return <CoachDashboard onLogout={logout} />;
+  if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
+  return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} />;
+}
+
+function CentralStaffLogin({ onBack, onLogin }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  async function submit() {
+    if (!pin) return;
+    setLoading(true);
+    setError("");
+    const message = await onLogin(pin);
+    if (message) setError(message);
+    setLoading(false);
+  }
+  return (
+    <div className="nyf">
+      <style>{STYLE}</style>
+      <div className="nyf-login-wrap">
+        <div className="nyf-login-logo">
+          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <h1>Staff access</h1>
+        </div>
+        <div className="nyf-card">
+          <div className="nyf-section-title"><ShieldCheck size={16} /> Enter staff PIN</div>
+          <input className="nyf-input" type="password" inputMode="numeric" value={pin}
+            onChange={(event) => setPin(event.target.value)} onKeyDown={(event) => event.key === "Enter" && submit()} placeholder="PIN" />
+          {error && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{error}</div>}
+          <button className="nyf-btn full" onClick={submit} disabled={!pin || loading}>{loading ? "Checking…" : "Unlock"}</button>
+        </div>
+        <div style={{ textAlign: "center" }}><button className="nyf-link-btn" onClick={onBack}>Back to member login</button></div>
+      </div>
+    </div>
+  );
+}
+
+function CoachDashboard({ onLogout }) {
+  const [members, setMembers] = useState([]);
+  const [name, setName] = useState("");
+  const [code, setCode] = useState(genCode());
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [memberData, setMemberData] = useState(null);
+
+  async function memberAction(action, extra = {}) {
+    const response = await fetch("/api/members", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...extra }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Request failed");
+    if (result.members) setMembers(result.members);
+    return result;
+  }
+
+  useEffect(() => {
+    memberAction("list").catch((e) => setError(e.message)).finally(() => setLoading(false));
+  }, []);
+
+  async function addMember() {
+    setError("");
+    try {
+      await memberAction("add", { name, code });
+      setName("");
+      setCode(genCode());
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function openMember(member) {
+    setSelected(member);
+    setMemberData(null);
+    setError("");
+    try {
+      const response = await fetch(`/api/data?code=${encodeURIComponent(member.code)}`, { credentials: "same-origin" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not load member");
+      setMemberData(result);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  if (selected) {
+    const weights = [...(memberData?.weightLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const foods = [...(memberData?.foodLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const profile = memberData?.profile || {};
+    return (
+      <div className="nyf">
+        <style>{STYLE}</style>
+        <div className="nyf-header">
+          <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <div className="nyf-greeting">{selected.name}</div>
+          <div className="nyf-sub">Coach view · {selected.code}</div>
+        </div>
+        <div className="nyf-scroll">
+          <button className="nyf-btn ghost" onClick={() => setSelected(null)} style={{ marginBottom: 14 }}>Back to members</button>
+          {!memberData ? <div className="nyf-empty">Loading profile…</div> : (
+            <>
+              <div className="nyf-card gold">
+                <div className="nyf-section-title">Goals</div>
+                <div className="nyf-grid2">
+                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.calorieGoal || "—"}</div><div className="nyf-stat-label">daily kcal</div></div>
+                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.proteinGoal || "—"}g</div><div className="nyf-stat-label">protein</div></div>
+                </div>
+              </div>
+              <div className="nyf-card">
+                <div className="nyf-section-title">Weight and body fat</div>
+                {weights.length ? weights.map((item) => (
+                  <div className="nyf-log-item" key={item.id}>
+                    <div><div className="nyf-log-name">{item.date}</div><div className="nyf-log-macro">{item.bodyFat ? `${item.bodyFat}% body fat` : "Body fat not logged"}</div></div>
+                    <strong>{item.weight}kg</strong>
+                  </div>
+                )) : <div className="nyf-empty">No check-ins yet.</div>}
+              </div>
+              <div className="nyf-card">
+                <div className="nyf-section-title">Food diary</div>
+                {foods.length ? foods.map((item) => (
+                  <div className="nyf-log-item" key={item.id}>
+                    <div><div className="nyf-log-name">{item.name}</div><div className="nyf-log-macro">{item.date} · P{item.protein} · C{item.carb} · F{item.fat}</div></div>
+                    <strong>{item.cal} kcal</strong>
+                  </div>
+                )) : <div className="nyf-empty">No food logged yet.</div>}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="nyf">
+      <style>{STYLE}</style>
+      <div className="nyf-header">
+        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+        <div className="nyf-greeting">Coach dashboard</div>
+      </div>
+      <div className="nyf-scroll">
+        <div className="nyf-card gold">
+          <div className="nyf-section-title"><UserPlus size={16} /> Add a member</div>
+          <label className="nyf-field-label">Member name</label>
+          <input className="nyf-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sarah Adams" />
+          <label className="nyf-field-label">Access code</label>
+          <div className="nyf-lookup-row" style={{ marginBottom: 10 }}>
+            <input className="nyf-input" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+            <button className="nyf-btn ghost" onClick={() => setCode(genCode())}>New</button>
+          </div>
+          {error && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{error}</div>}
+          <button className="nyf-btn full" onClick={addMember} disabled={!name.trim() || !code.trim()}>Add &amp; activate</button>
+        </div>
+        <div className="nyf-card">
+          <div className="nyf-section-title">Members ({members.filter((m) => m.active).length} active)</div>
+          {loading ? <div className="nyf-empty">Loading members…</div> : members.length === 0 ? <div className="nyf-empty">No members added yet.</div> :
+            members.map((member) => (
+              <div className="nyf-member-row" key={member.id}>
+                <button className="nyf-link-btn" style={{ textAlign: "left", textDecoration: "none", flex: 1 }} onClick={() => openMember(member)}>
+                  <div className="nyf-member-name">{member.name}</div>
+                  <div className="nyf-member-code">{member.code} · View profile</div>
+                </button>
+                <button className={`nyf-toggle ${member.active ? "on" : "off"}`} onClick={() => memberAction("toggle", { id: member.id }).catch((e) => setError(e.message))}>
+                  {member.active ? "Active" : "Paused"}
+                </button>
+              </div>
+            ))}
+        </div>
+        <button className="nyf-btn ghost full" onClick={onLogout}><LogOut size={15} /> Sign out</button>
       </div>
     </div>
   );
