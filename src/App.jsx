@@ -581,7 +581,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
       </div>
@@ -1586,7 +1586,7 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Member access</h1>
         </div>
         <div className="nyf-card">
@@ -1637,7 +1637,7 @@ function AdminPinScreen({ onBack, onUnlock }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Staff access</h1>
         </div>
         <div className="nyf-card">
@@ -1686,7 +1686,7 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">Member access</div>
       </div>
       <div className="nyf-scroll">
@@ -1830,7 +1830,7 @@ function CentralStaffLogin({ onBack, onLogin }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Staff access</h1>
         </div>
         <div className="nyf-card">
@@ -1905,7 +1905,7 @@ function CoachDashboard({ onLogout }) {
       <div className="nyf">
         <style>{STYLE}</style>
         <div className="nyf-header">
-          <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+          <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
           <div className="nyf-greeting">{selected.name}</div>
           <div className="nyf-sub">Coach view · {selected.code}</div>
         </div>
@@ -1949,7 +1949,7 @@ function CoachDashboard({ onLogout }) {
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.jpg" alt="New You Transformation Studio" />
+        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">Coach dashboard</div>
       </div>
       <div className="nyf-scroll">
