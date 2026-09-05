@@ -42,11 +42,6 @@ export default async function handler(req, res) {
       // Forces Gemini to return valid JSON only, no conversational preamble
       // like "Let's adjust..." wrapped around it.
       generationConfig.responseMimeType = "application/json";
-      // Newer Gemini Flash models spend part of maxOutputTokens on internal
-      // "thinking" before answering, which can silently eat the budget and
-      // truncate the actual JSON mid-object. Turn that off for JSON calls so
-      // the full token budget goes to the actual output.
-      generationConfig.thinkingConfig = { thinkingBudget: 0 };
     }
 
     const upstream = await fetch(
