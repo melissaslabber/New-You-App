@@ -1,16 +1,17 @@
-import { Redis } from "@upstash/redis";
 import { readSession } from "./_session.js";
+import { getRedis } from "./_redis.js";
 
-const redis = Redis.fromEnv();
 const getMembers = async () => {
+  const redis = getRedis();
   const value = await redis.get("nyf:members");
   return !value ? [] : typeof value === "string" ? JSON.parse(value) : value;
 };
-const saveMembers = (members) => redis.set("nyf:members", JSON.stringify(members));
+const saveMembers = (members) => getRedis().set("nyf:members", JSON.stringify(members));
 const publicMember = ({ id, name, code, active }) => ({ id, name, code, active });
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  try {
   const session = readSession(req);
   if (!session || session.role !== "staff") return res.status(401).json({ error: "Staff sign-in required" });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -35,8 +36,12 @@ export default async function handler(req, res) {
     const member = members.find((item) => item.id === id);
     const updated = members.filter((item) => item.id !== id);
     await saveMembers(updated);
-    if (member) await redis.del(`nyf:data:${member.code}`);
+    if (member) await getRedis().del(`nyf:data:${member.code}`);
     return res.status(200).json({ members: updated.map(publicMember) });
   }
-  return res.status(400).json({ error: "Unknown action" });
+    return res.status(400).json({ error: "Unknown action" });
+  } catch (error) {
+    console.error("Member service error", error);
+    return res.status(500).json({ error: error.message || "Member service unavailable" });
+  }
 }

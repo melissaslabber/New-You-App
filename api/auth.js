@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
-import { Redis } from "@upstash/redis";
 import { clearSession, readSession, setSession } from "./_session.js";
+import { getRedis } from "./_redis.js";
 
-const redis = Redis.fromEnv();
 const getMembers = async () => {
+  const redis = getRedis();
   const value = await redis.get("nyf:members");
   return !value ? [] : typeof value === "string" ? JSON.parse(value) : value;
 };
@@ -15,6 +15,7 @@ const safeEqual = (left, right) => {
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  try {
   if (req.method === "GET" && req.query?.action === "session") {
     const session = readSession(req);
     if (!session) return res.status(200).json({ authenticated: false });
@@ -49,5 +50,9 @@ export default async function handler(req, res) {
     clearSession(res);
     return res.status(200).json({ loggedOut: true });
   }
-  return res.status(400).json({ error: "Unknown action" });
+    return res.status(400).json({ error: "Unknown action" });
+  } catch (error) {
+    console.error("Authentication error", error);
+    return res.status(500).json({ error: error.message || "Authentication service unavailable" });
+  }
 }
