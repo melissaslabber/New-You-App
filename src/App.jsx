@@ -184,6 +184,8 @@ const ARTICLES = [
       "Body weight and body fat are not the same thing. Your weight on the scale includes muscle, bone, organs, water, glycogen, food moving through your gut, and fat — all added together into one number. Weight loss means that total number went down. Fat loss means body fat specifically went down. They often move together, but not always.",
       "Early scale drops are frequently water and glycogen, not fat. A single weigh-in is weak evidence of anything; a consistent trend over weeks is what actually tells you something. Waist measurements, photos, how clothes fit, strength and fitness all add context the scale alone can't give you.",
       "The aim isn't to make the number as small as possible — it's to lose excess fat while protecting muscle, health, and habits you can actually sustain.",
+      "Daily changes of one or two kilograms are usually water, glycogen and food volume rather than fat. Salt, carbohydrates, hormones, constipation and hard training can all temporarily move the scale.",
+      "Use several measures: weekly average weight, waist measurements every 2–4 weeks, consistent photos, clothing fit, strength and energy. Practical step: compare trends under similar conditions, not isolated weigh-ins.",
     ],
   },
   {
@@ -192,6 +194,8 @@ const ARTICLES = [
       "Calories measure energy, not virtue. Over time, fat loss requires your body to use more energy than it takes in — that's energy balance, and it's real. But it isn't a moral scorecard, and it isn't effortless just because the principle is simple.",
       "Most of your daily energy use isn't from exercise — it's from just being alive (breathing, circulation, temperature regulation, digestion). Wearable exercise-calorie estimates are often inflated or double-counted against a target that already includes an activity factor.",
       "Look at weekly patterns, not single meals. A higher Saturday doesn't undo a week of consistency — your body responds to the overall pattern, not a disciplinary hearing after one biscuit.",
+      "Calories out includes resting metabolism, digestion, exercise and everyday movement. Dieting can increase hunger and reduce unconscious movement, so the same intake may produce slower progress later without breaking the rules of energy balance.",
+      "Wearables can help with steps and activity patterns, but exercise-calorie estimates are often inaccurate. Practical step: track everything honestly for two weeks—including oils, drinks, sauces and weekends—before deciding the target is not working.",
     ],
   },
   {
@@ -199,6 +203,8 @@ const ARTICLES = [
     body: [
       "A realistic plan protects consistency, muscle, health, and your relationship with food. Pick one outcome goal, then three behaviours that support it — process goals you can actually perform daily, like a calorie-consistency target, a protein target, and training or step goals that fit your real week.",
       "Progress is uneven by nature. Water can hide fat loss for a while and then reveal it all at once. Expect that, and don't panic at a flat week — judge the trend, not any single day.",
+      "A commonly sustainable rate for many adults is about 0.25–0.75% of body weight per week. Faster loss can increase hunger, fatigue and muscle loss, while already-lean people often need a slower approach.",
+      "Separate outcomes from behaviours. 'Lose 8 kg' is an outcome; hitting your calorie range, protein, training and step goals are actions you control. Practical step: choose three weekly behaviours that fit your real schedule.",
     ],
   },
   {
@@ -207,6 +213,8 @@ const ARTICLES = [
       "A calorie is a unit of energy. South African labels usually show kilojoules — divide kJ by about 4.184 to get kcal. Your body spends energy on resting functions (most of it), digestion, planned exercise, and everyday movement like walking and chores.",
       "One reliable way to estimate your resting energy needs is the Mifflin-St Jeor equation: for women, (10 × weight in kg) + (6.25 × height in cm) − (5 × age) − 161. For men, the same but +5 instead of −161. Multiply that by an activity factor (roughly 1.20 for low activity, 1.35 light, 1.50 moderate, 1.70 high) to estimate maintenance calories.",
       "From there, a starting deficit of around 10–20% below maintenance is a practical coaching range for many adults — not a medical prescription. We're not racing to the lowest number; we're finding the highest intake that still produces steady progress. Test your estimate against 2–4 weeks of real trend data before changing anything.",
+      "Choose activity levels conservatively—a few gym sessions do not make an otherwise seated week highly active. For example, maintenance of 2,000 kcal gives a 10–20% deficit range of roughly 1,600–1,800 kcal.",
+      "Calculators are only starting estimates. Keep the target consistent, review weight averages, hunger and training after 2–4 weeks, then make a small change if needed. Pregnancy, breastfeeding, eating-disorder history, diabetes medication or significant medical conditions require individual healthcare guidance.",
     ],
   },
   {
@@ -214,6 +222,8 @@ const ARTICLES = [
     body: [
       "The three macronutrients have different jobs, and your overall intake and food quality matter more than picking a villain to fear. Protein maintains and repairs tissue. Carbohydrate is a useful fuel, especially for training and higher-intensity activity — fibre-rich sources are worth prioritising. Fat supports cell function, nutrient absorption, and making food enjoyable.",
       "A simple way to build a plate: a meaningful protein source, vegetables or fruit, a carbohydrate portion sized to your activity and hunger, and a measured fat or sauce. Two meals with identical calories can feel completely different depending on their protein, fibre and volume — energy balance drives fat loss, but food quality drives health, hunger and how easy the whole thing is to sustain.",
+      "Protein and carbohydrate provide about 4 kcal per gram; fat provides about 9 kcal per gram. Carbohydrate supports harder training, while dietary fat supports cells, hormones and absorption of vitamins A, D, E and K. None needs to be treated as the enemy.",
+      "Practical step: build most meals from four parts—protein, vegetables or fruit, an activity-sized carbohydrate portion and a measured fat or sauce. Treat foods can fit, but they usually use the calorie budget faster.",
     ],
   },
   {
@@ -221,6 +231,9 @@ const ARTICLES = [
     body: [
       "Adequate protein supports fullness and helps protect lean muscle during fat loss, especially alongside resistance training. A practical range for many active adults dieting is around 1.6–2.2g of protein per kilogram of body weight — a range to work within, not a pass-fail exam.",
       "Calculate a provisional target, then spread it across your normal meals rather than saving it all for one sitting.",
+      "If current body weight is much higher than goal weight, calculating from goal weight can prevent an unnecessarily large protein target. People with kidney disease or related medical conditions should obtain individual clinical advice.",
+      "Aim for a useful protein serving at each meal—often around 25–40 g—using foods such as chicken, fish, lean meat, eggs, yoghurt, cottage cheese, tofu, legumes or whey. Supplements are convenient, not compulsory.",
+      "Practical step: choose the protein source first for every main meal, then build the rest of the plate around it.",
     ],
   },
   {
@@ -228,6 +241,8 @@ const ARTICLES = [
     body: [
       "The best fat-loss meal controls calories while still feeling like actual food — a tiny decorative salad might be low-calorie, but it won't keep you satisfied. Start with your protein choice so it's never an afterthought; a palm-sized portion is a reasonable visual starting point when you're not tracking precisely.",
       "Aim to build three repeatable meals you can fall back on: a rushed weekday meal, a family meal, and a go-to choice for eating out.",
+      "Fullness improves when meals contain protein, fibre, volume and texture. Fruit, vegetables, potatoes, oats, soups and yoghurt can create a larger, more satisfying meal for the same calories than pastries, sweets or liquid calories.",
+      "Meal timing is personal. You do not need six meals a day; choose the pattern that controls hunger and supports your routine. Practical step: prepare one quick option, one family dinner and one restaurant choice before you need them.",
     ],
   },
   {
@@ -235,6 +250,8 @@ const ARTICLES = [
     body: [
       "A nutrition label is only useful when you compare its stated serving size to the amount you actually eat — the packet says one serving; your bowl often says otherwise. Read a label in order: serving size first, then calories/kilojoules, protein, carbohydrate, fat, fibre and sodium.",
       "Multiply every value when you eat more than one serving, and compare products per 100g as well as per serving so you're comparing like with like.",
+      "Weigh calorie-dense items while learning portions. Oil, peanut butter, nuts, cheese, mayonnaise and dressings are easy to underestimate. A small unmeasured pour can change a meal substantially.",
+      "Raw and cooked weights are different: meat loses water; rice and pasta gain it. Choose a database entry that matches how you weighed the food. Practical step: weigh your most common foods for two weeks to train your eye.",
     ],
   },
   {
@@ -242,6 +259,8 @@ const ARTICLES = [
     body: [
       "Targets are starting estimates that must be tested against real-life trends — no calculator, watch or app knows exactly how many calories your body uses. Start with calories using the Chapter 4 method and a moderate deficit, then set a protein range and build fibre gradually through plants and whole foods.",
       "Calories set the energy budget; protein protects lean tissue and manages hunger; fibre supports fullness. None of these should be so aggressive that the others collapse. After a few consistent weeks, let the trend — not the calculator — guide your next decision.",
+      "Set targets in order: calories first, protein second, a sensible minimum fat intake third, then use the remaining calories for carbohydrate and additional fat according to preference and training needs.",
+      "Protein and carbohydrate provide roughly 4 kcal per gram and fat roughly 9. Treat macro targets as ranges—being a few grams away is not failure. Practical step: prioritise calories and protein, then review the 2–4 week trend before adjusting.",
     ],
   },
   {
@@ -249,12 +268,16 @@ const ARTICLES = [
     body: [
       "A meal plan is a flexible structure, not a prison sentence. Decide how many meals and snacks actually suit your hunger and schedule, allocate protein first, and reserve more calories for whichever time of day you're hungriest.",
       "Plan around the week you actually have — work, family meals, and realistic effort — rather than an idealised version of your schedule.",
+      "Allocate protein across your chosen meals, then reserve more calories for the time of day you are usually hungriest. Use flexible swaps: chicken for fish or lean mince, rice for potato, and yoghurt for cottage cheese, checking actual nutrition values.",
+      "Keep emergency options available for busy days and plan predictable restaurant meals or treats in advance. Practical step: log tomorrow's food tonight and adjust portions before the day becomes hectic.",
     ],
   },
   {
     title: "11. Example meal plans — used as teaching tools",
     body: [
       "An example plan shows structure; it doesn't know your medical history, appetite or energy needs. Use examples to understand the decision-making process, then rewrite them with foods you actually buy, cook and enjoy — real life includes leftovers, birthdays, and children who change their minds about dinner.",
+      "Two people can reach similar targets with completely different menus. Eggs, yoghurt, chicken and rice can be swapped for oats, biltong, mince and potatoes when portions and totals are adjusted.",
+      "Always check whether weights are raw or cooked and enter your exact brands, because breads, yoghurts, sauces and protein powders vary. Practical step: replace every food you would not realistically eat with a nutritionally similar option you enjoy.",
     ],
   },
   {
@@ -262,6 +285,8 @@ const ARTICLES = [
     body: [
       "During fat loss, strength training signals to your body that muscle is worth keeping rather than losing alongside fat. You don't need to fear 'bulking up overnight' — muscle doesn't arrive nearly that easily.",
       "Two realistic full-body sessions a week, covering the major movement patterns, is a solid starting point most people can actually sustain.",
+      "A balanced programme includes a knee bend, hinge, push, pull, carry and core work. Exercises should match your experience, mobility and injuries, then progress gradually through repetitions, load or range of motion.",
+      "Maintaining strength during a deficit is meaningful progress. Soreness is not proof of a good session and sharp or persistent pain should be assessed. Practical step: record weights and repetitions so you can see what your body is retaining.",
     ],
   },
   {
@@ -269,6 +294,8 @@ const ARTICLES = [
     body: [
       "Cardiorespiratory fitness supports health, work capacity and quality of life — and running isn't the only form that counts. Choose modes you can perform consistently; the heart accepts far more variety than most people assume.",
       "A useful starting structure: one easy, comfortable cardio session and one optional interval session per week.",
+      "Use the talk test: easy cardio should still allow sentences. Walking, cycling, rowing, swimming and low-impact circuits all count, so choose a mode your joints tolerate and you can repeat.",
+      "Intervals are effective in small doses but require recovery. Cardio supports fitness and energy expenditure; it should not be punishment for eating. Practical step: build duration gradually before adding more intensity.",
     ],
   },
   {
@@ -276,6 +303,8 @@ const ARTICLES = [
     body: [
       "A formal workout can feel heroic, but the other 23 hours of the day matter too. Everyday movement — steps, chores, standing, carrying things — contributes real energy expenditure and health benefit without needing to feel like exercise.",
       "Track your baseline for a week, then choose one small, sustainable increase rather than an overnight overhaul.",
+      "There is no magical universal step target. If your baseline is 4,000, moving toward 5,000–6,000 is already progress. Short walks after meals, parking farther away and walking during calls all count.",
+      "Diet fatigue can reduce unconscious movement, partly offsetting planned exercise. Practical step: add 500–1,500 daily steps for two weeks, then reassess rather than making one huge jump.",
     ],
   },
   {
@@ -283,6 +312,8 @@ const ARTICLES = [
     body: [
       "Training creates a signal; recovery is what allows your body to adapt to it. Rest isn't something you earn after doing enough — it's part of doing enough. Sleep and recovery deserve a place in your programme, not an afterthought once everything else is done.",
       "Pick one sleep habit and one recovery boundary to focus on for the next couple of weeks.",
+      "Most adults benefit from roughly 7–9 hours of sleep. Regular timing, a dark room, less late caffeine and a short wind-down routine can help even when life prevents perfection.",
+      "Persistent fatigue, falling performance, irritability, poor sleep and ongoing soreness may indicate that training load or the deficit is too aggressive. Practical step: schedule at least one easier or rest day and tell your coach when recovery worsens.",
     ],
   },
   {
@@ -290,6 +321,8 @@ const ARTICLES = [
     body: [
       "A true plateau is a sustained lack of change despite genuinely consistent adherence — not three noisy weigh-ins in a row. Before changing your target, audit your actual consistency: is tracking accurate, are portions creeping up, has activity quietly dropped?",
       "If adherence is genuinely solid and the trend has been flat for 3–4 consistent weeks, a small adjustment — often just 100–200 calories — is more appropriate than a drastic overhaul.",
+      "Audit oils, sauces, drinks, bites while cooking, database entries, restaurants and weekends. Also check whether steps or training have fallen. Menstrual-cycle water retention can hide progress, so compare similar cycle phases where possible.",
+      "Change one variable at a time. A small calorie adjustment, modest activity increase or improved consistency is easier to evaluate than changing everything. Sometimes a controlled maintenance break is more useful than a deeper deficit.",
     ],
   },
   {
@@ -297,6 +330,8 @@ const ARTICLES = [
     body: [
       "A plan that only works under perfect conditions isn't ready for real life. Build in flexibility for restaurants, celebrations and difficult days rather than treating any deviation as failure.",
       "A practical approach: write a Friday-to-Sunday plan that includes one flexible meal and one recovery routine, so the weekend has structure without being rigid.",
+      "Cravings can come from hunger, restriction, habit, emotion or enjoyment. First check protein, fibre and meal volume; then consider a planned portion instead of resisting until you overeat.",
+      "After an unplanned high-calorie meal, return to normal at the next meal—do not starve or add punishment exercise. Most immediate scale gain is water and food volume. Practical step: decide in advance which restaurant extras matter most to you.",
     ],
   },
   {
@@ -304,6 +339,9 @@ const ARTICLES = [
     body: [
       "Maintenance isn't a finish line where biology stops applying — it's a set of repeatable skills, much like learning to drive without an instructor gripping the dashboard. The goal shifts from active fat loss to a sustainable long-term range you can live inside.",
       "Write out your maintenance range, your anchors (habits you'll keep no matter what), and an early-warning plan for noticing drift before it becomes a real problem.",
+      "Maintenance calories are a range, not one perfect number. A small initial increase on the scale can be glycogen, water and greater food volume rather than immediate fat regain.",
+      "Keep regular weighing, protein-centred meals, strength training, movement and some planning. Choose a comfortable weight range and respond calmly if the weekly trend exceeds it for several weeks.",
+      "Difficult seasons may require a simpler version of the plan. Maintaining through holidays, injury or work stress is still success. Practical step: define three habits you will keep and the warning signs that trigger a routine review.",
     ],
   },
 ];
