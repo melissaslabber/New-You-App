@@ -161,14 +161,18 @@ const number = (value) => Number.isFinite(Number(value)) ? Math.round(Number(val
 
 function normaliseProduct(product) {
   const nutrients = product?.nutriments || {};
-  const name = String(product?.product_name || "").trim();
+  const brand = String(product?.brands || "").split(",")[0].trim();
+  const englishName = String(product?.product_name_en || "").trim();
+  const originalName = String(product?.product_name || "").trim();
+  const language = String(product?.lang || "").toLowerCase();
+  const name = englishName || ((!language || language === "en") ? originalName : (brand ? `${brand} product` : "South African product"));
   if (!name) return null;
   const cal = number(nutrients["energy-kcal_100g"] ?? nutrients["energy-kcal"]);
   if (!cal) return null;
   return {
     id: String(product.code || `${name}-${product.brands || ""}`),
     name,
-    brand: String(product.brands || "").split(",")[0].trim(),
+    brand,
     cal,
     protein: number(nutrients.proteins_100g),
     carb: number(nutrients.carbohydrates_100g),
@@ -206,7 +210,9 @@ export default async function handler(req, res) {
         action: "process",
         json: "1",
         page_size: "15",
-        fields: "code,product_name,brands,nutriments",
+        fields: "code,product_name,product_name_en,brands,nutriments,lang,countries_tags",
+        lc: "en",
+        cc: "za",
         tagtype_0: "countries",
         tag_contains_0: "contains",
         tag_0: "south-africa",
