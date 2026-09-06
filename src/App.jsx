@@ -7,24 +7,24 @@ const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 .nyf {
-  --bg: #F2F5F9;
+  --bg: #F4F7FB;
   --surface: #FFFFFF;
   --ink: #0B1F33;
-  --ink-soft: #5B6B7D;
-  --forest: #072952;
-  --forest-deep: #04182F;
-  --gold: #D9A441;
-  --gold-soft: #F3E3C0;
-  --sand: #E6ECF3;
+  --ink-soft: #64748B;
+  --forest: #07356B;
+  --forest-deep: #031D3A;
+  --gold: #E2AE3D;
+  --gold-soft: #FFF4D7;
+  --sand: #EAF0F7;
   --clay: #C0392B;
   --clay-soft: #F5DCD8;
   --success: #2E7D5B;
   --success-soft: #DCEFE5;
-  --line: #DCE3EC;
+  --line: #DCE6F1;
   font-family: 'Inter', sans-serif;
-  background: var(--bg);
+  background: linear-gradient(180deg, #EEF4FA 0%, var(--bg) 35%, #F8FAFC 100%);
   color: var(--ink);
-  max-width: 460px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
@@ -33,68 +33,79 @@ const STYLE = `
 }
 .nyf * { box-sizing: border-box; }
 .nyf h1, .nyf h2, .nyf h3 { font-family: 'Outfit', sans-serif; margin: 0; }
-.nyf-scroll { flex: 1; overflow-y: auto; padding: 20px 18px 90px; }
+.nyf-scroll { flex: 1; overflow-y: auto; padding: 22px 18px 28px; }
 
 .nyf-header {
-  padding: 14px 18px 16px;
-  background: var(--forest);
+  padding: 22px 20px 20px;
+  background: linear-gradient(135deg, #031D3A 0%, #073E7A 64%, #07539E 100%);
   color: #fff;
   border-bottom: 3px solid var(--gold);
+  box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
-.nyf-header-logo { display: block; width: 96px; height: 96px; object-fit: contain; margin-bottom: 8px; border-radius: 4px; }
-.nyf-greeting { font-size: 24px; font-weight: 700; margin-top: 4px; }
-.nyf-sub { color: #C9D6C9; font-size: 13px; margin-top: 3px; }
+.nyf-greeting { font-size: 27px; font-weight: 800; letter-spacing: -0.025em; }
+.nyf-sub { color: #D7E7F7; font-size: 13px; margin-top: 4px; }
+.nyf-logo-strip {
+  flex-shrink: 0; min-height: 92px; background: #fff; border-top: 1px solid var(--line);
+  padding: 10px 18px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 -8px 24px rgba(3, 29, 58, 0.06);
+}
+.nyf-logo-strip img { display: block; width: 132px; height: 72px; object-fit: contain; }
 
 .nyf-nav {
   position: sticky; bottom: 0;
   display: flex;
   background: var(--surface);
-  border-top: 1px solid var(--line);
-  padding: 8px 6px 10px;
+  border-top: 1px solid #E3EAF2;
+  padding: 9px 8px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 30px rgba(15, 35, 58, 0.08);
+  z-index: 10;
 }
 .nyf-navbtn {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: none; border: none; padding: 6px 2px; cursor: pointer;
+  background: none; border: none; border-radius: 12px; padding: 7px 2px; cursor: pointer;
   color: var(--ink-soft); font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600;
 }
-.nyf-navbtn.active { color: var(--forest); }
+.nyf-navbtn.active { color: var(--forest); background: #EFF6FD; }
 .nyf-navbtn.active svg { color: var(--gold); }
 
 .nyf-card {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid rgba(214, 225, 237, 0.92);
   border-left: 4px solid var(--forest);
-  border-radius: 4px;
-  padding: 16px;
-  margin-bottom: 14px;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(15, 35, 58, 0.065);
 }
 .nyf-card.gold { border-left-color: var(--gold); }
 .nyf-card.clay { border-left-color: var(--clay); }
 
-.nyf-section-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.nyf-section-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.01em; }
 
 .nyf-bar-row { margin-bottom: 12px; }
 .nyf-bar-label { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 5px; color: var(--ink-soft); }
-.nyf-bar-track { height: 8px; background: var(--sand); border-radius: 20px; overflow: hidden; }
-.nyf-bar-fill { height: 100%; border-radius: 20px; background: var(--forest); transition: width 0.4s ease; }
+.nyf-bar-track { height: 9px; background: var(--sand); border-radius: 20px; overflow: hidden; }
+.nyf-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #07356B, #0878C9); transition: width 0.4s ease; }
 .nyf-bar-fill.over { background: var(--clay); }
 
 .nyf-btn {
-  background: var(--forest); color: #fff; border: none; border-radius: 3px;
-  padding: 11px 16px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13.5px;
+  background: linear-gradient(135deg, #062A55, #084B8D); color: #fff; border: none; border-radius: 11px;
+  padding: 12px 17px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13.5px;
   cursor: pointer; display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+  box-shadow: 0 6px 14px rgba(7, 53, 107, 0.18); transition: transform .15s ease, box-shadow .15s ease;
 }
-.nyf-btn.gold { background: var(--gold); color: var(--forest-deep); }
-.nyf-btn.ghost { background: transparent; color: var(--forest); border: 1px solid var(--forest); }
+.nyf-btn:active { transform: translateY(1px); box-shadow: 0 3px 8px rgba(7, 53, 107, 0.16); }
+.nyf-btn.gold { background: linear-gradient(135deg, #F0C45A, var(--gold)); color: var(--forest-deep); }
+.nyf-btn.ghost { background: #fff; color: var(--forest); border: 1px solid #B9CDE2; box-shadow: none; }
 .nyf-btn.full { width: 100%; }
 .nyf-btn:disabled { opacity: 0.55; cursor: default; }
 
 .nyf-input, .nyf-select {
-  width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 3px;
-  font-family: 'Inter', sans-serif; font-size: 13.5px; background: var(--bg); color: var(--ink);
-  margin-bottom: 10px;
+  width: 100%; padding: 11px 12px; border: 1px solid #CFDCE9; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 13.5px; background: #F9FBFD; color: var(--ink);
+  margin-bottom: 11px;
 }
-.nyf-input:focus, .nyf-select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.nyf-input:focus, .nyf-select:focus { outline: none; border-color: #1976BF; box-shadow: 0 0 0 3px rgba(25,118,191,.13); background: #fff; }
 .nyf-field-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; display: block; }
 .nyf-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -114,7 +125,7 @@ const STYLE = `
 .nyf-accordion-body p { margin: 0 0 10px; }
 .nyf-accordion-body p:last-child { margin-bottom: 0; }
 
-.nyf-ai-box { background: var(--forest); color: #fff; border-radius: 4px; padding: 14px 16px; }
+.nyf-ai-box { background: linear-gradient(135deg, #031D3A, #07447F); color: #fff; border-radius: 14px; padding: 16px 17px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
 .nyf-ai-box p {
   font-size: 13.5px;
   line-height: 1.55;
@@ -126,37 +137,37 @@ const STYLE = `
 .nyf-empty { text-align: center; padding: 24px 12px; color: var(--ink-soft); font-size: 13px; }
 .nyf-stat-big { font-size: 30px; font-weight: 800; font-family: 'Outfit', sans-serif; }
 .nyf-stat-label { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; }
-.nyf-modal-backdrop { position: absolute; inset: 0; background: rgba(27,45,35,0.55); display: flex; align-items: flex-end; z-index: 20; }
-.nyf-modal { background: var(--surface); width: 100%; border-radius: 12px 12px 0 0; padding: 20px 18px 24px; max-height: 80%; overflow-y: auto; }
+.nyf-modal-backdrop { position: absolute; inset: 0; background: rgba(3,20,40,0.68); backdrop-filter: blur(4px); display: flex; align-items: flex-end; z-index: 20; }
+.nyf-modal { background: var(--surface); width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px calc(26px + env(safe-area-inset-bottom)); max-height: 88%; overflow-y: auto; box-shadow: 0 -20px 50px rgba(3,20,40,.2); }
 .nyf-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .nyf-close-btn { background: var(--sand); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
 
-.nyf-tabswitch { display: flex; background: var(--sand); border-radius: 4px; padding: 3px; margin-bottom: 14px; }
+.nyf-tabswitch { display: flex; background: var(--sand); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
 .nyf-tabswitch button {
   flex: 1; border: none; background: none; padding: 8px 4px; font-family: 'Inter', sans-serif;
-  font-size: 12.5px; font-weight: 600; color: var(--ink-soft); border-radius: 3px; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; color: var(--ink-soft); border-radius: 9px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 5px;
 }
-.nyf-tabswitch button.active { background: var(--surface); color: var(--forest); }
+.nyf-tabswitch button.active { background: var(--surface); color: var(--forest); box-shadow: 0 3px 10px rgba(15,35,58,.09); }
 .nyf-lookup-row { display: flex; gap: 8px; align-items: flex-start; }
 .nyf-lookup-row .nyf-input { margin-bottom: 0; }
 .nyf-product-card {
-  background: var(--success-soft); border-radius: 4px; padding: 10px 12px; margin: 10px 0 4px;
+  background: var(--success-soft); border-radius: 12px; padding: 11px 13px; margin: 10px 0 4px;
   font-size: 12.5px; color: var(--forest-deep);
 }
 .nyf-food-results { display: grid; gap: 8px; margin: 8px 0 14px; }
 .nyf-food-option {
-  width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 4px;
+  width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 12px;
   padding: 10px 12px; background: var(--surface); color: var(--ink); cursor: pointer;
 }
 .nyf-food-option strong { display: block; font-size: 13px; margin-bottom: 3px; }
 .nyf-food-option span { display: block; color: var(--ink-soft); font-size: 11.5px; line-height: 1.4; }
 .nyf-lookup-error { background: var(--clay-soft); color: var(--clay); border-radius: 4px; padding: 10px 12px; margin: 10px 0 4px; font-size: 12.5px; }
 
-.nyf-login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28px 22px; }
+.nyf-login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 22px; }
 .nyf-login-logo { text-align: center; margin-bottom: 30px; }
 .nyf-login-logo img { display: block; width: 190px; height: 190px; object-fit: contain; margin: 0 auto 12px; border-radius: 6px; }
-.nyf-login-logo h1 { font-size: 26px; margin-top: 6px; color: var(--forest); }
+.nyf-login-logo h1 { font-size: 30px; margin-top: 6px; color: var(--forest-deep); letter-spacing: -0.03em; }
 .nyf-link-btn { background: none; border: none; color: var(--forest); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px 0; text-decoration: underline; }
 .nyf-member-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); gap: 8px; }
 .nyf-member-row:last-child { border-bottom: none; }
@@ -627,7 +638,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
       </div>
@@ -678,6 +688,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} />}
       </div>
 
+      <FooterLogo />
       <div className="nyf-nav">
         <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => setTab("home")} />
         <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => setTab("track")} />
@@ -698,6 +709,14 @@ function NavBtn({ icon, label, active, onClick }) {
       {icon}
       {label}
     </button>
+  );
+}
+
+function FooterLogo() {
+  return (
+    <div className="nyf-logo-strip">
+      <img src="/new-you-logo.png" alt="New You Transformation Studio" />
+    </div>
   );
 }
 
@@ -1680,7 +1699,6 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Member access</h1>
         </div>
         <div className="nyf-card">
@@ -1712,6 +1730,7 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
           <button className="nyf-link-btn" onClick={onStaffAccess}>New You staff access</button>
         </div>
       </div>
+      <FooterLogo />
     </div>
   );
 }
@@ -1731,7 +1750,6 @@ function AdminPinScreen({ onBack, onUnlock }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Staff access</h1>
         </div>
         <div className="nyf-card">
@@ -1754,6 +1772,7 @@ function AdminPinScreen({ onBack, onUnlock }) {
           <button className="nyf-link-btn" onClick={onBack}>Back to member login</button>
         </div>
       </div>
+      <FooterLogo />
     </div>
   );
 }
@@ -1780,7 +1799,6 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">Member access</div>
       </div>
       <div className="nyf-scroll">
@@ -1831,6 +1849,7 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
       <div style={{ padding: "12px 18px 20px" }}>
         <button className="nyf-btn ghost full" onClick={onBack}>Back to member login</button>
       </div>
+      <FooterLogo />
     </div>
   );
 }
@@ -1924,7 +1943,6 @@ function CentralStaffLogin({ onBack, onLogin }) {
       <style>{STYLE}</style>
       <div className="nyf-login-wrap">
         <div className="nyf-login-logo">
-          <img src="/new-you-logo.png" alt="New You Transformation Studio" />
           <h1>Staff access</h1>
         </div>
         <div className="nyf-card">
@@ -1936,6 +1954,7 @@ function CentralStaffLogin({ onBack, onLogin }) {
         </div>
         <div style={{ textAlign: "center" }}><button className="nyf-link-btn" onClick={onBack}>Back to member login</button></div>
       </div>
+      <FooterLogo />
     </div>
   );
 }
@@ -1999,7 +2018,6 @@ function CoachDashboard({ onLogout }) {
       <div className="nyf">
         <style>{STYLE}</style>
         <div className="nyf-header">
-          <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
           <div className="nyf-greeting">{selected.name}</div>
           <div className="nyf-sub">Coach view · {selected.code}</div>
         </div>
@@ -2035,6 +2053,7 @@ function CoachDashboard({ onLogout }) {
             </>
           )}
         </div>
+        <FooterLogo />
       </div>
     );
   }
@@ -2043,7 +2062,6 @@ function CoachDashboard({ onLogout }) {
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <img className="nyf-header-logo" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <div className="nyf-greeting">Coach dashboard</div>
       </div>
       <div className="nyf-scroll">
@@ -2076,6 +2094,7 @@ function CoachDashboard({ onLogout }) {
         </div>
         <button className="nyf-btn ghost full" onClick={onLogout}><LogOut size={15} /> Sign out</button>
       </div>
+      <FooterLogo />
     </div>
   );
 }
