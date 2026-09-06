@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 00:45 SAST.
-const APP_RELEASE = "2026-09-07-0045";
+// Consolidated New You release: 07 September 2026, 01:15 SAST.
+const APP_RELEASE = "2026-09-07-0115";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -769,6 +769,11 @@ function MainApp({ onLogout, memberName }) {
   }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
+  const previousDayLogs = useMemo(() => {
+    const date = new Date(); date.setDate(date.getDate() - 1);
+    const previousDate = date.toISOString().slice(0, 10);
+    return foodLogs.filter((item) => item.date === previousDate);
+  }, [foodLogs]);
   const totals = useMemo(
     () =>
       todayLogs.reduce(
@@ -797,6 +802,10 @@ function MainApp({ onLogout, memberName }) {
   }
   function removeFood(id) {
     setFoodLogs((prev) => prev.filter((f) => f.id !== id));
+  }
+  function copyPreviousDay() {
+    if (!previousDayLogs.length) return;
+    setFoodLogs((prev) => [...prev, ...previousDayLogs.map(({ id, date, ...item }) => ({ ...item, id: uid(), date: todayStr() }))]);
   }
   function addExercise(entry) {
     setExerciseLogs((prev) => [...prev, { id: uid(), date: todayStr(), ...entry }]);
@@ -1066,6 +1075,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             dailyHabits={dailyHabits}
             toggleHabit={toggleHabit}
             repeatFood={addFood}
+            previousDayLogs={previousDayLogs}
+            copyPreviousDay={copyPreviousDay}
             progressPhotos={progressPhotos}
             addProgressPhoto={addProgressPhoto}
             removeProgressPhoto={removeProgressPhoto}
@@ -1422,7 +1433,7 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
@@ -1436,6 +1447,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
         <button className="nyf-btn full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 4 }}>
           <Plus size={15} /> Log a meal
         </button>
+        {previousDayLogs.length > 0 && <button className="nyf-btn ghost full" onClick={copyPreviousDay} style={{ marginTop: 8 }}><RefreshCw size={15} /> Copy all of yesterday's food</button>}
       </div>
 
       <div className="nyf-card">
@@ -2005,6 +2017,23 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteD
   );
 }
 
+function FoodSubmissionForm({ initialName = "" }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: initialName, brand: "", barcode: "", servingSize: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
+  const [status, setStatus] = useState("");
+  useEffect(() => { if (!open && initialName) setForm((value) => ({ ...value, name: initialName })); }, [initialName, open]);
+  async function submit() {
+    setStatus("saving");
+    try {
+      const response = await fetch("/api/food-submissions", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item: form }) });
+      const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not submit food");
+      setStatus("sent"); setOpen(false);
+    } catch (error) { setStatus(error.message); }
+  }
+  if (!open) return <div style={{ marginBottom: 12 }}><button className="nyf-link-btn" onClick={() => { setStatus(""); setOpen(true); }}>Food still missing? Submit it to New You</button>{status === "sent" && <div className="nyf-product-card">Sent to your coach for verification. Once approved, every member can find it.</div>}</div>;
+  return <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Submit a missing food</strong><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Copy the values per 100 g or 100 ml from the nutrition label.</p><label className="nyf-field-label">Product name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><label className="nyf-field-label">Brand</label><input className="nyf-input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="e.g. Woolworths, Ouma or Albany" /><label className="nyf-field-label">Barcode (optional)</label><input className="nyf-input" inputMode="numeric" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /><div className="nyf-grid2"><div><label className="nyf-field-label">Normal serving</label><input className="nyf-input" type="number" value={form.servingSize} onChange={(e) => setForm({ ...form, servingSize: e.target.value })} /></div><div><label className="nyf-field-label">Unit</label><select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}><option value="g">grams</option><option value="ml">millilitres</option></select></div></div><div className="nyf-grid2">{[["cal","Calories"],["protein","Protein"],["carb","Carbs"],["fat","Fat"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} per 100</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>{status && !["saving","sent"].includes(status) && <div className="nyf-lookup-error">{status}</div>}<button className="nyf-btn full" onClick={submit} disabled={!form.name || !form.cal || status === "saving"}>{status === "saving" ? "Submitting…" : "Send for coach approval"}</button><button className="nyf-link-btn" onClick={() => setOpen(false)} style={{ display: "block", margin: "10px auto 0" }}>Cancel</button></div>;
+}
+
 function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
   const [mode, setMode] = useState("manual");
   const defaultMealType = new Date().getHours() < 10 ? "Breakfast" : new Date().getHours() < 14 ? "Lunch" : new Date().getHours() < 18 ? "Snack" : "Dinner";
@@ -2286,6 +2315,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                 )}
                 {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands (English)"}</button>}
                 <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "2px 0 10px" }}>For the exact product, search its brand and name or scan/type the barcode. If it is not listed yet, use the nutrition label to enter it manually.</p>
+                <FoodSubmissionForm initialName={foodQuery} />
               </>
             )}
             <label className="nyf-field-label">Meal</label>
@@ -2803,10 +2833,10 @@ function CentralStaffLogin({ onBack, onLogin }) {
 }
 
 function CoachGoalsEditor({ profile, onSave }) {
-  const [form, setForm] = useState({ calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50 });
+  const [form, setForm] = useState({ calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50, expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
   const [saved, setSaved] = useState(false);
   async function save() { await onSave(form); setSaved(true); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% — no extra allowance</option><option value="50">50% — recommended</option><option value="100">100% — full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0.1" max="1.5" step="0.1" value={form.expectedWeeklyLoss} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% — no extra allowance</option><option value="50">50% — recommended</option><option value="100">100% — full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
 function CoachDashboard({ onLogout }) {
@@ -2821,6 +2851,7 @@ function CoachDashboard({ onLogout }) {
   const [memberSearch, setMemberSearch] = useState("");
   const [memberFilter, setMemberFilter] = useState("all");
   const [backupLoading, setBackupLoading] = useState(false);
+  const [foodSubmissions, setFoodSubmissions] = useState([]);
 
   async function memberAction(action, extra = {}) {
     const response = await fetch("/api/members", {
@@ -2838,7 +2869,16 @@ function CoachDashboard({ onLogout }) {
   useEffect(() => {
     memberAction("list").catch((e) => setError(e.message)).finally(() => setLoading(false));
     fetch("/api/coach-overview", { credentials: "same-origin" }).then((response) => response.json()).then((result) => setSummaries(Object.fromEntries((result.summaries || []).map((item) => [item.code, item])))).catch(() => {});
+    loadFoodSubmissions();
   }, []);
+
+  async function loadFoodSubmissions() {
+    try { const response = await fetch("/api/food-submissions", { credentials: "same-origin" }); const result = await response.json(); if (response.ok) setFoodSubmissions(result.pending || []); } catch { /* Directory approval is optional if offline. */ }
+  }
+  async function reviewFood(id, action) {
+    setError("");
+    try { const response = await fetch("/api/food-submissions", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, action }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not review food"); setFoodSubmissions((items) => items.filter((item) => item.id !== id)); } catch (e) { setError(e.message); }
+  }
 
   async function addMember() {
     setError("");
@@ -2983,6 +3023,10 @@ function CoachDashboard({ onLogout }) {
           </div>
           {error && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{error}</div>}
           <button className="nyf-btn full" onClick={addMember} disabled={!name.trim() || !code.trim()}>Add &amp; activate</button>
+        </div>
+        <div className="nyf-card">
+          <div className="nyf-section-title"><UtensilsCrossed size={17} /> Foods awaiting approval ({foodSubmissions.length})</div>
+          {foodSubmissions.length === 0 ? <div className="nyf-empty">No food submissions waiting.</div> : foodSubmissions.map((item) => <div className="nyf-log-item" key={item.id} style={{ display: "block" }}><div className="nyf-log-name">{item.brand ? `${item.brand} · ` : ""}{item.name}</div><div className="nyf-log-macro">Per 100{item.unit}: {item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}{item.barcode ? ` · Barcode ${item.barcode}` : ""}</div><div style={{ display: "flex", gap: 8, marginTop: 9 }}><button className="nyf-btn" onClick={() => reviewFood(item.id, "approve")}>Approve</button><button className="nyf-btn ghost" onClick={() => reviewFood(item.id, "reject")}>Reject</button></div></div>)}
         </div>
         <div className="nyf-card">
           <div className="nyf-section-title">Members ({members.filter((m) => m.active).length} active)</div>
