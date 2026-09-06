@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 06 September 2026, 23:05 SAST.
-const APP_RELEASE = "2026-09-06-2305";
+// Consolidated New You release: 07 September 2026, 00:20 SAST.
+const APP_RELEASE = "2026-09-07-0020";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -2017,6 +2017,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
   const [foodResults, setFoodResults] = useState([]);
   const [foodSearchLoading, setFoodSearchLoading] = useState(false);
   const [foodSearchError, setFoodSearchError] = useState("");
+  const [foodHasMore, setFoodHasMore] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const videoRef = useRef(null);
@@ -2071,17 +2072,18 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     setScanning(false);
   }
 
-  async function searchFoods(queryOverride) {
+  async function searchFoods(queryOverride, includeBrands = false) {
     const query = String(queryOverride ?? foodQuery).trim();
     if (query.length < 2) return;
     setFoodSearchLoading(true);
     setFoodSearchError("");
-    setFoodResults([]);
+    if (!includeBrands) setFoodResults([]);
     try {
-      const response = await fetch(`/api/foods?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/foods?q=${encodeURIComponent(query)}${includeBrands ? "&more=1" : ""}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Food search failed");
       setFoodResults(data.results || []);
+      setFoodHasMore(Boolean(data.hasMore) && !includeBrands);
       if (!data.results?.length) setFoodSearchError("No matching foods found. You can still enter the nutrition values manually.");
     } catch (error) {
       setFoodSearchError("Couldn't search the food database right now. You can still enter the values manually.");
@@ -2282,6 +2284,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                     ))}
                   </div>
                 )}
+                {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands"}</button>}
               </>
             )}
             <label className="nyf-field-label">Meal</label>
