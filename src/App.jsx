@@ -194,6 +194,12 @@ const STYLE = `
 .nyf-progress-tile { background: linear-gradient(145deg, #F5F9FD, #EDF3F8); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; }
 .nyf-progress-tile strong { display: block; color: var(--forest); font-family: 'Outfit',sans-serif; font-size: 18px; }
 .nyf-progress-tile span { display: block; margin-top: 2px; color: var(--ink-soft); font-size: 9.5px; font-weight: 700; text-transform: uppercase; }
+.nyf-habits { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nyf-habit { border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 700; cursor: pointer; text-align: left; }
+.nyf-habit.done { background: linear-gradient(145deg, #EAF7F0, #DCEFE5); border-color: #AFD8C2; color: var(--success); }
+.nyf-habit-dot { width: 23px; height: 23px; border-radius: 50%; background: var(--sand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nyf-habit.done .nyf-habit-dot { background: var(--success); color: #fff; }
+.nyf-streak { display: inline-flex; align-items: center; gap: 5px; background: var(--gold-soft); color: #75500D; border-radius: 20px; padding: 6px 10px; font-size: 11px; font-weight: 800; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -432,6 +438,8 @@ function MainApp({ onLogout, memberName }) {
   const [checkedGroceryItems, setCheckedGroceryItems] = useState([]);
   const [likedFoods, setLikedFoods] = useState([]);
   const [weeklyCheckIns, setWeeklyCheckIns] = useState([]);
+  const [measurementLogs, setMeasurementLogs] = useState([]);
+  const [dailyHabits, setDailyHabits] = useState({});
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -448,6 +456,8 @@ function MainApp({ onLogout, memberName }) {
           if (d.checkedGroceryItems) setCheckedGroceryItems(d.checkedGroceryItems);
           if (d.likedFoods) setLikedFoods(d.likedFoods);
           if (d.weeklyCheckIns) setWeeklyCheckIns(d.weeklyCheckIns);
+          if (d.measurementLogs) setMeasurementLogs(d.measurementLogs);
+          if (d.dailyHabits) setDailyHabits(d.dailyHabits);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
         }
@@ -467,7 +477,7 @@ function MainApp({ onLogout, memberName }) {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns } }),
+          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits } }),
         });
         if (!response.ok) throw new Error("Save failed");
       } catch (e) {
@@ -475,7 +485,7 @@ function MainApp({ onLogout, memberName }) {
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, loaded]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -648,6 +658,13 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   function addWeeklyCheckIn(entry) {
     setWeeklyCheckIns((prev) => [{ id: uid(), date: todayStr(), ...entry }, ...prev]);
   }
+  function addMeasurements(entry) {
+    setMeasurementLogs((prev) => [{ id: uid(), date: todayStr(), ...entry }, ...prev]);
+  }
+  function toggleHabit(key) {
+    const date = todayStr();
+    setDailyHabits((prev) => ({ ...prev, [date]: { ...(prev[date] || {}), [key]: !prev[date]?.[key] } }));
+  }
 
   if (!loaded) {
     return (
@@ -694,6 +711,11 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             latestWeight={latestWeight}
             setShowFoodModal={setShowFoodModal}
             setShowWeightModal={setShowWeightModal}
+            measurementLogs={measurementLogs}
+            addMeasurements={addMeasurements}
+            todayHabits={dailyHabits[todayStr()] || {}}
+            dailyHabits={dailyHabits}
+            toggleHabit={toggleHabit}
           />
         )}
         {tab === "learn" && <LearnTab openArticle={openArticle} setOpenArticle={setOpenArticle} />}
@@ -888,9 +910,31 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   );
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal }) {
+const HABITS = [["water", "Water target"], ["steps", "Steps target"], ["protein", "Protein target"], ["training", "Training / movement"]];
+
+function HabitTracker({ todayHabits, dailyHabits, toggleHabit }) {
+  const completeToday = HABITS.filter(([key]) => todayHabits[key]).length;
+  let streak = 0;
+  for (let offset = 0; offset < 365; offset += 1) {
+    const date = new Date(); date.setDate(date.getDate() - offset);
+    const key = date.toISOString().slice(0, 10);
+    if (HABITS.every(([habit]) => dailyHabits[key]?.[habit])) streak += 1; else if (offset > 0 || completeToday > 0) break;
+  }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Check size={17} /> Daily habits</div><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{completeToday}/4 completed today</span><span className="nyf-streak"><Flame size={13} /> {streak} day streak</span></div><div className="nyf-habits">{HABITS.map(([key,label]) => <button key={key} className={`nyf-habit${todayHabits[key] ? " done" : ""}`} onClick={() => toggleHabit(key)}><span className="nyf-habit-dot">{todayHabits[key] ? <Check size={14} /> : null}</span><span>{label}</span></button>)}</div></div>;
+}
+
+function MeasurementsCard({ entries, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ waist: "", hips: "", chest: "", arm: "", thigh: "" });
+  const latest = entries[0];
+  function save() { onAdd(Object.fromEntries(Object.entries(form).map(([key,value]) => [key, value ? Number(value) : null]))); setOpen(false); }
+  return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
+}
+
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit }) {
   return (
     <>
+      <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
       <div className="nyf-card">
         <div className="nyf-section-title">Today's totals</div>
         <Bar label="Calories" value={totals.cal} goal={profile.calorieGoal} unit=" kcal" />
@@ -956,6 +1000,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
           <Plus size={15} /> Log check-in
         </button>
       </div>
+      <MeasurementsCard entries={measurementLogs} onAdd={addMeasurements} />
     </>
   );
 }
@@ -2128,11 +2173,14 @@ function CoachDashboard({ onLogout }) {
     const weights = [...(memberData?.weightLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
     const foods = [...(memberData?.foodLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
     const checkIns = [...(memberData?.weeklyCheckIns || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const measurements = [...(memberData?.measurementLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const memberHabits = memberData?.dailyHabits || {};
     const profile = memberData?.profile || {};
     const latestCoachWeight = weights[0]?.weight;
     const firstCoachWeight = weights[weights.length - 1]?.weight;
     const change = latestCoachWeight && firstCoachWeight ? (latestCoachWeight - firstCoachWeight).toFixed(1) : null;
     const loggedDays = new Set(foods.map((item) => item.date)).size;
+    const habitCompletions = Object.values(memberHabits).reduce((sum, day) => sum + HABITS.filter(([key]) => day?.[key]).length, 0);
     return (
       <div className="nyf">
         <style>{STYLE}</style>
@@ -2155,6 +2203,15 @@ function CoachDashboard({ onLogout }) {
                 <div className="nyf-progress-tile"><strong>{latestCoachWeight ? `${latestCoachWeight}kg` : "—"}</strong><span>Current</span></div>
                 <div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Change</span></div>
                 <div className="nyf-progress-tile"><strong>{loggedDays}</strong><span>Food days</span></div>
+              </div>
+              <div className="nyf-card">
+                <div className="nyf-section-title">Measurements &amp; habits</div>
+                <div className="nyf-progress-summary">
+                  <div className="nyf-progress-tile"><strong>{measurements[0]?.waist ? `${measurements[0].waist}cm` : "—"}</strong><span>Latest waist</span></div>
+                  <div className="nyf-progress-tile"><strong>{measurements.length}</strong><span>Measure-ins</span></div>
+                  <div className="nyf-progress-tile"><strong>{habitCompletions}</strong><span>Habits done</span></div>
+                </div>
+                {measurements.length ? measurements.slice(0, 5).map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.date}</div><div className="nyf-log-macro">Waist {item.waist || "—"} · Hips {item.hips || "—"} · Chest {item.chest || "—"} · Arm {item.arm || "—"} · Thigh {item.thigh || "—"} cm</div></div></div>) : <div className="nyf-empty">No measurements yet.</div>}
               </div>
               <div className="nyf-card gold">
                 <div className="nyf-section-title">Weekly check-ins</div>
