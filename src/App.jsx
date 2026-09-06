@@ -200,6 +200,14 @@ const STYLE = `
 .nyf-habit-dot { width: 23px; height: 23px; border-radius: 50%; background: var(--sand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .nyf-habit.done .nyf-habit-dot { background: var(--success); color: #fff; }
 .nyf-streak { display: inline-flex; align-items: center; gap: 5px; background: var(--gold-soft); color: #75500D; border-radius: 20px; padding: 6px 10px; font-size: 11px; font-weight: 800; }
+.nyf-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 12px; }
+.nyf-photo { position: relative; aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; background: var(--sand); }
+.nyf-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nyf-photo button { position: absolute; right: 5px; top: 5px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(3,29,58,.78); color: #fff; display: flex; align-items: center; justify-content: center; }
+.nyf-message { max-width: 86%; border-radius: 13px; padding: 10px 12px; margin: 7px 0; font-size: 12.5px; line-height: 1.45; }
+.nyf-message.member { margin-left: auto; background: var(--forest); color: #fff; border-bottom-right-radius: 3px; }
+.nyf-message.coach { background: var(--gold-soft); color: var(--ink); border-bottom-left-radius: 3px; }
+.nyf-message small { display: block; opacity: .68; margin-top: 4px; font-size: 9.5px; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -440,6 +448,8 @@ function MainApp({ onLogout, memberName }) {
   const [weeklyCheckIns, setWeeklyCheckIns] = useState([]);
   const [measurementLogs, setMeasurementLogs] = useState([]);
   const [dailyHabits, setDailyHabits] = useState({});
+  const [progressPhotos, setProgressPhotos] = useState([]);
+  const [coachMessages, setCoachMessages] = useState([]);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -458,6 +468,8 @@ function MainApp({ onLogout, memberName }) {
           if (d.weeklyCheckIns) setWeeklyCheckIns(d.weeklyCheckIns);
           if (d.measurementLogs) setMeasurementLogs(d.measurementLogs);
           if (d.dailyHabits) setDailyHabits(d.dailyHabits);
+          if (d.progressPhotos) setProgressPhotos(d.progressPhotos);
+          if (d.coachMessages) setCoachMessages(d.coachMessages);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
         }
@@ -477,7 +489,7 @@ function MainApp({ onLogout, memberName }) {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits } }),
+          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages } }),
         });
         if (!response.ok) throw new Error("Save failed");
       } catch (e) {
@@ -485,7 +497,7 @@ function MainApp({ onLogout, memberName }) {
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, loaded]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -665,6 +677,15 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     const date = todayStr();
     setDailyHabits((prev) => ({ ...prev, [date]: { ...(prev[date] || {}), [key]: !prev[date]?.[key] } }));
   }
+  function addCoachMessage(text) {
+    setCoachMessages((prev) => [...prev, { id: uid(), role: "member", text, date: new Date().toISOString() }]);
+  }
+  function addProgressPhoto(photo) {
+    setProgressPhotos((prev) => [{ id: uid(), date: todayStr(), ...photo }, ...prev].slice(0, 6));
+  }
+  function removeProgressPhoto(id) {
+    setProgressPhotos((prev) => prev.filter((item) => item.id !== id));
+  }
 
   if (!loaded) {
     return (
@@ -699,6 +720,11 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             setTab={setTab}
             weeklyCheckIns={weeklyCheckIns}
             addWeeklyCheckIn={addWeeklyCheckIn}
+            coachMessages={coachMessages}
+            addCoachMessage={addCoachMessage}
+            progressPhotos={progressPhotos}
+            addProgressPhoto={addProgressPhoto}
+            removeProgressPhoto={removeProgressPhoto}
           />
         )}
         {tab === "track" && (
@@ -854,7 +880,26 @@ function WeeklyCheckIn({ entries, onAdd }) {
   );
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn }) {
+function CoachMessagesCard({ messages, onSend }) {
+  const [text, setText] = useState("");
+  function send() { if (!text.trim()) return; onSend(text.trim()); setText(""); }
+  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Message your coach</div>{messages.length ? <div style={{ maxHeight: 230, overflowY: "auto", marginBottom: 10 }}>{messages.slice(-8).map((message) => <div key={message.id} className={`nyf-message ${message.role}`}><strong>{message.role === "coach" ? "Coach" : "You"}</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleDateString("en-ZA")}</small></div>)}</div> : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Ask a question or share something your coach should know.</p>}<textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…" /><button className="nyf-btn full" onClick={send} disabled={!text.trim()}>Send to coach</button></div>;
+}
+
+function ProgressPhotosCard({ photos, onAdd, onRemove }) {
+  const [busy, setBusy] = useState(false);
+  async function choose(event) {
+    const file = event.target.files?.[0]; if (!file) return;
+    setBusy(true);
+    const image = new Image(); const source = URL.createObjectURL(file);
+    image.onload = () => { const max = 520; const scale = Math.min(1, max / Math.max(image.width, image.height)); const canvas = document.createElement("canvas"); canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale); canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height); onAdd({ image: canvas.toDataURL("image/jpeg", .68) }); URL.revokeObjectURL(source); setBusy(false); event.target.value = ""; };
+    image.onerror = () => { URL.revokeObjectURL(source); setBusy(false); };
+    image.src = source;
+  }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Camera size={17} /> Private progress photos</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 8 }}>Add consistent front, side or back photos. Only you and signed-in New You staff can see them.</p>{photos.length > 0 && <div className="nyf-photo-grid">{photos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Progress ${photo.date}`} /><button onClick={() => onRemove(photo.id)} aria-label="Delete photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer" }}><Camera size={15} /> {busy ? "Preparing photo…" : photos.length >= 6 ? "Replace a photo to add another" : "Add progress photo"}<input type="file" accept="image/*" capture="environment" onChange={choose} disabled={busy || photos.length >= 6} style={{ display: "none" }} /></label><p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 8 }}>Up to 6 compressed photos are kept to protect app speed and storage.</p></div>;
+}
+
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto }) {
   const remaining = profile.calorieGoal - totals.cal;
   return (
     <>
@@ -906,6 +951,8 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         </div>
       )}
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} />
+      <CoachMessagesCard messages={coachMessages} onSend={addCoachMessage} />
+      <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
     </>
   );
 }
@@ -1874,7 +1921,7 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
   );
 }
 
-function LandingScreen({ onMember, onStaff }) {
+function LandingScreen({ onMember, onStaff, onInstall }) {
   return (
     <div className="nyf nyf-landing">
       <style>{STYLE}</style>
@@ -1887,6 +1934,7 @@ function LandingScreen({ onMember, onStaff }) {
       <div className="nyf-landing-actions">
         <button className="nyf-btn gold full" onClick={onMember} style={{ minHeight: 50 }}>Member login</button>
         <button className="nyf-btn ghost full" onClick={onStaff} style={{ marginTop: 10 }}>Coach &amp; staff access</button>
+        {onInstall && <button className="nyf-link-btn" onClick={onInstall} style={{ display: "block", margin: "10px auto 0", color: "#fff" }}>Install New You on this phone</button>}
         <div style={{ textAlign: "center", color: "#C9D9E8", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
       </div>
     </div>
@@ -2018,8 +2066,13 @@ export default function App() {
   const [view, setView] = useState("landing");
   const [memberName, setMemberName] = useState("");
   const [pausedNotice, setPausedNotice] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
+    const manifest = document.createElement("link"); manifest.rel = "manifest"; manifest.href = "/manifest.webmanifest"; document.head.appendChild(manifest);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    const captureInstall = (event) => { event.preventDefault(); setInstallPrompt(event); };
+    window.addEventListener("beforeinstallprompt", captureInstall);
     (async () => {
       try {
         const response = await fetch("/api/auth?action=session", { credentials: "same-origin" });
@@ -2036,7 +2089,10 @@ export default function App() {
       }
       setReady(true);
     })();
+    return () => window.removeEventListener("beforeinstallprompt", captureInstall);
   }, []);
+
+  async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); setInstallPrompt(null); }
 
   async function memberLogin(code) {
     const response = await fetch("/api/auth", {
@@ -2081,7 +2137,7 @@ export default function App() {
   if (view === "app") return <MainApp onLogout={logout} memberName={memberName} />;
   if (view === "admin") return <CoachDashboard onLogout={logout} />;
   if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
-  if (view === "landing") return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} />;
+  if (view === "landing") return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt ? installApp : null} />;
   return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} onBack={() => setView("landing")} />;
 }
 
@@ -2116,6 +2172,14 @@ function CentralStaffLogin({ onBack, onLogin }) {
       <FooterLogo />
     </div>
   );
+}
+
+function CoachReplyPanel({ messages, onSend }) {
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+  async function send() { if (!text.trim()) return; setSending(true); setError(""); try { await onSend(text.trim()); setText(""); } catch (e) { setError(e.message); } setSending(false); }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> Member messages</div>{messages.length ? <div style={{ maxHeight: 260, overflowY: "auto", marginBottom: 10 }}>{messages.slice(-12).map((message) => <div key={message.id} className={`nyf-message ${message.role}`}><strong>{message.role === "coach" ? "Coach" : "Member"}</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleDateString("en-ZA")}</small></div>)}</div> : <div className="nyf-empty">No messages yet.</div>}<textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Reply to this member…" />{error && <div className="nyf-lookup-error">{error}</div>}<button className="nyf-btn full" onClick={send} disabled={!text.trim() || sending}>{sending ? "Sending…" : "Send reply"}</button></div>;
 }
 
 function CoachDashboard({ onLogout }) {
@@ -2167,6 +2231,13 @@ function CoachDashboard({ onLogout }) {
     } catch (e) {
       setError(e.message);
     }
+  }
+
+  async function sendCoachReply(text) {
+    const response = await fetch("/api/coach-message", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: selected.code, text }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not send reply");
+    setMemberData(result.data);
   }
 
   if (selected) {
@@ -2224,6 +2295,8 @@ function CoachDashboard({ onLogout }) {
                   </div>
                 )) : <div className="nyf-empty">No weekly check-ins yet.</div>}
               </div>
+              <CoachReplyPanel messages={memberData?.coachMessages || []} onSend={sendCoachReply} />
+              {(memberData?.progressPhotos || []).length > 0 && <div className="nyf-card"><div className="nyf-section-title">Progress photos</div><div className="nyf-photo-grid">{memberData.progressPhotos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Member progress ${photo.date}`} /></div>)}</div><p style={{ fontSize: 10.5, color: "var(--ink-soft)" }}>Private coach view · do not share without the member’s permission.</p></div>}
               <div className="nyf-card">
                 <div className="nyf-section-title">Weight and body fat</div>
                 {weights.length ? weights.map((item) => (
