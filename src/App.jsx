@@ -771,9 +771,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             addWeeklyCheckIn={addWeeklyCheckIn}
             coachMessages={coachMessages}
             addCoachMessage={addCoachMessage}
-            progressPhotos={progressPhotos}
-            addProgressPhoto={addProgressPhoto}
-            removeProgressPhoto={removeProgressPhoto}
             foodLogs={foodLogs}
             weightLogs={weightLogs}
             todayExercise={todayExercise}
@@ -798,6 +795,9 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             dailyHabits={dailyHabits}
             toggleHabit={toggleHabit}
             repeatFood={addFood}
+            progressPhotos={progressPhotos}
+            addProgressPhoto={addProgressPhoto}
+            removeProgressPhoto={removeProgressPhoto}
           />
         )}
         {tab === "learn" && <LearnTab openArticle={openArticle} setOpenArticle={setOpenArticle} />}
@@ -976,7 +976,7 @@ function ExerciseCard({ entries, calories, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Exercise calories</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="From your watch or machine" /><button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto, foodLogs, weightLogs, todayExercise, exerciseCalories, addExercise, removeExercise }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, addExercise, removeExercise }) {
   const netCalories = Math.max(0, totals.cal - exerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
@@ -1040,7 +1040,6 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       )}
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
       <CoachMessagesCard memberName={profile.name} />
-      <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
     </>
   );
 }
@@ -1066,7 +1065,7 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, progressPhotos, addProgressPhoto, removeProgressPhoto }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
@@ -1139,6 +1138,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
         </button>
       </div>
       <MeasurementsCard entries={measurementLogs} onAdd={addMeasurements} />
+      <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
     </>
   );
 }
