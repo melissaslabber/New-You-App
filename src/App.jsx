@@ -896,10 +896,10 @@ function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
   );
 }
 
-function CoachMessagesCard({ messages, onSend }) {
+function CoachMessagesCard({ memberName }) {
   const [text, setText] = useState("");
-  function send() { if (!text.trim()) return; onSend(text.trim()); setText(""); }
-  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Message your coach</div>{messages.length ? <div style={{ maxHeight: 230, overflowY: "auto", marginBottom: 10 }}>{messages.slice(-8).map((message) => <div key={message.id} className={`nyf-message ${message.role}`}><strong>{message.role === "coach" ? "Coach" : "You"}</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleDateString("en-ZA")}</small></div>)}</div> : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Ask a question or share something your coach should know.</p>}<textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…" /><button className="nyf-btn full" onClick={send} disabled={!text.trim()}>Send to coach</button></div>;
+  function send() { if (!text.trim()) return; const clean = text.trim(); const message = `NEW YOU MEMBER MESSAGE\nFrom: ${memberName || "Member"}\nDate: ${todayStr()}\n\n${clean}`; window.open(`https://wa.me/27731800485?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer"); setText(""); }
+  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Message your coach</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Ask a question or share something with Coach Martin through WhatsApp.</p><textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…" /><button className="nyf-btn gold full" onClick={send} disabled={!text.trim()}>WhatsApp your coach</button></div>;
 }
 
 function ProgressPhotosCard({ photos, onAdd, onRemove }) {
@@ -967,7 +967,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         </div>
       )}
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
-      <CoachMessagesCard messages={coachMessages} onSend={addCoachMessage} />
+      <CoachMessagesCard memberName={profile.name} />
       <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
     </>
   );
