@@ -1077,6 +1077,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         {tab === "meals" && (
           <MealsTab
             profile={profile}
+            totals={totals}
+            creditedExerciseCalories={creditedExerciseCalories}
             suggestions={mealSuggestions}
             loading={mealsLoading}
             error={mealsError}
@@ -1602,8 +1604,60 @@ function LearnTab({ openArticle, setOpenArticle }) {
   );
 }
 
+function RestaurantHelper({ profile, totals = {}, creditedExerciseCalories = 0 }) {
+  const [restaurant, setRestaurant] = useState("");
+  const [notes, setNotes] = useState("");
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [answer, setAnswer] = useState("");
+  const [error, setError] = useState("");
+  const remaining = {
+    cal: Math.max(0, profile.calorieGoal - Math.max(0, (totals.cal || 0) - creditedExerciseCalories)),
+    protein: Math.max(0, profile.proteinGoal - (totals.protein || 0)),
+    carb: Math.max(0, profile.carbGoal - (totals.carb || 0)),
+    fat: Math.max(0, profile.fatGoal - (totals.fat || 0)),
+  };
+  function addPhotos(event) {
+    const files = Array.from(event.target.files || []).slice(0, 2);
+    files.forEach((file) => {
+      const source = URL.createObjectURL(file); const image = new Image();
+      image.onload = () => {
+        const max = 1200; const scale = Math.min(1, max / Math.max(image.width, image.height)); const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale); canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", .76);
+        setPhotos((current) => [...current, { preview: dataUrl, data: dataUrl.split(",")[1], mimeType: "image/jpeg" }].slice(0, 2));
+        URL.revokeObjectURL(source);
+      };
+      image.src = source;
+    });
+    event.target.value = "";
+  }
+  async function analyse() {
+    if (!restaurant.trim() && !notes.trim() && !photos.length) { setError("Enter the restaurant name, add menu details or take a menu photo."); return; }
+    setLoading(true); setError(""); setAnswer("");
+    const prompt = `You are the practical restaurant meal assistant for New You Fitness in South Africa. The member has approximately ${remaining.cal} kcal, ${remaining.protein}g protein, ${remaining.carb}g carbs and ${remaining.fat}g fat remaining today after their logged food and approved exercise credit.
+
+Restaurant: ${restaurant.trim() || "Not provided"}
+Member's menu notes: ${notes.trim() || "None"}
+${photos.length ? "Read the attached menu photo(s) carefully." : "No menu photo was supplied, so clearly label suggestions as typical options that the member must confirm are available."}
+
+Recommend the best 3 realistic menu choices that fit the remaining allowance. For each give: dish name, estimated calories and protein/carbs/fat, why it fits, and one exact ordering modification such as sauce on the side or swapping chips for salad. Put the strongest choice first. Do not invent certainty: menu nutrition is an estimate unless the menu supplies values. If the allowance is very small, recommend a smaller portion or taking half home. End with one short reminder that restaurant portions and cooking oil vary. Keep the response concise, clear and easy to scan.`;
+    try {
+      const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 18000);
+      const response = await fetch("/api/ai", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ prompt, maxTokens: 1200, images: photos.map(({ data, mimeType }) => ({ data, mimeType })) }) });
+      clearTimeout(timeout); const data = await response.json();
+      if (!response.ok || !data.text) throw new Error(data.error || "Could not analyse the menu");
+      setAnswer(data.text);
+    } catch (e) { setError(e?.name === "AbortError" ? "The menu analysis took too long. Try one clear photo or type the menu items." : "Couldn't analyse this menu right now. Please try again."); }
+    setLoading(false);
+  }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Search size={17} /> What should I order?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>At a restaurant? Enter its name or photograph the menu and get choices based on what you have left today.</p><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Remaining today:</strong> {remaining.cal} kcal · P{remaining.protein}g · C{remaining.carb}g · F{remaining.fat}g</div><label className="nyf-field-label">Restaurant name</label><input className="nyf-input" value={restaurant} onChange={(e) => setRestaurant(e.target.value)} placeholder="e.g. Spur, Ocean Basket or restaurant name" /><label className="nyf-field-label">Menu items or preferences (optional)</label><textarea className="nyf-input" rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Paste menu items, or say what you feel like eating…" />{photos.length > 0 && <div className="nyf-photo-grid" style={{ marginTop: 10 }}>{photos.map((photo, index) => <div className="nyf-photo" key={index}><img src={photo.preview} alt={`Menu ${index + 1}`} /><button onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))} aria-label="Remove menu photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer", marginTop: 10 }}><Camera size={15} /> {photos.length ? "Add another menu photo" : "Take or upload menu photo"}<input type="file" accept="image/*" capture="environment" multiple onChange={addPhotos} disabled={photos.length >= 2} style={{ display: "none" }} /></label><button className="nyf-btn gold full" style={{ marginTop: 9 }} onClick={analyse} disabled={loading}>{loading ? "Reading the menu…" : "Find my best choices"}</button>{error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}{answer && <div className="nyf-ai-box" style={{ marginTop: 12, whiteSpace: "pre-wrap" }}><p>{answer}</p></div>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.4, marginTop: 10 }}>Suggestions are estimates, not verified restaurant nutrition. Ingredients, portions and cooking oil can change the actual values.</p></div>;
+}
+
 function MealsTab({
   profile,
+  totals,
+  creditedExerciseCalories,
   suggestions,
   loading,
   error,
@@ -1652,6 +1706,7 @@ function MealsTab({
 
   return (
     <>
+      <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
       <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>Portions are automatically adjusted from your calorie and macro goals. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g</span></div></div>
       <div className="nyf-card">
         <div className="nyf-section-title">Foods you actually like</div>
