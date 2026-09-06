@@ -756,6 +756,11 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = `new-you-progress-${todayStr()}.csv`; link.click(); URL.revokeObjectURL(url);
   }
+  async function deleteProgressData() {
+    const response = await fetch("/api/delete-data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE" }) });
+    if (!response.ok) { const result = await response.json(); throw new Error(result.error || "Could not delete data"); }
+    await onLogout();
+  }
 
   if (!loaded) {
     return (
@@ -844,7 +849,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} />}
       </div>
 
       <FooterLogo />
@@ -1127,7 +1132,10 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
         {todayLogs.length === 0 ? (
           <div className="nyf-empty">Nothing logged yet — add your first meal above.</div>
         ) : (
-          todayLogs.map((f) => (
+          ["Breakfast", "Lunch", "Dinner", "Snack"].map((mealType) => {
+            const meals = todayLogs.filter((item) => (item.mealType || "Snack") === mealType);
+            if (!meals.length) return null;
+            return <div key={mealType}><div className="nyf-chip-heading" style={{ marginTop: 10 }}>{mealType}</div>{meals.map((f) => (
             <div className="nyf-log-item" key={f.id}>
               <div>
                 <div className="nyf-log-name">{f.name}{f.qty ? ` — ${f.qty}${f.unit}` : ""}</div>
@@ -1135,15 +1143,15 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span>{f.cal} kcal</span>
-                <button className="nyf-close-btn" onClick={() => repeatFood({ name: f.name, qty: f.qty, unit: f.unit, cal: f.cal, protein: f.protein, carb: f.carb, fat: f.fat })} aria-label="Log again" title="Log again">
+                <button className="nyf-close-btn" onClick={() => repeatFood({ mealType: f.mealType || mealType, name: f.name, qty: f.qty, unit: f.unit, cal: f.cal, protein: f.protein, carb: f.carb, fat: f.fat })} aria-label="Log again" title="Log again">
                   <Plus size={13} />
                 </button>
                 <button className="nyf-close-btn" onClick={() => removeFood(f.id)} aria-label="Remove">
                   <X size={13} />
                 </button>
               </div>
-            </div>
-          ))
+            </div>))}</div>;
+          })
         )}
       </div>
 
@@ -1514,7 +1522,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onExport }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -1570,14 +1578,15 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport }) {
         </button>
       )}
       </div>
-      <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button></div>
+      <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
     </>
   );
 }
 
 function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
   const [mode, setMode] = useState("manual");
-  const [form, setForm] = useState({ name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
+  const defaultMealType = new Date().getHours() < 10 ? "Breakfast" : new Date().getHours() < 14 ? "Lunch" : new Date().getHours() < 18 ? "Snack" : "Dinner";
+  const [form, setForm] = useState({ mealType: defaultMealType, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
   const [barcode, setBarcode] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -1662,6 +1671,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     const per100 = { cal: item.cal, protein: item.protein, carb: item.carb, fat: item.fat };
     setProduct({ name: item.name, per100 });
     setForm({
+      mealType: form.mealType,
       name: item.name,
       qty: "100",
       unit: item.unit || "g",
@@ -1696,6 +1706,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
         setProduct({ name: p.name || "Unnamed product", per100 });
         const qty = 100;
         setForm({
+          mealType: form.mealType,
           name: p.name || "Unnamed product",
           qty: String(qty),
           unit: "g",
@@ -1746,10 +1757,10 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
         {quickFoods.length > 0 && (
           <div style={{ marginBottom: 5 }}>
             <label className="nyf-field-label">Recently logged · tap to add again</label>
-            <div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div>
+            <div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: item.mealType || defaultMealType, name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div>
           </div>
         )}
-        {savedMeals.length > 0 && <div style={{ marginBottom: 5 }}><label className="nyf-field-label">Saved meals · one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>★ {item.name}</strong><span>{item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}</span></button>)}</div></div>}
+        {savedMeals.length > 0 && <div style={{ marginBottom: 5 }}><label className="nyf-field-label">Saved meals · one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: item.mealType || defaultMealType, name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>★ {item.name}</strong><span>{item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}</span></button>)}</div></div>}
 
         {mode === "barcode" && (
           <>
@@ -1833,6 +1844,8 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                 )}
               </>
             )}
+            <label className="nyf-field-label">Meal</label>
+            <select className="nyf-select" value={form.mealType} onChange={(e) => setForm({ ...form, mealType: e.target.value })}><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
             <label className="nyf-field-label">Meal or food name</label>
             <input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Chicken & rice bowl" />
 
@@ -1875,6 +1888,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
               disabled={!valid}
               onClick={() =>
                 onAdd({
+                  mealType: form.mealType,
                   name: form.name,
                   qty: form.qty || null,
                   unit: form.unit,
@@ -1888,7 +1902,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
             >
               Add to today
             </button>
-            <button className="nyf-btn ghost full" disabled={!valid} onClick={() => onSaveMeal?.({ name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 })} style={{ marginTop: 8 }}><Heart size={14} /> Save as usual meal</button>
+            <button className="nyf-btn ghost full" disabled={!valid} onClick={() => onSaveMeal?.({ mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 })} style={{ marginTop: 8 }}><Heart size={14} /> Save as usual meal</button>
           </>
         )}
       </div>
@@ -2359,6 +2373,8 @@ function CoachDashboard({ onLogout }) {
   const [summaries, setSummaries] = useState({});
   const [announcementText, setAnnouncementText] = useState("");
   const [announcementSaved, setAnnouncementSaved] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberFilter, setMemberFilter] = useState("all");
 
   async function memberAction(action, extra = {}) {
     const response = await fetch("/api/members", {
@@ -2503,6 +2519,13 @@ function CoachDashboard({ onLogout }) {
     );
   }
 
+  const needsAttention = (member) => {
+    const summary = summaries[member.code];
+    if (!summary?.lastFoodDate || !summary?.lastCheckIn) return true;
+    return Date.now() - new Date(`${summary.lastFoodDate}T00:00:00`).getTime() > 7 * 86400000;
+  };
+  const visibleMembers = members.filter((member) => member.name.toLowerCase().includes(memberSearch.trim().toLowerCase()) && (memberFilter === "all" || (memberFilter === "active" && member.active) || (memberFilter === "attention" && needsAttention(member))));
+
   return (
     <div className="nyf">
       <style>{STYLE}</style>
@@ -2525,8 +2548,10 @@ function CoachDashboard({ onLogout }) {
         </div>
         <div className="nyf-card">
           <div className="nyf-section-title">Members ({members.filter((m) => m.active).length} active)</div>
+          <input className="nyf-input" value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} placeholder="Search members…" />
+          <div className="nyf-tabswitch"><button className={memberFilter === "all" ? "active" : ""} onClick={() => setMemberFilter("all")}>All</button><button className={memberFilter === "active" ? "active" : ""} onClick={() => setMemberFilter("active")}>Active</button><button className={memberFilter === "attention" ? "active" : ""} onClick={() => setMemberFilter("attention")}>Needs attention</button></div>
           {loading ? <div className="nyf-empty">Loading members…</div> : members.length === 0 ? <div className="nyf-empty">No members added yet.</div> :
-            members.map((member) => (
+            visibleMembers.length === 0 ? <div className="nyf-empty">No members match this view.</div> : visibleMembers.map((member) => (
               <div className="nyf-member-row" key={member.id}>
                 <button className="nyf-link-btn" style={{ textAlign: "left", textDecoration: "none", flex: 1 }} onClick={() => openMember(member)}>
                   <div className="nyf-member-name">{member.name}</div>
