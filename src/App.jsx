@@ -237,6 +237,15 @@ const STYLE = `
 .nyf-install-icon { width: 66px; height: 66px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 5px; box-shadow: 0 8px 20px rgba(3,29,58,.1); }
 .nyf-install-step { display: flex; gap: 10px; align-items: flex-start; margin: 11px 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
 .nyf-install-step strong { width: 24px; height: 24px; border-radius: 50%; background: var(--gold-soft); color: #76510D; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nyf-workout-hero { background: linear-gradient(135deg, #031D3A, #0868AA); color: #fff; border: 0; border-left: 4px solid var(--gold); }
+.nyf-workout-time { display: inline-flex; padding: 6px 10px; border-radius: 20px; background: rgba(255,255,255,.12); color: #fff; font-size: 11px; font-weight: 800; margin-top: 10px; }
+.nyf-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 14px; }
+.nyf-levels button { border: 1px solid var(--line); background: #fff; color: var(--ink-soft); border-radius: 10px; padding: 9px 3px; font-size: 10.5px; font-weight: 800; cursor: pointer; }
+.nyf-levels button.active { background: var(--forest); border-color: var(--forest); color: #fff; }
+.nyf-exercise-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 9px; background: #fff; }
+.nyf-exercise-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.nyf-exercise-level { color: var(--gold); font-size: 11px; font-weight: 800; margin-top: 4px; }
+.nyf-exercise-how { color: var(--ink-soft); font-size: 12px; line-height: 1.55; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line); }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -570,6 +579,56 @@ const DAILY_MOTIVATION = [
   "Every healthy choice makes the next one a little easier.",
   "Discipline is remembering what you want most.",
 ];
+const WORKOUTS = [
+  { day: "Sunday", title: "Recovery reset", focus: "Mobility, core and easy conditioning", format: "15 min mobility flow · 15 min easy circuit · 5 min core", exercises: [
+    ["World's greatest stretch", "Step into a long lunge, place both hands inside the front foot, rotate the inside arm toward the ceiling, then change sides.", "Hands elevated, short lunge", "Floor version, controlled", "Add deeper rotation and reach"],
+    ["Glute bridge", "Lie on your back with knees bent. Brace, squeeze your glutes and lift your hips without arching your lower back.", "Bodyweight, 10 reps", "Bodyweight, 15 reps", "Single-leg, 8 each"],
+    ["Bird dog", "From hands and knees, brace your middle and slowly extend the opposite arm and leg without rotating your hips.", "Move one limb at a time", "Opposite arm and leg", "Pause 3 seconds each rep"],
+    ["March or walk", "Stay tall, swing your arms and maintain a comfortable pace at which you can speak in sentences.", "Easy march", "Brisk walk", "Light jog"],
+  ]},
+  { day: "Monday", title: "Full-body strength", focus: "Strong movement patterns with controlled conditioning", format: "15 min strength AMRAP · 2 min transition · 15 min circuit · 3 min finisher", exercises: [
+    ["Squat", "Stand about shoulder-width, brace, sit your hips between your feet and drive the floor away to stand.", "Chair squat × 10", "Goblet squat × 10", "Double-dumbbell front squat × 8"],
+    ["Push-up", "Keep head, ribs and hips in one line. Lower your chest under control, then press the floor away.", "Wall or bench × 10", "Knees or low bench × 8", "Floor × 10–15"],
+    ["Dumbbell row", "Support one hand, keep your back long and pull the dumbbell toward your hip without twisting.", "Light × 10 each", "Moderate × 12 each", "Heavy × 10 each"],
+    ["Romanian deadlift", "Soften the knees, push hips back while keeping weights close, then squeeze glutes to stand tall.", "Bodyweight hinge × 12", "Dumbbells × 10", "Heavy dumbbells × 8"],
+    ["Fast feet", "Take short quick steps, stay light on your feet and keep your chest tall.", "March 30 sec", "Fast feet 30 sec", "High knees 30 sec"],
+  ]},
+  { day: "Tuesday", title: "Conditioning + engine", focus: "Functional fitness and sustainable speed", format: "15 min intervals · 2 min transition · 15 min AMRAP · 3 min finisher", exercises: [
+    ["Step-up", "Place the whole foot on a stable step, drive through it to stand and control the descent.", "Low step × 8 each", "Medium step × 10 each", "Weighted × 10 each"],
+    ["Dumbbell deadlift", "Brace, push hips back, keep weights close and stand by driving through the floor.", "Light × 12", "Moderate × 12", "Heavy × 10"],
+    ["Mountain climber", "Hold a strong plank and bring one knee forward at a time without letting your hips bounce.", "Hands elevated, slow × 20", "Floor, controlled × 24", "Fast cross-body × 30"],
+    ["Dumbbell push press", "Dip slightly through knees and hips, then drive the weights overhead while keeping ribs controlled.", "One light weight × 10", "Two weights × 10", "Heavier × 8"],
+    ["Shuttle", "Move between two safe markers, decelerate under control and turn with short steps.", "Fast walk 30 sec", "Jog 30 sec", "Run 30 sec"],
+  ]},
+  { day: "Wednesday", title: "Recovery conditioning + core", focus: "Move well, strengthen your middle and recover", format: "15 min easy circuit · 2 min transition · 15 min core flow · 3 min breathing", exercises: [
+    ["Reverse lunge", "Step back, lower both knees comfortably, keep the front foot planted and drive forward to stand.", "Supported shallow × 8 each", "Bodyweight × 10 each", "Weighted × 10 each"],
+    ["Dead bug", "Lie on your back, gently press your lower back down and slowly extend opposite arm and leg.", "Heel taps × 10", "Opposite limbs × 10", "Hold a light weight × 12"],
+    ["Side plank", "Keep shoulder stacked over elbow and create a straight line through your body without dropping the hips.", "Bent knees, 20 sec", "Straight legs, 25 sec", "Top-leg lift, 25 sec"],
+    ["Good morning", "Place hands across your chest, soften knees and hinge hips backward while keeping your spine long.", "Bodyweight × 12", "Light weight × 12", "Slow tempo × 10"],
+    ["Low-impact cardio", "Move continuously at a pace that raises your heart rate while still allowing comfortable breathing.", "March 60 sec", "Step jacks 60 sec", "Easy skipping 60 sec"],
+  ]},
+  { day: "Thursday", title: "Full-body strength patterns", focus: "New movements, full-body strength and control", format: "15 min quality rounds · 2 min transition · 15 min density block · 3 min carry", exercises: [
+    ["Split squat", "Use a staggered stance, lower straight down and drive through the front foot while keeping the torso tall.", "Supported × 8 each", "Bodyweight × 10 each", "Weighted × 8 each"],
+    ["Floor press", "Lie on your back, keep wrists stacked and lower elbows gently to the floor before pressing up.", "One dumbbell × 10", "Two dumbbells × 10", "Heavy × 8–10"],
+    ["Bent-over row", "Hinge at the hips, brace your trunk and pull both weights toward your lower ribs.", "Light × 10", "Moderate × 12", "Heavy × 8–10"],
+    ["Dumbbell clean", "Drive through legs and hips, guide the weight close to your body and receive it softly at the shoulder.", "One light weight × 6 each", "Alternating × 8 each", "Two dumbbells × 8"],
+    ["Farmer carry", "Stand tall with weights at your sides, brace and walk with controlled steps without leaning.", "Light 30 sec", "Moderate 40 sec", "Heavy 45 sec"],
+  ]},
+  { day: "Friday", title: "Hybrid conditioning", focus: "Cardio intervals, strength endurance and HIIT", format: "15 min 40:20 intervals · 2 min transition · 15 min rounds · 3 min finisher", exercises: [
+    ["Burpee", "Place hands down, step or jump to plank, return your feet and stand tall. Keep the movement controlled.", "Hands elevated, step × 6", "Floor step-back × 8", "Chest-to-floor jump × 10"],
+    ["Dumbbell thruster", "Squat with weights at shoulders, then drive up and use the leg momentum to press overhead.", "One light weight × 8", "Two light weights × 10", "Heavier × 10"],
+    ["Alternating lunge", "Step forward or backward, lower with control and keep the front knee following the toes.", "Supported × 8 each", "Bodyweight × 10 each", "Weighted × 10 each"],
+    ["Plank shoulder tap", "From a strong plank, tap the opposite shoulder while resisting hip rotation.", "Hands elevated × 12", "Knees down × 16", "Full plank × 20"],
+    ["Cardio burst", "Choose a safe option and work hard while maintaining control; slow down before technique breaks.", "March 40 sec", "Step jacks 40 sec", "High knees or skipping 40 sec"],
+  ]},
+  { day: "Saturday", title: "Challenge workout", focus: "Solo challenge with community-style energy", format: "15 min AMRAP · 2 min transition · 15 min ladder · 3 min best effort", exercises: [
+    ["Ground-to-overhead", "Lift a weight from between the feet using legs and hips, then guide it overhead with control.", "Light plate/dumbbell × 8", "Single dumbbell × 10", "Two dumbbells × 10"],
+    ["Bodyweight squat", "Keep your whole foot grounded, sit down between your hips and stand tall with knees tracking toes.", "Chair × 12", "Free squat × 15", "Jump squat × 12"],
+    ["Renegade row", "From a plank or elevated position, pull one weight toward your hip while keeping your body square.", "Hands elevated × 6 each", "Knees down × 8 each", "Full plank × 8 each"],
+    ["Sit-up", "Brace before moving, curl the trunk with control and avoid pulling on your neck.", "Crunch × 12", "Sit-up × 12", "Weighted sit-up × 10"],
+    ["Shuttle or skipping", "Use quick controlled footwork and a pace you can maintain for the prescribed interval.", "Fast walk 45 sec", "Jog 45 sec", "Run/skip 45 sec"],
+  ]},
+];
 function MainApp({ onLogout, memberName }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
@@ -882,7 +941,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
+        <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "workout" ? "Workout of the day" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
@@ -934,6 +993,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeProgressPhoto={removeProgressPhoto}
           />
         )}
+        {tab === "workout" && <WorkoutTab setTab={setTab} />}
         {tab === "learn" && <LearnTab openArticle={openArticle} setOpenArticle={setOpenArticle} />}
         {tab === "meals" && (
           <MealsTab
@@ -959,6 +1019,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       <FooterLogo />
       <div className="nyf-nav">
         <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => setTab("home")} />
+        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => setTab("workout")} />
         <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => setTab("track")} />
         <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => setTab("meals")} />
         <NavBtn icon={<BookOpen size={19} />} label="Learn" active={tab === "learn"} onClick={() => setTab("learn")} />
@@ -978,6 +1039,21 @@ function NavBtn({ icon, label, active, onClick }) {
       {label}
     </button>
   );
+}
+
+function WorkoutTab({ setTab }) {
+  const [level, setLevel] = useState(1);
+  const [open, setOpen] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const workout = WORKOUTS[selectedDay];
+  const warmup = ["2 min easy march, walk or light skipping", "2 min arm circles, shoulder rolls and reaches", "2 min alternating reverse lunges or supported split squats", "2 min bodyweight squats and hip hinges", "2 min easy practice of today's movements"];
+  return <>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">{workout.day} · New You at home</div><h2 style={{ fontSize: 27 }}>{workout.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5, lineHeight: 1.5, marginBottom: 0 }}>{workout.focus}</p><span className="nyf-workout-time">45 minutes · Warm-up 10 + Workout 35</span></div>
+    <div className="nyf-card"><label className="nyf-field-label">Choose another training day</label><select className="nyf-select" value={selectedDay} onChange={(e) => { setSelectedDay(Number(e.target.value)); setOpen(null); }}>{WORKOUTS.map((item,index) => <option key={item.day} value={index}>{item.day} · {item.title}</option>)}</select><div className="nyf-section-title">Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 0 }}>Choose the level that lets you move safely with good form. You may use different levels for different exercises.</p></div>
+    <div className="nyf-card gold"><div className="nyf-section-title">10-minute warm-up</div>{warmup.map((item,index) => <div className="nyf-log-item" key={item}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}>{item}</div></div>)}</div>
+    <div className="nyf-card"><div className="nyf-section-title">35-minute workout</div><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Format:</strong> {workout.format}. Move steadily, rest when needed and stop before form breaks down.</div>{workout.exercises.map((exercise,index) => <div className="nyf-exercise-card" key={exercise[0]}><button className="nyf-exercise-head" onClick={() => setOpen(open === index ? null : index)} style={{ width: "100%", border: 0, background: "none", padding: 0, textAlign: "left", color: "inherit", cursor: "pointer" }}><div><strong>{exercise[0]}</strong><div className="nyf-exercise-level">Level {level}: {exercise[level + 1]}</div></div><ChevronDown size={16} style={{ transform: open === index ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }} /></button>{open === index && <div className="nyf-exercise-how"><strong>How to do it:</strong> {exercise[1]}<div style={{ marginTop: 7 }}><strong>All options:</strong><br />Level 1 — {exercise[2]}<br />Level 2 — {exercise[3]}<br />Level 3 — {exercise[4]}</div></div>}</div>)}</div>
+    <div className="nyf-card clay"><div className="nyf-section-title">Train safely</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Clear a safe space and use stable equipment. Stop for sharp pain, chest pain, faintness or unusual shortness of breath. If you have an injury, recent surgery, pregnancy or a medical condition, use guidance from your coach or healthcare professional.</p><button className="nyf-btn gold full" onClick={() => setTab("home")}>Finished · log my exercise</button></div>
+  </>;
 }
 
 function FooterLogo() {
