@@ -212,6 +212,13 @@ const STYLE = `
 .nyf-motivation::after { content: ""; position: absolute; width: 110px; height: 110px; right: -38px; top: -46px; border-radius: 50%; background: rgba(255,255,255,.07); }
 .nyf-motivation-label { display: flex; align-items: center; gap: 6px; color: #F2C75C; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 9px; }
 .nyf-motivation-quote { position: relative; z-index: 1; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.38; letter-spacing: -.01em; }
+.nyf-quick-scroll { display: flex; gap: 7px; overflow-x: auto; padding: 2px 1px 10px; scrollbar-width: none; }
+.nyf-quick-scroll::-webkit-scrollbar { display: none; }
+.nyf-quick-food { flex: 0 0 auto; max-width: 170px; border: 1px solid #D5E1EC; background: #fff; border-radius: 12px; padding: 9px 11px; text-align: left; color: var(--ink); cursor: pointer; }
+.nyf-quick-food strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.nyf-quick-food span { display: block; color: var(--ink-soft); font-size: 10px; margin-top: 2px; }
+.nyf-portion-row { display: flex; gap: 6px; margin: -3px 0 11px; }
+.nyf-portion-row button { flex: 1; border: 1px solid var(--line); background: #fff; color: var(--forest); border-radius: 9px; padding: 7px 3px; font-weight: 700; font-size: 11px; cursor: pointer; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -771,6 +778,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             todayHabits={dailyHabits[todayStr()] || {}}
             dailyHabits={dailyHabits}
             toggleHabit={toggleHabit}
+            repeatFood={addFood}
           />
         )}
         {tab === "learn" && <LearnTab openArticle={openArticle} setOpenArticle={setOpenArticle} />}
@@ -804,7 +812,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => setTab("profile")} />
       </div>
 
-      {showFoodModal && <FoodModal onAdd={addFood} onClose={() => setShowFoodModal(false)} />}
+      {showFoodModal && <FoodModal onAdd={addFood} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} />}
       {showWeightModal && <WeightModal onAdd={addWeight} onClose={() => setShowWeightModal(false)} />}
     </div>
   );
@@ -1028,7 +1036,7 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
@@ -1056,6 +1064,9 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span>{f.cal} kcal</span>
+                <button className="nyf-close-btn" onClick={() => repeatFood({ name: f.name, qty: f.qty, unit: f.unit, cal: f.cal, protein: f.protein, carb: f.carb, fat: f.fat })} aria-label="Log again" title="Log again">
+                  <Plus size={13} />
+                </button>
                 <button className="nyf-close-btn" onClick={() => removeFood(f.id)} aria-label="Remove">
                   <X size={13} />
                 </button>
@@ -1490,7 +1501,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout }) {
   );
 }
 
-function FoodModal({ onAdd, onClose }) {
+function FoodModal({ onAdd, onClose, recentFoods = [] }) {
   const [mode, setMode] = useState("manual");
   const [form, setForm] = useState({ name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
   const [barcode, setBarcode] = useState("");
@@ -1507,10 +1518,20 @@ function FoodModal({ onAdd, onClose }) {
   const scannerControlsRef = useRef(null);
   const cameraSupported = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   const valid = form.name && form.cal;
+  const quickFoods = useMemo(() => {
+    const seen = new Set();
+    return [...recentFoods].reverse().filter((item) => { const key = item.name?.trim().toLowerCase(); if (!key || seen.has(key)) return false; seen.add(key); return true; }).slice(0, 8);
+  }, [recentFoods]);
 
   useEffect(() => {
     return () => stopScan();
   }, []);
+
+  useEffect(() => {
+    if (mode !== "manual" || foodQuery.trim().length < 2) { if (!foodQuery.trim()) setFoodResults([]); return; }
+    const timer = setTimeout(() => searchFoods(foodQuery), 450);
+    return () => clearTimeout(timer);
+  }, [foodQuery, mode]);
 
   async function startScan() {
     setCameraError("");
@@ -1545,8 +1566,8 @@ function FoodModal({ onAdd, onClose }) {
     setScanning(false);
   }
 
-  async function searchFoods() {
-    const query = foodQuery.trim();
+  async function searchFoods(queryOverride) {
+    const query = String(queryOverride ?? foodQuery).trim();
     if (query.length < 2) return;
     setFoodSearchLoading(true);
     setFoodSearchError("");
@@ -1648,6 +1669,13 @@ function FoodModal({ onAdd, onClose }) {
           </button>
         </div>
 
+        {quickFoods.length > 0 && (
+          <div style={{ marginBottom: 5 }}>
+            <label className="nyf-field-label">Recently logged · tap to add again</label>
+            <div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div>
+          </div>
+        )}
+
         {mode === "barcode" && (
           <>
             <label className="nyf-field-label">Barcode number</label>
@@ -1710,10 +1738,10 @@ function FoodModal({ onAdd, onClose }) {
                     className="nyf-input"
                     value={foodQuery}
                     onChange={(e) => setFoodQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && searchFoods()}
+                    onKeyDown={(e) => e.key === "Enter" && searchFoods(foodQuery)}
                     placeholder="e.g. chicken breast, yoghurt or Weet-Bix"
                   />
-                  <button className="nyf-btn" onClick={searchFoods} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
+                  <button className="nyf-btn" onClick={() => searchFoods()} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
                     {foodSearchLoading ? "…" : <Search size={15} />}
                   </button>
                 </div>
@@ -1745,8 +1773,13 @@ function FoodModal({ onAdd, onClose }) {
               <select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
                 <option value="g">grams (g)</option>
                 <option value="ml">millilitres (ml)</option>
+                <option value="tsp">teaspoons</option>
+                <option value="tbsp">tablespoons</option>
+                <option value="cup">cups</option>
+                <option value="serving">servings</option>
               </select>
             </div>
+            {product && <div className="nyf-portion-row">{[50, 100, 150, 200].map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : "g"}</button>)}</div>}
 
             <label className="nyf-field-label">Calories (kcal)</label>
             <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
