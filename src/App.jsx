@@ -177,6 +177,24 @@ const STYLE = `
 .nyf-toggle.on { background: var(--success-soft); color: var(--success); }
 .nyf-toggle.off { background: var(--clay-soft); color: var(--clay); }
 
+.nyf-landing { min-height: 100dvh; display: flex; flex-direction: column; background: linear-gradient(155deg, #031D3A 0%, #07518F 58%, #0B78B7 100%); color: #fff; }
+.nyf-landing-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 44px 26px 30px; }
+.nyf-landing-mark { width: 176px; height: 176px; object-fit: contain; margin: 0 auto 22px; filter: drop-shadow(0 16px 24px rgba(0,0,0,.18)); }
+.nyf-landing h1 { font-size: 39px; line-height: 1.02; letter-spacing: -.04em; text-align: center; }
+.nyf-landing-copy { max-width: 330px; margin: 14px auto 24px; text-align: center; color: #D9E8F4; font-size: 14px; line-height: 1.6; }
+.nyf-feature-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 24px; }
+.nyf-feature-pill { padding: 11px 5px; text-align: center; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.09); border-radius: 12px; font-size: 10.5px; font-weight: 700; }
+.nyf-landing-actions { background: #fff; padding: 20px 22px calc(22px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
+.nyf-step { font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+.nyf-range-note { font-size: 11.5px; color: var(--ink-soft); margin: -4px 0 12px; }
+.nyf-score-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 13px; }
+.nyf-score { border: 1px solid var(--line); background: #fff; padding: 9px 2px; border-radius: 9px; color: var(--ink); font-weight: 700; cursor: pointer; }
+.nyf-score.active { background: var(--forest); border-color: var(--forest); color: #fff; }
+.nyf-progress-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.nyf-progress-tile { background: linear-gradient(145deg, #F5F9FD, #EDF3F8); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; }
+.nyf-progress-tile strong { display: block; color: var(--forest); font-family: 'Outfit',sans-serif; font-size: 18px; }
+.nyf-progress-tile span { display: block; margin-top: 2px; color: var(--ink-soft); font-size: 9.5px; font-weight: 700; text-transform: uppercase; }
+
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
 .nyf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -399,7 +417,7 @@ const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 function MainApp({ onLogout, memberName }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
-  const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55 });
+  const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55, onboardingComplete: false });
   const [weightLogs, setWeightLogs] = useState([]);
   const [foodLogs, setFoodLogs] = useState([]);
   const [showFoodModal, setShowFoodModal] = useState(false);
@@ -413,6 +431,7 @@ function MainApp({ onLogout, memberName }) {
   const [favoriteMeals, setFavoriteMeals] = useState([]);
   const [checkedGroceryItems, setCheckedGroceryItems] = useState([]);
   const [likedFoods, setLikedFoods] = useState([]);
+  const [weeklyCheckIns, setWeeklyCheckIns] = useState([]);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -422,12 +441,13 @@ function MainApp({ onLogout, memberName }) {
         if (!r.ok) throw new Error("Could not load member data");
         const d = await r.json();
         if (d && Object.keys(d).length) {
-          if (d.profile) setProfile(d.profile);
+          if (d.profile) setProfile({ ...d.profile, onboardingComplete: d.profile.onboardingComplete ?? true });
           if (d.weightLogs) setWeightLogs(d.weightLogs);
           if (d.foodLogs) setFoodLogs(d.foodLogs);
           if (d.favoriteMeals) setFavoriteMeals(d.favoriteMeals);
           if (d.checkedGroceryItems) setCheckedGroceryItems(d.checkedGroceryItems);
           if (d.likedFoods) setLikedFoods(d.likedFoods);
+          if (d.weeklyCheckIns) setWeeklyCheckIns(d.weeklyCheckIns);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
         }
@@ -447,7 +467,7 @@ function MainApp({ onLogout, memberName }) {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods } }),
+          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns } }),
         });
         if (!response.ok) throw new Error("Save failed");
       } catch (e) {
@@ -455,7 +475,7 @@ function MainApp({ onLogout, memberName }) {
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, loaded]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -625,6 +645,10 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     setLikedFoods((prev) => (prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]));
   }
 
+  function addWeeklyCheckIn(entry) {
+    setWeeklyCheckIns((prev) => [{ id: uid(), date: todayStr(), ...entry }, ...prev]);
+  }
+
   if (!loaded) {
     return (
       <div className="nyf">
@@ -632,6 +656,10 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <div className="nyf-empty">Loading your dashboard…</div>
       </div>
     );
+  }
+
+  if (!profile.onboardingComplete) {
+    return <Onboarding profile={profile} onComplete={setProfile} onLogout={onLogout} />;
   }
 
   return (
@@ -652,6 +680,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             aiLoading={aiLoading}
             getAiInsight={getAiInsight}
             setTab={setTab}
+            weeklyCheckIns={weeklyCheckIns}
+            addWeeklyCheckIn={addWeeklyCheckIn}
           />
         )}
         {tab === "track" && (
@@ -740,7 +770,69 @@ function Bar({ label, value, goal, unit }) {
   );
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab }) {
+function Onboarding({ profile, onComplete, onLogout }) {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375" });
+  const ready = form.age && form.height && form.weight && form.goalWeight;
+  function finish() {
+    const weight = Number(form.weight);
+    const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
+    const maintenance = Math.round(bmr * Number(form.activity));
+    const calorieGoal = Math.max(1200, Math.round((maintenance - 400) / 10) * 10);
+    const proteinGoal = Math.round(weight * 1.8);
+    const fatGoal = Math.round(weight * 0.7);
+    const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
+    onComplete({ ...profile, ...form, age: Number(form.age), height: Number(form.height), weight, goalWeight: Number(form.goalWeight), maintenance, calorieGoal, proteinGoal, carbGoal, fatGoal, onboardingComplete: true });
+  }
+  return (
+    <div className="nyf">
+      <style>{STYLE}</style>
+      <div className="nyf-header"><div className="nyf-step">Step {step} of 2</div><div className="nyf-greeting">Let's personalise your plan</div><div className="nyf-sub">A few details help us calculate a sensible starting point.</div></div>
+      <div className="nyf-scroll">
+        {step === 1 ? (
+          <div className="nyf-card gold">
+            <div className="nyf-section-title"><User size={17} /> About you</div>
+            <label className="nyf-field-label">Name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <label className="nyf-field-label">Sex used for the calorie equation</label><select className="nyf-select" value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}><option value="female">Woman</option><option value="male">Man</option></select>
+            <div className="nyf-grid2"><div><label className="nyf-field-label">Age</label><input className="nyf-input" type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></div><div><label className="nyf-field-label">Height (cm)</label><input className="nyf-input" type="number" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} /></div></div>
+            <button className="nyf-btn full" onClick={() => setStep(2)} disabled={!form.age || !form.height}>Continue</button>
+          </div>
+        ) : (
+          <div className="nyf-card gold">
+            <div className="nyf-section-title"><Calculator size={17} /> Your starting point</div>
+            <div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div><div><label className="nyf-field-label">Goal weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.goalWeight} onChange={(e) => setForm({ ...form, goalWeight: e.target.value })} /></div></div>
+            <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3–5 days</option><option value="1.725">Very active</option></select>
+            <p className="nyf-range-note">We’ll calculate maintenance calories, a moderate fat-loss target and your daily macros. You can edit them later under Goals.</p>
+            <button className="nyf-btn gold full" onClick={finish} disabled={!ready}><Sparkles size={15} /> Create my plan</button>
+            <button className="nyf-link-btn" onClick={() => setStep(1)}>Back</button>
+          </div>
+        )}
+        <button className="nyf-link-btn" onClick={onLogout}>Sign out</button>
+      </div>
+      <FooterLogo />
+    </div>
+  );
+}
+
+function WeeklyCheckIn({ entries, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ energy: 3, hunger: 3, sleep: 3, training: 3, win: "", struggle: "" });
+  const latest = entries[0];
+  function save() { onAdd(form); setOpen(false); }
+  return (
+    <div className="nyf-card gold">
+      <div className="nyf-section-title"><Check size={17} /> Weekly check-in</div>
+      {!open ? <><p style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 11 }}>{latest ? `Last completed ${latest.date}. Keep your coach up to date.` : "Tell your coach how the week has really felt."}</p><button className="nyf-btn gold full" onClick={() => setOpen(true)}>{latest ? "Complete a new check-in" : "Start check-in"}</button></> : <>
+        {[['energy','Energy'],['hunger','Hunger'],['sleep','Sleep'],['training','Training']].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label}: {form[key]}/5</label><div className="nyf-score-row">{[1,2,3,4,5].map((n) => <button key={n} className={`nyf-score${form[key] === n ? " active" : ""}`} onClick={() => setForm({ ...form, [key]: n })}>{n}</button>)}</div></div>)}
+        <label className="nyf-field-label">Your win this week</label><input className="nyf-input" value={form.win} onChange={(e) => setForm({ ...form, win: e.target.value })} placeholder="What went well?" />
+        <label className="nyf-field-label">Where you need support</label><textarea className="nyf-input" rows="3" value={form.struggle} onChange={(e) => setForm({ ...form, struggle: e.target.value })} placeholder="Anything your coach should know?" />
+        <button className="nyf-btn full" onClick={save}>Send check-in to coach</button>
+      </>}
+    </div>
+  );
+}
+
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn }) {
   const remaining = profile.calorieGoal - totals.cal;
   return (
     <>
@@ -791,6 +883,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
           </div>
         </div>
       )}
+      <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} />
     </>
   );
 }
@@ -1680,7 +1773,7 @@ function LegacyApp() {
   return <LoginScreen onLogin={handleLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("admin-pin")} />;
 }
 
-function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
+function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
@@ -1728,9 +1821,29 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess }) {
         </div>
         <div style={{ textAlign: "center", marginTop: 6 }}>
           <button className="nyf-link-btn" onClick={onStaffAccess}>New You staff access</button>
+          {onBack && <><span style={{ color: "var(--line)", margin: "0 8px" }}>·</span><button className="nyf-link-btn" onClick={onBack}>Back</button></>}
         </div>
       </div>
       <FooterLogo />
+    </div>
+  );
+}
+
+function LandingScreen({ onMember, onStaff }) {
+  return (
+    <div className="nyf nyf-landing">
+      <style>{STYLE}</style>
+      <div className="nyf-landing-hero">
+        <img className="nyf-landing-mark" src="/new-you-logo.png" alt="New You Transformation Studio" />
+        <h1>Your transformation,<br />tracked.</h1>
+        <p className="nyf-landing-copy">Personalised calories, macros, meal inspiration, progress tracking and supportive coach insights—all in one place.</p>
+        <div className="nyf-feature-row"><div className="nyf-feature-pill">Smart meals</div><div className="nyf-feature-pill">Daily tracking</div><div className="nyf-feature-pill">Coach support</div></div>
+      </div>
+      <div className="nyf-landing-actions">
+        <button className="nyf-btn gold full" onClick={onMember} style={{ minHeight: 50 }}>Member login</button>
+        <button className="nyf-btn ghost full" onClick={onStaff} style={{ marginTop: 10 }}>Coach &amp; staff access</button>
+        <div style={{ textAlign: "center", color: "var(--ink-soft)", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
+      </div>
     </div>
   );
 }
@@ -1857,7 +1970,7 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
 // Central, database-backed access used by the deployed member app.
 export default function App() {
   const [ready, setReady] = useState(false);
-  const [view, setView] = useState("login");
+  const [view, setView] = useState("landing");
   const [memberName, setMemberName] = useState("");
   const [pausedNotice, setPausedNotice] = useState(false);
 
@@ -1923,7 +2036,8 @@ export default function App() {
   if (view === "app") return <MainApp onLogout={logout} memberName={memberName} />;
   if (view === "admin") return <CoachDashboard onLogout={logout} />;
   if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
-  return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} />;
+  if (view === "landing") return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} />;
+  return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} onBack={() => setView("landing")} />;
 }
 
 function CentralStaffLogin({ onBack, onLogin }) {
@@ -2013,7 +2127,12 @@ function CoachDashboard({ onLogout }) {
   if (selected) {
     const weights = [...(memberData?.weightLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
     const foods = [...(memberData?.foodLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const checkIns = [...(memberData?.weeklyCheckIns || [])].sort((a, b) => b.date.localeCompare(a.date));
     const profile = memberData?.profile || {};
+    const latestCoachWeight = weights[0]?.weight;
+    const firstCoachWeight = weights[weights.length - 1]?.weight;
+    const change = latestCoachWeight && firstCoachWeight ? (latestCoachWeight - firstCoachWeight).toFixed(1) : null;
+    const loggedDays = new Set(foods.map((item) => item.date)).size;
     return (
       <div className="nyf">
         <style>{STYLE}</style>
@@ -2031,6 +2150,22 @@ function CoachDashboard({ onLogout }) {
                   <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.calorieGoal || "—"}</div><div className="nyf-stat-label">daily kcal</div></div>
                   <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.proteinGoal || "—"}g</div><div className="nyf-stat-label">protein</div></div>
                 </div>
+              </div>
+              <div className="nyf-progress-summary">
+                <div className="nyf-progress-tile"><strong>{latestCoachWeight ? `${latestCoachWeight}kg` : "—"}</strong><span>Current</span></div>
+                <div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Change</span></div>
+                <div className="nyf-progress-tile"><strong>{loggedDays}</strong><span>Food days</span></div>
+              </div>
+              <div className="nyf-card gold">
+                <div className="nyf-section-title">Weekly check-ins</div>
+                {checkIns.length ? checkIns.map((item) => (
+                  <div className="nyf-log-item" key={item.id} style={{ display: "block" }}>
+                    <div className="nyf-log-name">{item.date}</div>
+                    <div className="nyf-log-macro">Energy {item.energy}/5 · Hunger {item.hunger}/5 · Sleep {item.sleep}/5 · Training {item.training}/5</div>
+                    {item.win && <div style={{ fontSize: 12.5, marginTop: 5 }}><strong>Win:</strong> {item.win}</div>}
+                    {item.struggle && <div style={{ fontSize: 12.5, marginTop: 3 }}><strong>Support:</strong> {item.struggle}</div>}
+                  </div>
+                )) : <div className="nyf-empty">No weekly check-ins yet.</div>}
               </div>
               <div className="nyf-card">
                 <div className="nyf-section-title">Weight and body fat</div>
