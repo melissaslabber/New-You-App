@@ -219,6 +219,10 @@ const STYLE = `
 .nyf-quick-food span { display: block; color: var(--ink-soft); font-size: 10px; margin-top: 2px; }
 .nyf-portion-row { display: flex; gap: 6px; margin: -3px 0 11px; }
 .nyf-portion-row button { flex: 1; border: 1px solid var(--line); background: #fff; color: var(--forest); border-radius: 9px; padding: 7px 3px; font-weight: 700; font-size: 11px; cursor: pointer; }
+.nyf-calorie-equation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 12px 0; }
+.nyf-calorie-equation div { background: #F3F7FB; border: 1px solid var(--line); border-radius: 11px; padding: 10px 5px; text-align: center; }
+.nyf-calorie-equation strong { display: block; font-size: 17px; color: var(--forest); font-family: 'Outfit', sans-serif; }
+.nyf-calorie-equation span { display: block; color: var(--ink-soft); font-size: 9.5px; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -484,6 +488,7 @@ function MainApp({ onLogout, memberName }) {
   const [dailyHabits, setDailyHabits] = useState({});
   const [progressPhotos, setProgressPhotos] = useState([]);
   const [coachMessages, setCoachMessages] = useState([]);
+  const [exerciseLogs, setExerciseLogs] = useState([]);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -504,6 +509,7 @@ function MainApp({ onLogout, memberName }) {
           if (d.dailyHabits) setDailyHabits(d.dailyHabits);
           if (d.progressPhotos) setProgressPhotos(d.progressPhotos);
           if (d.coachMessages) setCoachMessages(d.coachMessages);
+          if (d.exerciseLogs) setExerciseLogs(d.exerciseLogs);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
         }
@@ -523,7 +529,7 @@ function MainApp({ onLogout, memberName }) {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages } }),
+          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs } }),
         });
         if (!response.ok) throw new Error("Save failed");
       } catch (e) {
@@ -531,7 +537,7 @@ function MainApp({ onLogout, memberName }) {
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, loaded]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -547,6 +553,8 @@ function MainApp({ onLogout, memberName }) {
       ),
     [todayLogs]
   );
+  const todayExercise = useMemo(() => exerciseLogs.filter((item) => item.date === todayStr()), [exerciseLogs]);
+  const exerciseCalories = useMemo(() => todayExercise.reduce((sum, item) => sum + (Number(item.calories) || 0), 0), [todayExercise]);
 
   const sortedWeights = useMemo(() => [...weightLogs].sort((a, b) => a.date.localeCompare(b.date)), [weightLogs]);
   const latestWeight = sortedWeights[sortedWeights.length - 1];
@@ -558,6 +566,12 @@ function MainApp({ onLogout, memberName }) {
   }
   function removeFood(id) {
     setFoodLogs((prev) => prev.filter((f) => f.id !== id));
+  }
+  function addExercise(entry) {
+    setExerciseLogs((prev) => [...prev, { id: uid(), date: todayStr(), ...entry }]);
+  }
+  function removeExercise(id) {
+    setExerciseLogs((prev) => prev.filter((item) => item.id !== id));
   }
   function addWeight(entry) {
     setWeightLogs((prev) => [...prev, { id: uid(), date: todayStr(), ...entry }]);
@@ -611,7 +625,7 @@ function MainApp({ onLogout, memberName }) {
   async function getAiInsight() {
     setAiLoading(true);
     setAiText("");
-    const overCal = totals.cal - profile.calorieGoal;
+    const overCal = totals.cal - exerciseCalories - profile.calorieGoal;
     const overCarb = totals.carb - profile.carbGoal;
     const trend =
       sortedWeights.length >= 2
@@ -620,6 +634,7 @@ function MainApp({ onLogout, memberName }) {
     const prompt = `You are a supportive, knowledgeable fitness coach at New You Fitness, a gym whose tone is warm and non-intimidating (brand line: "YOU vs YOU"). Give the member a complete, short, specific and encouraging insight in exactly 3 concise sentences, with no headers or bullet points, based on today's nutrition data below. Finish every sentence fully. If they are over their calorie or carb goal, gently flag it and give one practical, non-judgmental suggestion for tomorrow. If they are on track, affirm it briefly and offer one useful tip. Never mention that you are an AI model.
 
 Calorie goal: ${profile.calorieGoal} kcal. Consumed today: ${totals.cal} kcal (${overCal > 0 ? `${overCal} over` : `${Math.abs(overCal)} under`}).
+Exercise logged today: ${exerciseCalories} kcal. Net calories after exercise: ${Math.max(0, totals.cal - exerciseCalories)} kcal. Treat exercise-calorie estimates as approximate.
 Protein goal: ${profile.proteinGoal}g. Consumed: ${totals.protein}g.
 Carb goal: ${profile.carbGoal}g. Consumed: ${totals.carb}g (${overCarb > 0 ? `${overCarb}g over` : `${Math.abs(overCarb)}g under`}).
 Fat goal: ${profile.fatGoal}g. Consumed: ${totals.fat}g.
@@ -761,6 +776,10 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeProgressPhoto={removeProgressPhoto}
             foodLogs={foodLogs}
             weightLogs={weightLogs}
+            todayExercise={todayExercise}
+            exerciseCalories={exerciseCalories}
+            addExercise={addExercise}
+            removeExercise={removeExercise}
           />
         )}
         {tab === "track" && (
@@ -950,8 +969,16 @@ function ProgressPhotosCard({ photos, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Camera size={17} /> Private progress photos</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 8 }}>Add consistent front, side or back photos. Only you and signed-in New You staff can see them.</p>{photos.length > 0 && <div className="nyf-photo-grid">{photos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Progress ${photo.date}`} /><button onClick={() => onRemove(photo.id)} aria-label="Delete photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer" }}><Camera size={15} /> {busy ? "Preparing photo…" : photos.length >= 6 ? "Replace a photo to add another" : "Add progress photo"}<input type="file" accept="image/*" capture="environment" onChange={choose} disabled={busy || photos.length >= 6} style={{ display: "none" }} /></label><p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 8 }}>Up to 6 compressed photos are kept to protect app speed and storage.</p></div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto, foodLogs, weightLogs }) {
-  const remaining = profile.calorieGoal - totals.cal;
+function ExerciseCard({ entries, calories, onAdd, onRemove }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ activity: "New You class", calories: "" });
+  function save() { if (!form.calories) return; onAdd({ activity: form.activity || "Exercise", calories: Number(form.calories) }); setForm({ activity: "New You class", calories: "" }); setOpen(false); }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Exercise calories</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="From your watch or machine" /><button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
+}
+
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto, foodLogs, weightLogs, todayExercise, exerciseCalories, addExercise, removeExercise }) {
+  const netCalories = Math.max(0, totals.cal - exerciseCalories);
+  const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
   const dayNumber = Math.floor((new Date() - startOfYear) / 86400000);
   const motivation = DAILY_MOTIVATION[dayNumber % DAILY_MOTIVATION.length];
@@ -963,7 +990,8 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       </div>
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
-        <div className="nyf-stat-label">{remaining >= 0 ? "remaining today" : `${Math.abs(remaining)} over today's goal`}</div>
+        <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
+        <div className="nyf-calorie-equation"><div><strong>{totals.cal}</strong><span>Food kcal</span></div><div><strong>− {exerciseCalories}</strong><span>Exercise</span></div><div><strong>{netCalories}</strong><span>Net kcal</span></div></div>
         <div style={{ height: 14 }} />
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
@@ -972,6 +1000,8 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
           <Plus size={15} /> Log food
         </button>
       </div>
+
+      <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
 
       <div className="nyf-card gold">
         <div className="nyf-section-title">
