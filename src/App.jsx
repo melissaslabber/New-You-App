@@ -725,6 +725,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             progressPhotos={progressPhotos}
             addProgressPhoto={addProgressPhoto}
             removeProgressPhoto={removeProgressPhoto}
+            foodLogs={foodLogs}
+            weightLogs={weightLogs}
           />
         )}
         {tab === "track" && (
@@ -862,11 +864,24 @@ function Onboarding({ profile, onComplete, onLogout }) {
   );
 }
 
-function WeeklyCheckIn({ entries, onAdd }) {
+function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ energy: 3, hunger: 3, sleep: 3, training: 3, win: "", struggle: "" });
   const latest = entries[0];
-  function save() { onAdd(form); setOpen(false); }
+  function save(shareToWhatsApp = false) {
+    onAdd(form);
+    setOpen(false);
+    if (!shareToWhatsApp) return;
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 6); cutoff.setHours(0, 0, 0, 0);
+    const recent = foodLogs.filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff);
+    const byDay = recent.reduce((days, item) => { const day = days[item.date] || { cal: 0, protein: 0, carb: 0, fat: 0, meals: [] }; day.cal += Number(item.cal) || 0; day.protein += Number(item.protein) || 0; day.carb += Number(item.carb) || 0; day.fat += Number(item.fat) || 0; if (day.meals.length < 5) day.meals.push(item.name); days[item.date] = day; return days; }, {});
+    const sortedWeights = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+    const first = sortedWeights[0]?.weight; const latest = sortedWeights[sortedWeights.length - 1]?.weight;
+    const change = first && latest ? `${latest - first > 0 ? "+" : ""}${(latest - first).toFixed(1)} kg` : "Not enough entries";
+    const diary = Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b)).map(([date, day]) => `${date}: ${Math.round(day.cal)} kcal | P${Math.round(day.protein)} C${Math.round(day.carb)} F${Math.round(day.fat)} | ${day.meals.join(", ")}`).join("\n") || "No food logged in the past 7 days.";
+    const message = `NEW YOU WEEKLY CHECK-IN\nMember: ${profile.name || "Member"}\nDate: ${todayStr()}\n\nEnergy: ${form.energy}/5\nHunger: ${form.hunger}/5\nSleep: ${form.sleep}/5\nTraining: ${form.training}/5\nWin: ${form.win || "—"}\nSupport needed: ${form.struggle || "—"}\n\nWEIGHT PROGRESS\nLatest: ${latest ? `${latest} kg` : "Not logged"}\nOverall change: ${change}\n\nLAST 7 DAYS FOOD DIARY\n${diary}`;
+    window.open(`https://wa.me/27731800485?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
   return (
     <div className="nyf-card gold">
       <div className="nyf-section-title"><Check size={17} /> Weekly check-in</div>
@@ -874,7 +889,8 @@ function WeeklyCheckIn({ entries, onAdd }) {
         {[['energy','Energy'],['hunger','Hunger'],['sleep','Sleep'],['training','Training']].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label}: {form[key]}/5</label><div className="nyf-score-row">{[1,2,3,4,5].map((n) => <button key={n} className={`nyf-score${form[key] === n ? " active" : ""}`} onClick={() => setForm({ ...form, [key]: n })}>{n}</button>)}</div></div>)}
         <label className="nyf-field-label">Your win this week</label><input className="nyf-input" value={form.win} onChange={(e) => setForm({ ...form, win: e.target.value })} placeholder="What went well?" />
         <label className="nyf-field-label">Where you need support</label><textarea className="nyf-input" rows="3" value={form.struggle} onChange={(e) => setForm({ ...form, struggle: e.target.value })} placeholder="Anything your coach should know?" />
-        <button className="nyf-btn full" onClick={save}>Send check-in to coach</button>
+        <button className="nyf-btn gold full" onClick={() => save(true)}>Save &amp; WhatsApp Coach Martin</button>
+        <button className="nyf-btn ghost full" style={{ marginTop: 8 }} onClick={() => save(false)}>Save in app only</button>
       </>}
     </div>
   );
@@ -899,7 +915,7 @@ function ProgressPhotosCard({ photos, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Camera size={17} /> Private progress photos</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 8 }}>Add consistent front, side or back photos. Only you and signed-in New You staff can see them.</p>{photos.length > 0 && <div className="nyf-photo-grid">{photos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Progress ${photo.date}`} /><button onClick={() => onRemove(photo.id)} aria-label="Delete photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer" }}><Camera size={15} /> {busy ? "Preparing photo…" : photos.length >= 6 ? "Replace a photo to add another" : "Add progress photo"}<input type="file" accept="image/*" capture="environment" onChange={choose} disabled={busy || photos.length >= 6} style={{ display: "none" }} /></label><p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 8 }}>Up to 6 compressed photos are kept to protect app speed and storage.</p></div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto, foodLogs, weightLogs }) {
   const remaining = profile.calorieGoal - totals.cal;
   return (
     <>
@@ -950,7 +966,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
           </div>
         </div>
       )}
-      <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} />
+      <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
       <CoachMessagesCard messages={coachMessages} onSend={addCoachMessage} />
       <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
     </>
