@@ -177,14 +177,14 @@ const STYLE = `
 .nyf-toggle.on { background: var(--success-soft); color: var(--success); }
 .nyf-toggle.off { background: var(--clay-soft); color: var(--clay); }
 
-.nyf-landing { min-height: 100dvh; display: flex; flex-direction: column; background: linear-gradient(155deg, #031D3A 0%, #07518F 58%, #0B78B7 100%); color: #fff; }
-.nyf-landing-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 44px 26px 30px; }
-.nyf-landing-mark { width: 176px; height: 176px; object-fit: contain; margin: 0 auto 22px; filter: drop-shadow(0 16px 24px rgba(0,0,0,.18)); }
-.nyf-landing h1 { font-size: 39px; line-height: 1.02; letter-spacing: -.04em; text-align: center; }
-.nyf-landing-copy { max-width: 330px; margin: 14px auto 24px; text-align: center; color: #D9E8F4; font-size: 14px; line-height: 1.6; }
+.nyf-landing { min-height: 100dvh; display: flex; flex-direction: column; background: #fff; color: var(--ink); }
+.nyf-landing-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 38px 26px 28px; background: #fff; }
+.nyf-landing-mark { width: 190px; height: 190px; object-fit: contain; margin: 0 auto 20px; }
+.nyf-landing h1 { font-size: 39px; line-height: 1.02; letter-spacing: -.04em; text-align: center; color: var(--forest-deep); }
+.nyf-landing-copy { max-width: 330px; margin: 14px auto 24px; text-align: center; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
 .nyf-feature-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 24px; }
-.nyf-feature-pill { padding: 11px 5px; text-align: center; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.09); border-radius: 12px; font-size: 10.5px; font-weight: 700; }
-.nyf-landing-actions { background: #fff; padding: 20px 22px calc(22px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
+.nyf-feature-pill { padding: 11px 5px; text-align: center; border: 1px solid #D8E4F0; background: linear-gradient(145deg, #F7FAFD, #EDF4FA); color: var(--forest); border-radius: 12px; font-size: 10.5px; font-weight: 800; }
+.nyf-landing-actions { background: linear-gradient(145deg, #031D3A, #074A86); padding: 22px 22px calc(24px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; box-shadow: 0 -14px 30px rgba(3,29,58,.12); }
 .nyf-step { font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
 .nyf-range-note { font-size: 11.5px; color: var(--ink-soft); margin: -4px 0 12px; }
 .nyf-score-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 13px; }
@@ -1842,7 +1842,7 @@ function LandingScreen({ onMember, onStaff }) {
       <div className="nyf-landing-actions">
         <button className="nyf-btn gold full" onClick={onMember} style={{ minHeight: 50 }}>Member login</button>
         <button className="nyf-btn ghost full" onClick={onStaff} style={{ marginTop: 10 }}>Coach &amp; staff access</button>
-        <div style={{ textAlign: "center", color: "var(--ink-soft)", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
+        <div style={{ textAlign: "center", color: "#C9D9E8", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
       </div>
     </div>
   );
