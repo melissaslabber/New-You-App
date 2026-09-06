@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 01:40 SAST.
-const APP_RELEASE = "2026-09-07-0140";
+// Consolidated New You release: 07 September 2026, 02:05 SAST.
+const APP_RELEASE = "2026-09-07-0205";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -691,7 +691,7 @@ const WORKOUT_PLANS = [
   [["Set 1 · HIIT", "15 min", "3 rounds: burpee, thruster, alternating lunge, shoulder tap and cardio burst. Work 40 sec and rest/change 20 sec at every station."], ["Reset", "2 min", "Walk slowly, breathe and drink water. The next set should be strong but controlled."], ["Set 2 · Strength endurance", "15 min", "3 rounds: complete your selected reps for all five exercises. Use up to 5 min per round and rest only with the time left after finishing."], ["Finisher", "3 min", "6 rounds: your cardio-burst option for 20 sec, then rest for 10 sec."]],
   [["Set 1 · Challenge AMRAP", "15 min", "Repeat all five exercises using your selected level. Keep a steady pace and record how many full rounds you complete."], ["Reset", "2 min", "Walk, breathe, drink water and prepare for the ladder."], ["Set 2 · Ladder", "15 min", "Start with 2 reps of each strength exercise, then 4, 6, 8 and continue adding 2. Do shuttle/skipping for 30 sec after every completed round."], ["Best-effort finisher", "3 min", "3 rounds: shuttle or skipping for 45 sec, then rest for 15 sec. Stay controlled to the finish."]],
 ];
-function MainApp({ onLogout, memberName }) {
+function MainApp({ onLogout, memberName, onInstall, showInstallGuide, onCloseInstallGuide, onShowInstallGuide }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
   const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55, exerciseCredit: 50, onboardingComplete: false });
@@ -1106,7 +1106,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
       </div>
 
       <FooterLogo />
@@ -1121,6 +1121,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
 
       {showFoodModal && <FoodModal onAdd={addFood} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} savedMeals={savedMeals} onSaveMeal={saveMeal} />}
       {showWeightModal && <WeightModal onAdd={addWeight} onClose={() => setShowWeightModal(false)} />}
+      {showInstallGuide && <InstallGuide onClose={onCloseInstallGuide} onInstall={onInstall} />}
     </div>
   );
 }
@@ -1956,7 +1957,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData, onShowInstallGuide }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -2012,6 +2013,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteD
         </button>
       )}
       </div>
+      <div className="nyf-card gold"><div className="nyf-section-title"><Plus size={17} /> Add New You to your phone</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Place the New You app icon on your home screen for quick access. This does not use the Play Store.</p><button className="nyf-btn full" onClick={onShowInstallGuide}>Show installation instructions</button></div>
       <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
     </>
   );
@@ -2829,7 +2831,7 @@ export default function App() {
   }
 
   if (!ready) return <div className="nyf"><style>{STYLE}</style><div className="nyf-empty">Loading…</div></div>;
-  if (view === "app") return <MainApp onLogout={logout} memberName={memberName} />;
+  if (view === "app") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <MainApp onLogout={logout} memberName={memberName} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} onShowInstallGuide={() => setShowInstallGuide(true)} />; }
   if (view === "admin") return <CoachDashboard onLogout={logout} />;
   if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
   if (view === "landing") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} />; }
