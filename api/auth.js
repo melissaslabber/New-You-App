@@ -17,14 +17,22 @@ export default async function handler(req, res) {
     if (req.method === "GET" && req.query?.action === "session") {
       const session = readSession(req); if (!session) return res.status(200).json({ authenticated: false });
       if (session.role === "member") { const member = (await getMembers()).find((item) => item.code === session.code); if (!member?.active) { clearSession(res); return res.status(200).json({ authenticated: false, paused: Boolean(member) }); } return res.status(200).json({ authenticated: true, role: "member", name: member.name }); }
-      return res.status(200).json({ authenticated: true, role: "staff" });
+      return res.status(200).json({ authenticated: true, role: "staff", canReturnToMember: Boolean(session.returnCode) });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
     const action = req.body?.action;
     if (action === "logout") { clearSession(res); return res.status(200).json({ loggedOut: true }); }
+    if (action === "switchToMember") {
+      const session = readSession(req);
+      if (session?.role !== "staff" || !session.returnCode) return res.status(403).json({ error: "No member profile is linked to this staff session." });
+      const member = (await getMembers()).find((item) => item.code === session.returnCode);
+      if (!member?.active) return res.status(403).json({ error: "The linked member profile is not active." });
+      setSession(res, { role: "member", code: member.code });
+      return res.status(200).json({ authenticated: true, role: "member", name: member.name });
+    }
     if (!["memberLogin", "staffLogin"].includes(action)) return res.status(400).json({ error: "Unknown action" });
     const rate = await checkRateLimit(req, action); if (!rate.allowed) return res.status(429).json({ error: "Too many attempts. Please wait 15 minutes and try again." });
     if (action === "memberLogin") { const code = String(req.body?.code || "").trim().toUpperCase(); const member = (await getMembers()).find((item) => item.code === code); if (!member) return res.status(401).json({ error: "Code not recognised. Check with New You Fitness." }); if (!member.active) return res.status(403).json({ error: "Your access is paused. Contact New You Fitness." }); await getRedis().del(rate.key); setSession(res, { role: "member", code }); return res.status(200).json({ authenticated: true, role: "member", name: member.name }); }
-    const configuredPin = process.env.STAFF_PIN; if (!configuredPin) return res.status(500).json({ error: "Staff access has not been configured" }); if (!safeEqual(req.body?.pin || "", configuredPin)) return res.status(401).json({ error: "Incorrect PIN" }); await getRedis().del(rate.key); setSession(res, { role: "staff" }); return res.status(200).json({ authenticated: true, role: "staff" });
+    const configuredPin = process.env.STAFF_PIN; if (!configuredPin) return res.status(500).json({ error: "Staff access has not been configured" }); if (!safeEqual(req.body?.pin || "", configuredPin)) return res.status(401).json({ error: "Incorrect PIN" }); await getRedis().del(rate.key); const currentSession = readSession(req); const returnCode = currentSession?.role === "member" ? currentSession.code : currentSession?.role === "staff" ? currentSession.returnCode : undefined; setSession(res, { role: "staff", ...(returnCode ? { returnCode } : {}) }); return res.status(200).json({ authenticated: true, role: "staff", canReturnToMember: Boolean(returnCode) });
   } catch (error) { console.error("Authentication error", error); return res.status(500).json({ error: error.message || "Authentication service unavailable" }); }
 }
