@@ -764,11 +764,15 @@ function MainApp({ onLogout, memberName }) {
     // ANTHROPIC_API_KEY set in Vercel).
     let backendReachable = true;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, maxTokens, jsonMode }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       let data = null;
       try {
         data = await res.json();
@@ -836,6 +840,16 @@ ${trend}`;
   async function getMealSuggestions() {
     setMealsLoading(true);
     setMealsError("");
+    const instantMeals = [
+      { mealType: "Breakfast", name: "Protein yoghurt bowl", description: "Creamy yoghurt, whey and berries for an easy high-protein start.", cal: 300, protein: 31, carb: 30, fat: 5, ingredients: ["250g fat-free plain yoghurt", "25g whey protein", "100g blueberries", "10g peanut butter"] },
+      { mealType: "Snack", name: "Biltong and fruit", description: "A quick protein-rich snack with fresh fruit.", cal: 190, protein: 22, carb: 19, fat: 3, ingredients: ["50g lean biltong", "1 small apple"] },
+      { mealType: "Lunch", name: "Chicken salad bowl", description: "Lean chicken with a large colourful salad and avocado.", cal: 370, protein: 39, carb: 25, fat: 13, ingredients: ["130g cooked chicken breast", "2 cups mixed salad", "100g tomato and cucumber", "50g avocado"] },
+      { mealType: "Snack", name: "Cottage cheese crunch", description: "Cottage cheese with cucumber for a filling afternoon snack.", cal: 130, protein: 16, carb: 8, fat: 3, ingredients: ["150g low-fat cottage cheese", "100g cucumber", "Black pepper"] },
+      { mealType: "Dinner", name: "Lean mince veggie plate", description: "Lean mince, vegetables and potato make a balanced comforting dinner.", cal: 400, protein: 34, carb: 40, fat: 12, ingredients: ["130g cooked lean mince", "200g mixed vegetables", "150g baby potatoes", "1 tsp olive oil"] },
+      { mealType: "Extra", name: "Sugar-free jelly", description: "A light sweet option when you want something after dinner.", cal: 40, protein: 2, carb: 4, fat: 0, ingredients: ["1 cup prepared sugar-free jelly"] },
+    ];
+    // Give the member useful choices instantly while a personalised set is prepared.
+    setMealSuggestions(instantMeals);
     const likedLine = likedFoods.length
       ? `\n\nThis member specifically enjoys these foods: ${likedFoods.join(", ")}. Build the meals around these foods wherever realistically possible — the whole point is that meals they actually like are easier to stick to. Only bring in other foods where needed for balance or to hit the targets sensibly.`
       : "";
@@ -857,7 +871,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         return JSON.parse(clean);
       };
 
-      const text = await callAI(prompt, 6000, true);
+      const text = await callAI(prompt, 1800, true);
       let parsed;
       try {
         parsed = parseMeals(text);
@@ -865,7 +879,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         // Repair a rare malformed response automatically instead of exposing a
         // technical JSON error to the member.
         const repairPrompt = `Repair the JSON below. Return only one valid JSON array. Keep the same meal information, use whole numbers without leading zeroes, and do not add markdown or commentary.\n\n${text}`;
-        parsed = parseMeals(await callAI(repairPrompt, 6000, true));
+        parsed = parseMeals(await callAI(repairPrompt, 1200, true));
       }
       if (Array.isArray(parsed)) {
         setMealSuggestions(parsed);
@@ -873,7 +887,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         setMealsError("Couldn't read the suggestions — try again.");
       }
     } catch {
-      setMealsError("Couldn't generate meal ideas right now. Please tap New suggestions to try again.");
+      // Keep the instant, coach-approved meal set on screen if AI is slow or unavailable.
+      setMealsError("Instant suggestions shown. Personalised suggestions are temporarily taking longer than expected.");
     }
     setMealsLoading(false);
   }
@@ -1534,7 +1549,7 @@ function MealsTab({
           </>
         ) : (
           <button className="nyf-btn gold full" onClick={getMealSuggestions} disabled={loading}>
-            {loading ? "Thinking of meals…" : suggestions.length ? <><RefreshCw size={15} /> New suggestions</> : "Suggest meals for me"}
+            {loading ? "Personalising… instant meals below" : suggestions.length ? <><RefreshCw size={15} /> New suggestions</> : "Suggest meals for me"}
           </button>
         )}
         {error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}
