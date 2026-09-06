@@ -1,84 +1,39 @@
-// Vercel serverless function — calls Google's Gemini API (free tier) instead
-// of a paid provider. Keeps the API key server-side, never in browser code.
-//
-// Setup:
-// 1. Go to https://aistudio.google.com/apikey, sign in with a Google account,
-//    click "Create API key". No credit card needed for the free tier.
-// 2. In Vercel: Project -> Settings -> Environment Variables -> add
-//    GEMINI_API_KEY with that value, save, then redeploy.
-//
-// Free tier notes (worth knowing, not hiding):
-// - Rate-limited (roughly 10-15 requests/minute on Flash models as of
-//   writing) — fine for occasional use by a small gym's members, but could
-//   throttle if many people tap "Suggest meals" at the exact same moment.
-// - Google's free-tier terms allow using your requests/responses to improve
-//   their models. This app sends calorie/macro goals and liked foods, not
-//   identifying health data, but it's worth knowing before relying on this
-//   for real member use.
-// - Google renames/retires Flash model versions periodically. If this stops
-//   working, check the current model list at https://ai.google.dev/models
-//   and update GEMINI_MODEL below (or set it as its own env var).
-
-import { readSession } from "./_session.js";
-
 export default async function handler(req, res) {
-  res.setHeader("Cache-Control", "no-store");
-  if (!readSession(req)) {
-    return res.status(401).json({ error: "Sign-in required" });
-  }
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const { prompt, maxTokens, jsonMode } = req.body || {};
-  if (!prompt) {
-    return res.status(400).json({ error: "Missing prompt" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server is missing GEMINI_API_KEY" });
-  }
+  if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
 
-  const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+  const { prompt, maxTokens = 1200, jsonMode = false } = req.body || {};
+  if (!prompt || typeof prompt !== "string") return res.status(400).json({ error: "A prompt is required" });
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    // Some Gemini models count internal reasoning against the output allowance.
-    // A generous minimum prevents short coach responses ending mid-sentence.
-    const generationConfig = { maxOutputTokens: Math.max(Number(maxTokens) || 1000, 4096) };
-    if (jsonMode) {
-      // Forces Gemini to return valid JSON only, no conversational preamble
-      // like "Let's adjust..." wrapped around it.
-      generationConfig.responseMimeType = "application/json";
-    }
-
-    const upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.45,
+            maxOutputTokens: Math.min(Number(maxTokens) || 1200, 2048),
+            ...(jsonMode ? { responseMimeType: "application/json" } : {}),
+          },
         }),
       }
     );
-
-    const data = await upstream.json();
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({ error: data?.error?.message || "Upstream error from Gemini" });
-    }
-
-    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("").trim() || "";
-    if (!text) {
-      return res.status(502).json({ error: "Gemini returned no text — it may have blocked the response for safety reasons" });
-    }
-
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data?.error?.message || "Gemini request failed" });
+    const text = (data?.candidates?.[0]?.content?.parts || []).map((part) => part.text || "").join("").trim();
+    if (!text) return res.status(502).json({ error: "Gemini returned no text" });
     return res.status(200).json({ text });
-  } catch (e) {
-    return res.status(500).json({ error: "Request to Gemini failed" });
+  } catch (error) {
+    return res.status(error?.name === "AbortError" ? 504 : 500).json({ error: error?.name === "AbortError" ? "Meal generation timed out" : "AI request failed" });
+  } finally {
+    clearTimeout(timeout);
   }
 }
