@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0235";
+const APP_RELEASE = "2026-09-07-0310";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -691,7 +691,7 @@ const WORKOUT_PLANS = [
   [["Set 1 · HIIT", "15 min", "3 rounds: burpee, thruster, alternating lunge, shoulder tap and cardio burst. Work 40 sec and rest/change 20 sec at every station."], ["Reset", "2 min", "Walk slowly, breathe and drink water. The next set should be strong but controlled."], ["Set 2 · Strength endurance", "15 min", "3 rounds: complete your selected reps for all five exercises. Use up to 5 min per round and rest only with the time left after finishing."], ["Finisher", "3 min", "6 rounds: your cardio-burst option for 20 sec, then rest for 10 sec."]],
   [["Set 1 · Challenge AMRAP", "15 min", "Repeat all five exercises using your selected level. Keep a steady pace and record how many full rounds you complete."], ["Reset", "2 min", "Walk, breathe, drink water and prepare for the ladder."], ["Set 2 · Ladder", "15 min", "Start with 2 reps of each strength exercise, then 4, 6, 8 and continue adding 2. Do shuttle/skipping for 30 sec after every completed round."], ["Best-effort finisher", "3 min", "3 rounds: shuttle or skipping for 45 sec, then rest for 15 sec. Stay controlled to the finish."]],
 ];
-function MainApp({ onLogout, memberName, onInstall, showInstallGuide, onCloseInstallGuide, onShowInstallGuide }) {
+function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstallGuide, onCloseInstallGuide, onShowInstallGuide }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
   const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55, exerciseCredit: 50, onboardingComplete: false });
@@ -1106,7 +1106,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
       </div>
 
       <FooterLogo />
@@ -1964,7 +1964,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData, onShowInstallGuide }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -2014,6 +2014,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteD
           <ChefHat size={15} /> See meal ideas for these goals
         </button>
       )}
+      {onSwitchToStaff && <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={onSwitchToStaff}><UserPlus size={15} /> Switch to staff access</button>}
       {onLogout && (
         <button className="nyf-btn ghost full" style={{ marginTop: 10 }} onClick={onLogout}>
           <LogOut size={15} /> Log out
@@ -2768,6 +2769,7 @@ export default function App() {
   const [pausedNotice, setPausedNotice] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [canReturnToMember, setCanReturnToMember] = useState(false);
 
   useEffect(() => {
     const manifest = document.createElement("link"); manifest.rel = "manifest"; manifest.href = "/manifest.webmanifest"; document.head.appendChild(manifest);
@@ -2785,6 +2787,7 @@ export default function App() {
           setMemberName(session.name || "");
           setView("app");
         } else if (session.authenticated && session.role === "staff") {
+          setCanReturnToMember(Boolean(session.canReturnToMember));
           setView("admin");
         }
       } catch {
@@ -2822,8 +2825,18 @@ export default function App() {
     });
     const result = await response.json();
     if (!response.ok) return result.error || "Could not sign in.";
+    setCanReturnToMember(Boolean(result.canReturnToMember));
     setView("admin");
     return null;
+  }
+
+  async function returnToMember() {
+    const response = await fetch("/api/auth", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "switchToMember" }) });
+    const result = await response.json();
+    if (!response.ok) { window.alert(result.error || "Could not return to your member profile."); return; }
+    setMemberName(result.name || "");
+    setCanReturnToMember(false);
+    setView("app");
   }
 
   async function logout() {
@@ -2834,13 +2847,14 @@ export default function App() {
       body: JSON.stringify({ action: "logout" }),
     });
     setMemberName("");
+    setCanReturnToMember(false);
     setView("login");
   }
 
   if (!ready) return <div className="nyf"><style>{STYLE}</style><div className="nyf-empty">Loading…</div></div>;
-  if (view === "app") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <MainApp onLogout={logout} memberName={memberName} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} onShowInstallGuide={() => setShowInstallGuide(true)} />; }
-  if (view === "admin") return <CoachDashboard onLogout={logout} />;
-  if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
+  if (view === "app") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <MainApp onLogout={logout} onSwitchToStaff={() => setView("staff-login")} memberName={memberName} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} onShowInstallGuide={() => setShowInstallGuide(true)} />; }
+  if (view === "admin") return <CoachDashboard onLogout={logout} onReturnToMember={canReturnToMember ? returnToMember : null} />;
+  if (view === "staff-login") return <CentralStaffLogin onBack={() => setView(memberName ? "app" : "login")} onLogin={staffLogin} />;
   if (view === "landing") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} />; }
   return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} onBack={() => setView("landing")} />;
 }
@@ -2885,7 +2899,7 @@ function CoachGoalsEditor({ profile, onSave }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0.1" max="1.5" step="0.1" value={form.expectedWeeklyLoss} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% — no extra allowance</option><option value="50">50% — recommended</option><option value="100">100% — full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
-function CoachDashboard({ onLogout }) {
+function CoachDashboard({ onLogout, onReturnToMember }) {
   const [members, setMembers] = useState([]);
   const [name, setName] = useState("");
   const [code, setCode] = useState(genCode());
@@ -3079,6 +3093,7 @@ function CoachDashboard({ onLogout }) {
             ))}
         </div>
         <button className="nyf-btn ghost full" onClick={downloadBackup} disabled={backupLoading}>{backupLoading ? "Preparing backup…" : "Download complete member backup"}</button>
+        {onReturnToMember && <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={onReturnToMember}><User size={15} /> Return to my member profile</button>}
         <button className="nyf-btn ghost full" style={{ marginTop: 10 }} onClick={onLogout}><LogOut size={15} /> Sign out</button>
       </div>
       <FooterLogo />
