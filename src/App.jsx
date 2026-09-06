@@ -208,6 +208,10 @@ const STYLE = `
 .nyf-message.member { margin-left: auto; background: var(--forest); color: #fff; border-bottom-right-radius: 3px; }
 .nyf-message.coach { background: var(--gold-soft); color: var(--ink); border-bottom-left-radius: 3px; }
 .nyf-message small { display: block; opacity: .68; margin-top: 4px; font-size: 9.5px; }
+.nyf-motivation { position: relative; overflow: hidden; background: linear-gradient(135deg, #031D3A, #07518F); color: #fff; border: 0; border-left: 4px solid var(--gold); }
+.nyf-motivation::after { content: ""; position: absolute; width: 110px; height: 110px; right: -38px; top: -46px; border-radius: 50%; background: rgba(255,255,255,.07); }
+.nyf-motivation-label { display: flex; align-items: center; gap: 6px; color: #F2C75C; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 9px; }
+.nyf-motivation-quote { position: relative; z-index: 1; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.38; letter-spacing: -.01em; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -428,6 +432,29 @@ const FOOD_PREFERENCE_LIST = [
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const DAILY_MOTIVATION = [
+  "Consistency beats intensity when intensity cannot be sustained.",
+  "One balanced meal is a vote for the person you are becoming.",
+  "You do not need a perfect day—just one good next decision.",
+  "Small choices, repeated often, create remarkable change.",
+  "Keep the promise you made to yourself today.",
+  "Progress grows quietly before it becomes visible.",
+  "Fuel your goals, move your body and trust the process.",
+  "A difficult day does not erase your consistent weeks.",
+  "Your future self is built by what you practise today.",
+  "Show up imperfectly. That still counts as showing up.",
+  "Eat to support your goal, not to punish your body.",
+  "The scale is one data point; your habits tell the fuller story.",
+  "Keep going—ordinary days are where transformation happens.",
+  "Choose progress over all-or-nothing thinking.",
+  "Today is another chance to become stronger and healthier.",
+  "A steady plan you follow is better than a perfect plan you abandon.",
+  "Your results come from returning to the plan, again and again.",
+  "Protein, plants, water and patience—keep the basics strong.",
+  "You are not starting over; you are continuing with experience.",
+  "Every healthy choice makes the next one a little easier.",
+  "Discipline is remembering what you want most.",
+];
 function MainApp({ onLogout, memberName }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
@@ -917,8 +944,15 @@ function ProgressPhotosCard({ photos, onAdd, onRemove }) {
 
 function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, progressPhotos, addProgressPhoto, removeProgressPhoto, foodLogs, weightLogs }) {
   const remaining = profile.calorieGoal - totals.cal;
+  const startOfYear = new Date(new Date().getFullYear(), 0, 0);
+  const dayNumber = Math.floor((new Date() - startOfYear) / 86400000);
+  const motivation = DAILY_MOTIVATION[dayNumber % DAILY_MOTIVATION.length];
   return (
     <>
+      <div className="nyf-card nyf-motivation">
+        <div className="nyf-motivation-label"><Sparkles size={13} /> Today's motivation</div>
+        <div className="nyf-motivation-quote">“{motivation}”</div>
+      </div>
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today" : `${Math.abs(remaining)} over today's goal`}</div>
