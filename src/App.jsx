@@ -137,9 +137,9 @@ const STYLE = `
 .nyf-empty { text-align: center; padding: 24px 12px; color: var(--ink-soft); font-size: 13px; }
 .nyf-stat-big { font-size: 30px; font-weight: 800; font-family: 'Outfit', sans-serif; }
 .nyf-stat-label { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; }
-.nyf-modal-backdrop { position: absolute; inset: 0; background: rgba(3,20,40,0.68); backdrop-filter: blur(4px); display: flex; align-items: flex-end; z-index: 20; }
-.nyf-modal { background: var(--surface); width: 100%; border-radius: 24px 24px 0 0; padding: 22px 18px calc(26px + env(safe-area-inset-bottom)); max-height: 88%; overflow-y: auto; box-shadow: 0 -20px 50px rgba(3,20,40,.2); }
-.nyf-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.nyf-modal-backdrop { position: fixed; inset: 0; background: rgba(3,20,40,0.68); backdrop-filter: blur(4px); display: flex; align-items: flex-start; z-index: 100; overflow: hidden; }
+.nyf-modal { background: var(--surface); width: 100%; border-radius: 0 0 24px 24px; padding: calc(14px + env(safe-area-inset-top)) 18px calc(26px + env(safe-area-inset-bottom)); max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; scroll-padding-top: 92px; box-shadow: 0 20px 50px rgba(3,20,40,.2); }
+.nyf-modal-head { position: sticky; top: calc(-14px - env(safe-area-inset-top)); z-index: 5; display: flex; justify-content: space-between; align-items: center; margin: calc(-14px - env(safe-area-inset-top)) -18px 14px; padding: calc(14px + env(safe-area-inset-top)) 18px 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .nyf-close-btn { background: var(--sand); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
 
 .nyf-tabswitch { display: flex; background: var(--sand); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
