@@ -629,6 +629,57 @@ const WORKOUTS = [
     ["Shuttle or skipping", "Use quick controlled footwork and a pace you can maintain for the prescribed interval.", "Fast walk 45 sec", "Jog 45 sec", "Run/skip 45 sec"],
   ]},
 ];
+const GYM_WORKOUTS = [
+  { day: "Sunday", title: "Gym recovery reset", focus: "Easy cardio, mobility and controlled core work", exercises: [
+    ["Stationary bike", "Adjust the seat so the knee stays slightly bent at the bottom. Pedal smoothly at a conversational pace.", "Easy resistance", "Moderate resistance", "Moderate resistance with short pickups"],
+    ["Cable face pull", "Set the cable near eye height, pull the rope toward your face and squeeze the shoulder blades without shrugging.", "Very light cable", "Light cable", "Moderate cable with a pause"],
+    ["Cable Pallof press", "Stand side-on to the cable, brace and press the handle forward without allowing your torso to rotate.", "Light, wide stance", "Moderate, narrow stance", "Half-kneeling with controlled load"],
+    ["Back extension", "Hinge from the hips with a neutral spine, then squeeze the glutes to return to a straight-body position.", "Short bodyweight range", "Full bodyweight range", "Hold a light plate"],
+    ["Incline treadmill walk", "Walk tall without leaning on the rails. Choose a pace that allows calm, controlled breathing.", "Flat/easy walk", "Moderate incline", "Brisk incline walk"],
+  ]},
+  { day: "Monday", title: "Gym full-body strength", focus: "Heavy foundational lifts with functional conditioning", exercises: [
+    ["Barbell back squat", "Brace before unracking, keep the whole foot planted, sit between the hips and drive the floor away.", "Goblet squat with light dumbbell", "Barbell squat at a comfortable load", "Heavier barbell with perfect form"],
+    ["Dumbbell bench press", "Set the shoulder blades against the bench, lower the dumbbells with control and press above the chest.", "Light dumbbells", "Moderate dumbbells", "Heavy controlled dumbbells"],
+    ["Lat pulldown", "Keep the ribs controlled and pull the bar toward the upper chest by driving the elbows down.", "Light neutral grip", "Moderate standard grip", "Heavy controlled reps"],
+    ["Barbell Romanian deadlift", "Soften the knees, push the hips back, keep the bar close and stand by squeezing the glutes.", "Light dumbbells", "Moderate barbell", "Heavy barbell with straps if needed"],
+    ["Rower", "Drive with the legs, lean slightly, then pull to the lower ribs. Return arms, body and legs in that order.", "Easy steady pace", "Strong sustainable pace", "Hard powerful pace"],
+  ]},
+  { day: "Tuesday", title: "Gym conditioning + engine", focus: "Machines, loaded movement and sustainable speed", exercises: [
+    ["Dumbbell box step-up", "Place the whole foot on the box, drive through it to stand and lower under control.", "Low box, bodyweight", "Medium box, light dumbbells", "Higher box, challenging dumbbells"],
+    ["Kettlebell swing", "Hinge and snap the hips forward; let the kettlebell float without lifting it with the arms.", "Light kettlebell deadlift", "Russian swing to chest height", "Heavier powerful Russian swing"],
+    ["Cable row", "Sit tall, brace and pull the handle toward the lower ribs without rocking backward.", "Light load", "Moderate load", "Heavy load with a pause"],
+    ["Dumbbell push press", "Dip through the knees and hips, then drive the dumbbells overhead while keeping the ribs down.", "One light dumbbell", "Two moderate dumbbells", "Two challenging dumbbells"],
+    ["Assault bike or spin bike", "Push and pull smoothly while driving the pedals. Keep a pace you can repeat for every interval.", "Easy spin", "Strong steady effort", "Hard interval effort"],
+  ]},
+  { day: "Wednesday", title: "Gym recovery + core", focus: "Low-impact conditioning, trunk strength and mobility", exercises: [
+    ["Treadmill incline walk", "Walk tall without holding the rails and use an incline that keeps the effort controlled.", "Flat to 2% incline", "4–7% incline", "8–12% brisk incline"],
+    ["Cable wood chop", "Brace and rotate through the upper back and hips while guiding the cable diagonally across the body.", "Light, small range", "Moderate controlled range", "Half-kneeling with greater control"],
+    ["Captain's chair knee raise", "Press the back into the pad, brace and raise the knees without swinging.", "Alternating knee lifts", "Both knees together", "Straighter-leg raise"],
+    ["Hip thrust on bench", "Plant the feet, tuck the ribs and drive the hips up by squeezing the glutes, not the lower back.", "Bodyweight", "Dumbbell across hips", "Padded barbell across hips"],
+    ["Cross-trainer", "Keep the heels supported and move smoothly at a recovery pace you can maintain.", "Easy resistance", "Moderate resistance", "Moderate resistance with short pickups"],
+  ]},
+  { day: "Thursday", title: "Gym strength patterns", focus: "Different movement patterns using free weights and cables", exercises: [
+    ["Barbell deadlift", "Brace before lifting, push the floor away and keep the bar close. Finish tall without leaning back.", "Kettlebell deadlift", "Barbell from raised blocks", "Barbell from floor at a challenging load"],
+    ["Incline dumbbell press", "Set the bench to a low incline, keep shoulders stable and press the dumbbells above the upper chest.", "Light dumbbells", "Moderate dumbbells", "Heavy controlled dumbbells"],
+    ["Single-arm cable row", "Stand or kneel square to the cable and pull the handle toward the hip without rotating.", "Light supported stance", "Moderate split stance", "Heavy half-kneeling row"],
+    ["Barbell reverse lunge", "Step backward and lower under control while keeping the front foot firmly planted.", "Supported bodyweight", "Dumbbell reverse lunge", "Barbell reverse lunge"],
+    ["Farmer carry", "Hold heavy weights at the sides, brace, stand tall and walk with short controlled steps.", "Light dumbbells", "Moderate kettlebells", "Heavy dumbbells or trap bar"],
+  ]},
+  { day: "Friday", title: "Gym hybrid conditioning", focus: "Strength endurance mixed with cardio-machine intervals", exercises: [
+    ["Barbell thruster", "Squat with the bar at the shoulders, stand powerfully and use that drive to press overhead.", "Light dumbbell goblet thruster", "Light barbell thruster", "Challenging barbell thruster"],
+    ["Sled push", "Keep the arms firm, brace and drive through the floor with short powerful steps.", "Light sled or treadmill push", "Moderate sled", "Heavy sled"],
+    ["Dumbbell walking lunge", "Step long enough to control both knees, stay tall and drive through the front foot.", "Bodyweight reverse lunge", "Light dumbbell walking lunge", "Heavy dumbbell walking lunge"],
+    ["TRX or bar row", "Keep the body braced in one line and pull the chest toward the handles or bar.", "High-angle TRX row", "Lower-angle TRX row", "Feet-elevated row"],
+    ["SkiErg or rower", "Create power with the whole body and return smoothly so the pace remains repeatable.", "Easy controlled pace", "Strong interval pace", "Hard race-style pace"],
+  ]},
+  { day: "Saturday", title: "Gym challenge workout", focus: "A measurable solo challenge using full-body gym movements", exercises: [
+    ["Barbell ground-to-overhead", "Lift the bar close to the body with legs and hips, then receive it securely overhead.", "Light plate ground-to-overhead", "Light barbell clean and press", "Barbell power clean and push press"],
+    ["Dumbbell front squat", "Hold the dumbbells at the shoulders, brace and squat with knees following the toes.", "Goblet squat", "Two dumbbells", "Heavy two-dumbbell squat"],
+    ["Renegade row", "Brace in a plank and row one dumbbell toward the hip while resisting torso rotation.", "Hands on bench", "Knees on floor", "Full plank with heavier dumbbells"],
+    ["Bench burpee", "Place the hands securely, step or jump back, return the feet and stand with control.", "High-bench step-back", "Low-bench jump-back", "Floor chest-to-ground burpee"],
+    ["Treadmill, bike or rower", "Choose one machine and work at a pace that is challenging but safe for the full interval.", "Fast walk/easy cycle", "Run or strong cycle/row", "Hard repeatable effort"],
+  ]},
+];
 const WORKOUT_PLANS = [
   [["Set 1 · Mobility", "10 min", "2 rounds: stretch 45 sec, glute bridge 45 sec, bird dog 45 sec and easy march 45 sec. Take 15 sec to change after each movement, then rest 60 sec after each round."], ["Set 2 · Easy circuit", "15 min", "3 rounds: work for 45 sec on each exercise, take 15 sec to change, then walk and breathe for 60 sec."], ["Set 3 · Core & breathing", "10 min", "5 rounds: glute bridge 40 sec, bird dog 40 sec, then rest and breathe for 40 sec."]],
   [["Set 1 · Strength", "15 min", "3 rounds: squat 45 sec, push-up 45 sec, row left 45 sec, row right 45 sec and Romanian deadlift 45 sec. Rest/change for 15 sec after every exercise."], ["Reset", "2 min", "Walk slowly, breathe, drink water and prepare for the conditioning set."], ["Set 2 · Functional circuit", "15 min", "5 rounds: squat 30 sec, push-up 30 sec, alternating rows 30 sec, deadlift 30 sec, fast feet 30 sec, then rest 30 sec."], ["Finisher", "3 min", "6 rounds: fast feet or high knees for 20 sec, then rest for 10 sec."]],
@@ -1067,21 +1118,34 @@ function NavBtn({ icon, label, active, onClick }) {
 
 function WorkoutTab({ setTab }) {
   const [level, setLevel] = useState(1);
+  const [venue, setVenue] = useState("home");
   const [open, setOpen] = useState(null);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
-  const workout = WORKOUTS[selectedDay];
-  const workoutPlan = WORKOUT_PLANS[selectedDay];
-  const warmup = [
+  const workout = (venue === "gym" ? GYM_WORKOUTS : WORKOUTS)[selectedDay];
+  const gymPlan = [
+    ["Set 1 · Strength & skill", "15 min", `3 rounds: ${workout.exercises.map((item) => item[0]).join(", ")}. Work for 45 sec and use 15 sec to change equipment after every exercise.`],
+    ["Reset", "2 min", "Walk slowly, breathe, drink water and safely prepare the equipment for the next set."],
+    ["Set 2 · Functional circuit", "15 min", `5 rounds: ${workout.exercises.map((item) => item[0]).join(", ")} for 30 sec each, then rest for 30 sec.`],
+    ["Finisher", "3 min", `6 rounds: ${workout.exercises[4][0]} for 20 sec, then rest for 10 sec.`],
+  ];
+  const workoutPlan = venue === "gym" ? gymPlan : WORKOUT_PLANS[selectedDay];
+  const homeWarmup = [
     ["Set 1 · Raise your temperature", "4 min", "2 rounds: march, walk or light skip for 60 sec; step jacks for 30 sec; arm circles and shoulder rolls for 30 sec."],
     ["Set 2 · Mobilise", "4 min", "2 rounds: reverse lunges for 30 sec; bodyweight squats for 30 sec; hip hinges for 30 sec; torso rotations and reaches for 30 sec."],
     ["Set 3 · Movement rehearsal", "2 min", "Practise today's main exercises slowly for 30 sec each. Use no weight or a very light weight and focus on technique."],
   ];
+  const gymWarmup = [
+    ["Set 1 · Cardio machine", "4 min", "Use the treadmill, bike, rower or cross-trainer: 2 min easy, then 4 rounds of 20 sec quicker and 10 sec easy."],
+    ["Set 2 · Mobilise", "4 min", "2 rounds: reverse lunges for 30 sec; bodyweight squats for 30 sec; hip hinges for 30 sec; arm circles and torso rotations for 30 sec."],
+    ["Set 3 · Equipment rehearsal", "2 min", "Practise today's first two lifts for 60 sec each with an empty bar, the lightest cable setting or very light dumbbells."],
+  ];
+  const warmup = venue === "gym" ? gymWarmup : homeWarmup;
   return <>
-    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">{workout.day} · New You at home</div><h2 style={{ fontSize: 27 }}>{workout.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5, lineHeight: 1.5, marginBottom: 0 }}>{workout.focus}</p><span className="nyf-workout-time">45 minutes · Warm-up 10 + Workout 35</span></div>
-    <div className="nyf-card"><label className="nyf-field-label">Choose another training day</label><select className="nyf-select" value={selectedDay} onChange={(e) => { setSelectedDay(Number(e.target.value)); setOpen(null); }}>{WORKOUTS.map((item,index) => <option key={item.day} value={index}>{item.day} · {item.title}</option>)}</select><div className="nyf-section-title">Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 0 }}>Choose the level that lets you move safely with good form. You may use different levels for different exercises.</p></div>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">{workout.day} · {venue === "gym" ? "Gym workout" : "New You at home"}</div><h2 style={{ fontSize: 27 }}>{workout.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5, lineHeight: 1.5, marginBottom: 0 }}>{workout.focus}</p><span className="nyf-workout-time">45 minutes · Warm-up 10 + Workout 35</span></div>
+    <div className="nyf-card"><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch" style={{ marginBottom: 14 }}><button className={venue === "home" ? "active" : ""} onClick={() => { setVenue("home"); setOpen(null); }}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => { setVenue("gym"); setOpen(null); }}>At the gym</button></div>{venue === "gym" && <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Gym equipment:</strong> This version uses barbells, dumbbells, benches, cables and cardio machines. Where equipment is busy or unavailable, use the Level 1 alternative.</div>}<label className="nyf-field-label">Choose another training day</label><select className="nyf-select" value={selectedDay} onChange={(e) => { setSelectedDay(Number(e.target.value)); setOpen(null); }}>{(venue === "gym" ? GYM_WORKOUTS : WORKOUTS).map((item,index) => <option key={item.day} value={index}>{item.day} · {item.title}</option>)}</select><div className="nyf-section-title">Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 0 }}>Choose the level that lets you move safely with good form. You may use different levels for different exercises.</p></div>
     <div className="nyf-card gold"><div className="nyf-section-title">10-minute warm-up · follow these sets</div>{warmup.map((item,index) => <div className="nyf-log-item" key={item[0]}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{item[0]}</strong><strong>{item[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{item[2]}</div></div></div>)}</div>
     <div className="nyf-card"><div className="nyf-section-title">35-minute workout · timed plan</div><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Follow each set in order.</strong> The work, transition and rest periods below add up to exactly 35 minutes.</div>{workoutPlan.map((block,index) => <div className="nyf-log-item" key={block[0]}><strong style={{ color: "var(--blue)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{block[0]}</strong><strong style={{ whiteSpace: "nowrap" }}>{block[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{block[2]}</div></div></div>)}<div className="nyf-section-title" style={{ marginTop: 16 }}>Exercise demonstrations</div><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Tap an exercise to learn the technique and view all three levels.</p>{workout.exercises.map((exercise,index) => <div className="nyf-exercise-card" key={exercise[0]}><button className="nyf-exercise-head" onClick={() => setOpen(open === index ? null : index)} style={{ width: "100%", border: 0, background: "none", padding: 0, textAlign: "left", color: "inherit", cursor: "pointer" }}><div><strong>{exercise[0]}</strong><div className="nyf-exercise-level">Level {level}: {exercise[level + 1]}</div></div><ChevronDown size={16} style={{ transform: open === index ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }} /></button>{open === index && <div className="nyf-exercise-how"><strong>How to do it:</strong> {exercise[1]}<div style={{ marginTop: 7 }}><strong>All options:</strong><br />Level 1 — {exercise[2]}<br />Level 2 — {exercise[3]}<br />Level 3 — {exercise[4]}</div></div>}</div>)}</div>
-    <div className="nyf-card clay"><div className="nyf-section-title">Train safely</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Clear a safe space and use stable equipment. Stop for sharp pain, chest pain, faintness or unusual shortness of breath. If you have an injury, recent surgery, pregnancy or a medical condition, use guidance from your coach or healthcare professional.</p><button className="nyf-btn gold full" onClick={() => setTab("home")}>Finished · log my exercise</button></div>
+    <div className="nyf-card clay"><div className="nyf-section-title">Train safely</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>{venue === "gym" ? "Use safety clips, check machine settings and ask gym staff for a spotter when needed. Never attempt a heavy barbell movement you have not been taught." : "Clear a safe space and use stable equipment."} Stop for sharp pain, chest pain, faintness or unusual shortness of breath. If you have an injury, recent surgery, pregnancy or a medical condition, use guidance from your coach or healthcare professional.</p><button className="nyf-btn gold full" onClick={() => setTab("home")}>Finished · log my exercise</button></div>
   </>;
 }
 
@@ -1243,6 +1307,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <div className="nyf-motivation-quote">“{motivation}”</div>
       </div>
       {announcement?.text && <div className="nyf-card nyf-announcement"><div className="nyf-section-title"><Sparkles size={16} /> From Coach Martin</div><div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{announcement.text}</div></div>}
+      <MemberCoachInbox messages={coachMessages} />
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
@@ -1298,6 +1363,12 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <CoachMessagesCard memberName={profile.name} />
     </>
   );
+}
+
+function MemberCoachInbox({ messages = [] }) {
+  const coachMessages = messages.filter((message) => message.role === "coach").slice(-3).reverse();
+  if (!coachMessages.length) return null;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> Messages from your coach</div>{coachMessages.map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>)}</div>;
 }
 
 const HABITS = [["water", "Water target"], ["steps", "Steps target"], ["protein", "Protein target"], ["training", "Training / movement"]];
@@ -1490,6 +1561,24 @@ function MealsTab({
 }) {
   const hasGoals = profile.calorieGoal > 0;
   const favoriteNames = new Set(favoriteMeals.map((m) => m.name));
+  const basicPlan = useMemo(() => {
+    const eggs = 3, yoghurt = 400, peanutButter = 5, blueberries = 150, biltong = 30, salad = 250;
+    const toast = Math.max(1, Math.min(8, Math.round((profile.carbGoal - 68) / 16)));
+    const proteinBeforeWheyChicken = 62 + toast * 4;
+    const proteinNeeded = Math.max(0, profile.proteinGoal - proteinBeforeWheyChicken);
+    const whey = Math.max(10, Math.round((proteinNeeded * 0.25 / 0.8) / 5) * 5);
+    const chicken = Math.max(60, Math.round(((proteinNeeded - whey * 0.8) / 0.31) / 10) * 10);
+    const fatBeforeOil = eggs * 4.8 + toast * 1.2 + yoghurt * 0.002 + peanutButter * 0.5 + blueberries * 0.003 + biltong * 0.05 + chicken * 0.036 + salad * 0.002 + whey * 0.06;
+    const oliveOil = Math.max(0, Math.round(profile.fatGoal - fatBeforeOil));
+    const meals = [
+      { name: "Breakfast · Scrambled eggs on toast", serving: `${eggs} eggs + ${toast} slices whole-wheat toast`, cal: eggs * 72 + toast * 90, protein: eggs * 6.3 + toast * 4, carb: eggs * 0.4 + toast * 16, fat: eggs * 4.8 + toast * 1.2 },
+      { name: "Lunch · Protein yoghurt bowl", serving: `${yoghurt}g plain fat-free yoghurt + 1 tsp (${peanutButter}g) peanut butter + ${whey}g whey + ${blueberries}g blueberries + cinnamon`, cal: yoghurt * 0.56 + peanutButter * 5.88 + whey * 4 + blueberries * 0.57, protein: yoghurt * 0.057 + peanutButter * 0.25 + whey * 0.8 + blueberries * 0.007, carb: yoghurt * 0.077 + peanutButter * 0.2 + whey * 0.08 + blueberries * 0.145, fat: yoghurt * 0.002 + peanutButter * 0.5 + whey * 0.06 + blueberries * 0.003 },
+      { name: "Snack · Lean biltong", serving: `${biltong}g lean biltong`, cal: biltong * 2.5, protein: biltong * 0.5, carb: biltong * 0.03, fat: biltong * 0.05 },
+      { name: "Dinner · Chicken and salad", serving: `${chicken}g cooked chicken breast + ${salad}g mixed salad${oliveOil ? ` + ${oliveOil}g olive oil/lemon dressing` : " + lemon dressing"}`, cal: chicken * 1.65 + salad * 0.25 + oliveOil * 9, protein: chicken * 0.31 + salad * 0.012, carb: salad * 0.05, fat: chicken * 0.036 + salad * 0.002 + oliveOil },
+    ];
+    const totals = meals.reduce((sum, meal) => ({ cal: sum.cal + meal.cal, protein: sum.protein + meal.protein, carb: sum.carb + meal.carb, fat: sum.fat + meal.fat }), { cal: 0, protein: 0, carb: 0, fat: 0 });
+    return { meals, totals };
+  }, [profile.calorieGoal, profile.proteinGoal, profile.carbGoal, profile.fatGoal]);
 
   const groceryItems = useMemo(() => {
     const seen = new Map(); // lowercased item -> original casing
@@ -1504,6 +1593,7 @@ function MealsTab({
 
   return (
     <>
+      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>Portions are automatically adjusted from your calorie and macro goals. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g</span></div></div>
       <div className="nyf-card">
         <div className="nyf-section-title">Foods you actually like</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
