@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, Bell } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
+
+// Consolidated New You release: 06 September 2026, 14:45 SAST.
+const APP_RELEASE = "2026-09-06-1445";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -223,7 +226,6 @@ const STYLE = `
 .nyf-calorie-equation div { background: #F3F7FB; border: 1px solid var(--line); border-radius: 11px; padding: 10px 5px; text-align: center; }
 .nyf-calorie-equation strong { display: block; font-size: 17px; color: var(--forest); font-family: 'Outfit', sans-serif; }
 .nyf-calorie-equation span { display: block; color: var(--ink-soft); font-size: 9.5px; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
-.nyf-announcement { background: linear-gradient(135deg, #FFF7DE, #F7E7B8); border: 1px solid #E6C56E; border-left: 4px solid var(--gold); color: #4D390E; }
 .nyf-consent { display: flex; align-items: flex-start; gap: 9px; font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); margin: 12px 0; }
 .nyf-consent input { margin-top: 3px; accent-color: var(--forest); }
 .nyf-save-state { margin-top: 6px; font-size: 10.5px; font-weight: 700; color: #C9D9E8; }
@@ -710,11 +712,8 @@ function MainApp({ onLogout, memberName }) {
   const [measurementLogs, setMeasurementLogs] = useState([]);
   const [dailyHabits, setDailyHabits] = useState({});
   const [progressPhotos, setProgressPhotos] = useState([]);
-  const [coachMessages, setCoachMessages] = useState([]);
-  const [readCoachMessageIds, setReadCoachMessageIds] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
-  const [announcement, setAnnouncement] = useState(null);
   const [saveStatus, setSaveStatus] = useState("saved");
   const [saveRetry, setSaveRetry] = useState(0);
   const saveTimer = useRef(null);
@@ -736,8 +735,6 @@ function MainApp({ onLogout, memberName }) {
           if (d.measurementLogs) setMeasurementLogs(d.measurementLogs);
           if (d.dailyHabits) setDailyHabits(d.dailyHabits);
           if (d.progressPhotos) setProgressPhotos(d.progressPhotos);
-          if (d.coachMessages) setCoachMessages(d.coachMessages);
-          if (d.readCoachMessageIds) setReadCoachMessageIds(d.readCoachMessageIds);
           if (d.exerciseLogs) setExerciseLogs(d.exerciseLogs);
           if (d.savedMeals) setSavedMeals(d.savedMeals);
         } else if (memberName) {
@@ -746,7 +743,6 @@ function MainApp({ onLogout, memberName }) {
       } catch (e) {
         // no saved data yet
       }
-      try { const response = await fetch("/api/announcement", { credentials: "same-origin" }); const result = await response.json(); if (response.ok) setAnnouncement(typeof result.announcement === "string" ? JSON.parse(result.announcement) : result.announcement); } catch {}
       setLoaded(true);
     })();
   }, []);
@@ -758,7 +754,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("saving");
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, readCoachMessageIds, exerciseLogs, savedMeals } }) });
+          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, savedMeals } }) });
           if (!response.ok) throw new Error("Save failed");
           setSaveStatus("saved"); return;
         } catch (e) {
@@ -768,7 +764,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("error");
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, readCoachMessageIds, exerciseLogs, savedMeals, loaded, saveRetry]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, savedMeals, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -976,9 +972,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     const date = todayStr();
     setDailyHabits((prev) => ({ ...prev, [date]: { ...(prev[date] || {}), [key]: !prev[date]?.[key] } }));
   }
-  function addCoachMessage(text) {
-    setCoachMessages((prev) => [...prev, { id: uid(), role: "member", text, date: new Date().toISOString() }]);
-  }
   function addProgressPhoto(photo) {
     setProgressPhotos((prev) => [{ id: uid(), date: todayStr(), ...photo }, ...prev].slice(0, 6));
   }
@@ -1035,10 +1028,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             setTab={setTab}
             weeklyCheckIns={weeklyCheckIns}
             addWeeklyCheckIn={addWeeklyCheckIn}
-            coachMessages={coachMessages}
-            readCoachMessageIds={readCoachMessageIds}
-            markCoachMessageRead={(id) => setReadCoachMessageIds((current) => current.includes(id) ? current : [...current, id])}
-            addCoachMessage={addCoachMessage}
             foodLogs={foodLogs}
             weightLogs={weightLogs}
             todayExercise={todayExercise}
@@ -1048,7 +1037,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeExercise={removeExercise}
             exerciseLogs={exerciseLogs}
             dailyHabits={dailyHabits}
-            announcement={announcement}
           />
         )}
         {tab === "track" && (
@@ -1094,7 +1082,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} coachMessages={coachMessages} readCoachMessageIds={readCoachMessageIds} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} />}
       </div>
 
       <FooterLogo />
@@ -1132,7 +1120,7 @@ function WorkoutTab({ setTab }) {
     ["Set 1 · Strength & skill", "15 min", `3 rounds: ${workout.exercises.map((item) => item[0]).join(", ")}. Work for 45 sec and use 15 sec to change equipment after every exercise.`],
     ["Reset", "2 min", "Walk slowly, breathe, drink water and safely prepare the equipment for the next set."],
     ["Set 2 · Functional circuit", "15 min", `5 rounds: ${workout.exercises.map((item) => item[0]).join(", ")} for 30 sec each, then rest for 30 sec.`],
-    ["Finisher", "3 min", `6 rounds: ${workout.exercises[4][0]} for 20 sec, then rest for 10 sec.`],
+    ["Finisher", "3 min", `6 rounds: ${workout.exercises[workout.exercises.length - 1]?.[0] || "cardio exercise"} for 20 sec, then rest for 10 sec.`],
   ];
   const workoutPlan = venue === "gym" ? gymPlan : WORKOUT_PLANS[selectedDay];
   const homeWarmup = [
@@ -1263,8 +1251,12 @@ function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
 
 function CoachMessagesCard({ memberName }) {
   const [text, setText] = useState("");
-  function send() { if (!text.trim()) return; const clean = text.trim(); const message = `NEW YOU MEMBER MESSAGE\nFrom: ${memberName || "Member"}\nDate: ${todayStr()}\n\n${clean}`; window.open(`https://wa.me/27731800485?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer"); setText(""); }
-  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Message your coach</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Ask a question or share something with Coach Martin through WhatsApp.</p><textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…" /><button className="nyf-btn gold full" onClick={send} disabled={!text.trim()}>WhatsApp your coach</button></div>;
+  function send() {
+    const clean = text.trim();
+    const message = clean ? `NEW YOU MEMBER MESSAGE\nFrom: ${memberName || "Member"}\nDate: ${todayStr()}\n\n${clean}` : `Hi Coach Martin, this is ${memberName || "a New You member"}.`;
+    window.location.href = `https://wa.me/27731800485?text=${encodeURIComponent(message)}`;
+  }
+  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Contact your coach</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Open WhatsApp to contact Coach Martin. Adding a message below is optional.</p><textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Optional message…" /><button className="nyf-btn gold full" onClick={send}>Open WhatsApp with Coach Martin</button></div>;
 }
 
 function ProgressPhotosCard({ photos, onAdd, onRemove }) {
@@ -1300,7 +1292,21 @@ function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits
   return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Your last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{foodDays ? Math.round(calories / foodDays) : "—"}</strong><span>Avg kcal</span></div><div className="nyf-progress-tile"><strong>{foodDays ? `${Math.round(protein / foodDays)}g` : "—"}</strong><span>Avg protein</span></div><div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Weight change</span></div></div><div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Exercise recorded: <strong>{Math.round(exercise)} kcal</strong> · Habits completed: <strong>{habitDone}/28</strong> · Food logged: <strong>{foodDays}/7 days</strong></div>{foodDays > 0 && <div style={{ marginTop: 9, fontSize: 11.5, color: "var(--ink-soft)" }}>Calorie target: {profile.calorieGoal} kcal · Protein target: {profile.proteinGoal}g</div>}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, readCoachMessageIds, markCoachMessageRead, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, announcement }) {
+function BeginnerDailyGuide({ profile, totals, foodLogs, todayExercise, dailyHabits, setTab }) {
+  const today = todayStr();
+  const habits = dailyHabits[today] || {};
+  const tasks = [
+    { label: "Log what you eat", done: foodLogs.some((item) => item.date === today), action: () => setTab("track") },
+    { label: `Reach ${profile.proteinGoal}g protein`, done: totals.protein >= profile.proteinGoal, action: () => setTab("meals") },
+    { label: "Drink your water", done: Boolean(habits.water), action: () => setTab("track") },
+    { label: "Complete steps or a workout", done: Boolean(habits.steps || habits.training || todayExercise.length), action: () => setTab("workout") },
+  ];
+  const completed = tasks.filter((task) => task.done).length;
+  const badge = completed === 4 ? "Consistency champion" : completed >= 2 ? "Building momentum" : "Start with one small win";
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Check size={17} /> Your simple plan for today</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Do these four things. You do not need a perfect day—just keep moving forward.</p><div className="nyf-product-card"><strong>{completed}/4 complete · {badge}</strong></div>{tasks.map((task) => <button className={`nyf-habit${task.done ? " done" : ""}`} style={{ width: "100%", marginTop: 8 }} key={task.label} onClick={task.action}><span className="nyf-habit-dot">{task.done ? <Check size={14} /> : null}</span><span>{task.label}</span></button>)}</div>;
+}
+
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
@@ -1312,9 +1318,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <div className="nyf-motivation-label"><Sparkles size={13} /> Today's motivation</div>
         <div className="nyf-motivation-quote">“{motivation}”</div>
       </div>
-      {announcement?.text && <div className="nyf-card nyf-announcement"><div className="nyf-section-title"><Sparkles size={16} /> From Coach Martin</div><div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{announcement.text}</div></div>}
-      <MemberCoachInbox messages={coachMessages} readIds={readCoachMessageIds} onRead={markCoachMessageRead} />
-      <PushNotificationCard />
+      <BeginnerDailyGuide profile={profile} totals={totals} foodLogs={foodLogs} todayExercise={todayExercise} dailyHabits={dailyHabits} setTab={setTab} />
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
@@ -1372,65 +1376,6 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   );
 }
 
-function MemberCoachInbox({ messages = [], readIds = [], onRead }) {
-  const coachMessages = messages.filter((message) => message.role === "coach" && !readIds.includes(message.id)).slice(-3).reverse();
-  if (!coachMessages.length) return null;
-  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> New message from your coach</div>{coachMessages.map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small><button className="nyf-btn full" style={{ marginTop: 9 }} onClick={() => onRead(message.id)}><Check size={14} /> Mark as read</button></div>)}</div>;
-}
-
-function PushNotificationCard() {
-  const [status, setStatus] = useState("checking");
-  const defaultPublicKey = "BKU_PP8G86YRWIKxqQvhRLFMOunGHmxdt9si4AlGFQ01tMkn91C7xymhgWJbx8Igk4YdzAWPOL1niT_LrgILgZE";
-  const [publicKey, setPublicKey] = useState(defaultPublicKey);
-  const [error, setError] = useState("");
-  const supported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-  useEffect(() => {
-    if (!supported) { setStatus("unsupported"); return; }
-    (async () => {
-      try {
-        const response = await fetch("/api/push-subscription", { credentials: "same-origin" });
-        const data = await response.json();
-        if (!response.ok) { setStatus("off"); return; }
-        setPublicKey(data.publicKey || defaultPublicKey);
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        setStatus(subscription ? "on" : Notification.permission === "denied" ? "denied" : "off");
-      } catch { setStatus("off"); }
-    })();
-  }, []);
-  function decodeKey(value) {
-    const padding = "=".repeat((4 - value.length % 4) % 4);
-    const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
-    return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
-  }
-  async function enable() {
-    setError(""); setStatus("working");
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") { setStatus(permission === "denied" ? "denied" : "off"); return; }
-      const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: decodeKey(publicKey) });
-      const response = await fetch("/api/push-subscription", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subscription: subscription.toJSON() }) });
-      if (!response.ok) throw new Error("Could not save notification permission");
-      setStatus("on");
-    } catch (e) { setError(e.message || "Could not enable notifications"); setStatus("off"); }
-  }
-  async function disable() {
-    setError(""); setStatus("working");
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        await fetch("/api/push-subscription", { method: "DELETE", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: subscription.endpoint }) });
-        await subscription.unsubscribe();
-      }
-      setStatus("off");
-    } catch { setError("Could not turn notifications off right now."); setStatus("on"); }
-  }
-  if (["checking", "unconfigured", "on"].includes(status)) return null;
-  return <div className="nyf-card"><div className="nyf-section-title"><Bell size={17} /> Coach-message notifications</div>{status === "unsupported" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Push notifications are not supported by this browser. You can still read coach messages here in the app.</p> : status === "denied" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Notifications are blocked. Open your phone’s site settings for New You and allow notifications.</p> : <><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Turn this on to receive an alert when Coach Martin sends you a message.</p><button className="nyf-btn gold full" disabled={status === "working"} onClick={enable}>{status === "working" ? "Please wait…" : "Enable notifications"}</button></>}{error && <div className="nyf-lookup-error" style={{ marginTop: 8 }}>{error}</div>}</div>;
-}
 
 const HABITS = [["water", "Water target"], ["steps", "Steps target"], ["protein", "Protein target"], ["training", "Training / movement"]];
 
@@ -1654,6 +1599,37 @@ Recommend the best 3 realistic menu choices that fit the remaining allowance. Fo
   return <div className="nyf-card gold"><div className="nyf-section-title"><Search size={17} /> What should I order?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>At a restaurant? Enter its name or photograph the menu and get choices based on what you have left today.</p><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Remaining today:</strong> {remaining.cal} kcal · P{remaining.protein}g · C{remaining.carb}g · F{remaining.fat}g</div><label className="nyf-field-label">Restaurant name</label><input className="nyf-input" value={restaurant} onChange={(e) => setRestaurant(e.target.value)} placeholder="e.g. Spur, Ocean Basket or restaurant name" /><label className="nyf-field-label">Menu items or preferences (optional)</label><textarea className="nyf-input" rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Paste menu items, or say what you feel like eating…" />{photos.length > 0 && <div className="nyf-photo-grid" style={{ marginTop: 10 }}>{photos.map((photo, index) => <div className="nyf-photo" key={index}><img src={photo.preview} alt={`Menu ${index + 1}`} /><button onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))} aria-label="Remove menu photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer", marginTop: 10 }}><Camera size={15} /> {photos.length ? "Add another menu photo" : "Take or upload menu photo"}<input type="file" accept="image/*" capture="environment" multiple onChange={addPhotos} disabled={photos.length >= 2} style={{ display: "none" }} /></label><button className="nyf-btn gold full" style={{ marginTop: 9 }} onClick={analyse} disabled={loading}>{loading ? "Reading the menu…" : "Find my best choices"}</button>{error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}{answer && <div className="nyf-ai-box" style={{ marginTop: 12, whiteSpace: "pre-wrap" }}><p>{answer}</p></div>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.4, marginTop: 10 }}>Suggestions are estimates, not verified restaurant nutrition. Ingredients, portions and cooking oil can change the actual values.</p></div>;
 }
 
+const QUICK_CHOICE_GROUPS = {
+  Meal: [
+    { name: "Chicken, potato and salad", cal: 480, protein: 48, carb: 42, fat: 12, tip: "Keep sauce on the side." },
+    { name: "Scrambled eggs on toast", cal: 390, protein: 27, carb: 32, fat: 17, tip: "Use cooking spray instead of extra butter." },
+    { name: "Tuna salad wrap", cal: 410, protein: 36, carb: 39, fat: 11, tip: "Choose light mayonnaise." },
+  ],
+  Snack: [
+    { name: "Lean biltong", cal: 125, protein: 25, carb: 1, fat: 3, tip: "A useful high-protein option." },
+    { name: "Protein yoghurt bowl", cal: 240, protein: 31, carb: 20, fat: 4, tip: "Use fat-free plain yoghurt and berries." },
+    { name: "Whey protein shake", cal: 125, protein: 24, carb: 3, fat: 2, tip: "Mix with water when calories are tight." },
+  ],
+  Craving: [
+    { name: "Chocolate protein yoghurt", cal: 210, protein: 27, carb: 19, fat: 3, tip: "Mix cocoa and sweetener into protein yoghurt." },
+    { name: "Air-popped popcorn", cal: 120, protein: 4, carb: 23, fat: 2, tip: "Measure the kernels before popping." },
+    { name: "Zero-sugar jelly and yoghurt", cal: 105, protein: 10, carb: 12, fat: 1, tip: "Good when you want something sweet and filling." },
+  ],
+};
+
+function FoodDecisionHelper({ profile, totals, creditedExerciseCalories }) {
+  const [choice, setChoice] = useState("Meal");
+  const remainingCalories = Math.max(0, profile.calorieGoal - Math.max(0, totals.cal - creditedExerciseCalories));
+  const remainingProtein = Math.max(0, profile.proteinGoal - totals.protein);
+  const options = QUICK_CHOICE_GROUPS[choice].map((item) => ({ ...item, fits: item.cal <= remainingCalories })).sort((a, b) => Number(b.fits) - Number(a.fits) || b.protein - a.protein);
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> What can I eat now?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>You have about <strong>{remainingCalories} kcal</strong> and <strong>{remainingProtein}g protein</strong> left. Choose what you need:</p><div className="nyf-tabswitch">{Object.keys(QUICK_CHOICE_GROUPS).map((name) => <button className={choice === name ? "active" : ""} onClick={() => setChoice(name)} key={name}>{name}</button>)}</div>{options.map((item) => <div className="nyf-log-item" key={item.name} style={{ alignItems: "flex-start" }}><div><div className="nyf-log-name">{item.fits ? "🟢" : "🟡"} {item.name}</div><div className="nyf-log-macro">P{item.protein} · C{item.carb} · F{item.fat} · {item.tip}</div></div><strong style={{ whiteSpace: "nowrap", marginLeft: 8 }}>{item.cal} kcal</strong></div>)}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 10 }}>🟢 fits your remaining calories · 🟡 reduce the portion or choose a lighter option. Values are estimates.</p></div>;
+}
+
+function EasyFoodSwaps() {
+  const swaps = [["Full-fat flavoured yoghurt", "Fat-free plain yoghurt + berries", "Usually more protein and fewer calories"], ["Chips with dinner", "Baby potatoes or salad", "More filling for the calories"], ["Sugary cold drink", "Zero-sugar drink or water", "Save liquid calories"], ["Creamy sauce", "Sauce on the side", "You control the portion"]];
+  return <div className="nyf-card"><div className="nyf-section-title"><RefreshCw size={16} /> Easy food swaps</div>{swaps.map(([from,to,why]) => <div className="nyf-log-item" key={from} style={{ display: "block" }}><div className="nyf-log-name">{from} → {to}</div><div className="nyf-log-macro">{why}</div></div>)}</div>;
+}
+
 function MealsTab({
   profile,
   totals,
@@ -1706,6 +1682,8 @@ function MealsTab({
 
   return (
     <>
+      <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
+      <EasyFoodSwaps />
       <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
       <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>Portions are automatically adjusted from your calorie and macro goals. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g</span></div></div>
       <div className="nyf-card">
@@ -1948,7 +1926,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData, coachMessages = [], readCoachMessageIds = [] }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -2004,7 +1982,6 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteD
         </button>
       )}
       </div>
-      <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Coach message history</div>{coachMessages.filter((message) => message.role === "coach" && readCoachMessageIds.includes(message.id)).length ? coachMessages.filter((message) => message.role === "coach" && readCoachMessageIds.includes(message.id)).slice().reverse().map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</small></div>) : <div className="nyf-empty">Messages you mark as read will be saved here.</div>}</div>
       <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
     </>
   );
@@ -2785,14 +2762,6 @@ function CentralStaffLogin({ onBack, onLogin }) {
   );
 }
 
-function CoachReplyPanel({ messages, onSend }) {
-  const [text, setText] = useState("");
-  const [error, setError] = useState("");
-  const [sending, setSending] = useState(false);
-  async function send() { if (!text.trim()) return; setSending(true); setError(""); try { await onSend(text.trim()); setText(""); } catch (e) { setError(e.message); } setSending(false); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> Member messages</div>{messages.length ? <div style={{ maxHeight: 260, overflowY: "auto", marginBottom: 10 }}>{messages.slice(-12).map((message) => <div key={message.id} className={`nyf-message ${message.role}`}><strong>{message.role === "coach" ? "Coach" : "Member"}</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleDateString("en-ZA")}</small></div>)}</div> : <div className="nyf-empty">No messages yet.</div>}<textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Reply to this member…" />{error && <div className="nyf-lookup-error">{error}</div>}<button className="nyf-btn full" onClick={send} disabled={!text.trim() || sending}>{sending ? "Sending…" : "Send reply"}</button></div>;
-}
-
 function CoachGoalsEditor({ profile, onSave }) {
   const [form, setForm] = useState({ calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50 });
   const [saved, setSaved] = useState(false);
@@ -2809,8 +2778,6 @@ function CoachDashboard({ onLogout }) {
   const [selected, setSelected] = useState(null);
   const [memberData, setMemberData] = useState(null);
   const [summaries, setSummaries] = useState({});
-  const [announcementText, setAnnouncementText] = useState("");
-  const [announcementSaved, setAnnouncementSaved] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberFilter, setMemberFilter] = useState("all");
   const [backupLoading, setBackupLoading] = useState(false);
@@ -2831,7 +2798,6 @@ function CoachDashboard({ onLogout }) {
   useEffect(() => {
     memberAction("list").catch((e) => setError(e.message)).finally(() => setLoading(false));
     fetch("/api/coach-overview", { credentials: "same-origin" }).then((response) => response.json()).then((result) => setSummaries(Object.fromEntries((result.summaries || []).map((item) => [item.code, item])))).catch(() => {});
-    fetch("/api/announcement", { credentials: "same-origin" }).then((response) => response.json()).then((result) => { const value = typeof result.announcement === "string" ? JSON.parse(result.announcement) : result.announcement; setAnnouncementText(value?.text || ""); }).catch(() => {});
   }, []);
 
   async function addMember() {
@@ -2859,19 +2825,9 @@ function CoachDashboard({ onLogout }) {
     }
   }
 
-  async function sendCoachReply(text) {
-    const response = await fetch("/api/coach-message", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: selected.code, text }) });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Could not send reply");
-    setMemberData(result.data);
-  }
   async function saveCoachGoals(goals) {
     const response = await fetch("/api/coach-goals", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: selected.code, goals }) });
     const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not save goals"); setMemberData(result.data);
-  }
-  async function saveAnnouncement() {
-    setAnnouncementSaved(false); const response = await fetch("/api/announcement", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: announcementText }) });
-    if (!response.ok) { const result = await response.json(); setError(result.error || "Could not save announcement"); return; } setAnnouncementSaved(true);
   }
   async function downloadBackup() {
     setBackupLoading(true); setError("");
@@ -2935,7 +2891,6 @@ function CoachDashboard({ onLogout }) {
                   </div>
                 )) : <div className="nyf-empty">No weekly check-ins yet.</div>}
               </div>
-              <CoachReplyPanel messages={memberData?.coachMessages || []} onSend={sendCoachReply} />
               {(memberData?.progressPhotos || []).length > 0 && <div className="nyf-card"><div className="nyf-section-title">Progress photos</div><div className="nyf-photo-grid">{memberData.progressPhotos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Member progress ${photo.date}`} /></div>)}</div><p style={{ fontSize: 10.5, color: "var(--ink-soft)" }}>Private coach view · do not share without the member’s permission.</p></div>}
               <div className="nyf-card">
                 <div className="nyf-section-title">Weight and body fat</div>
@@ -2977,7 +2932,6 @@ function CoachDashboard({ onLogout }) {
         <div className="nyf-greeting">Coach dashboard</div>
       </div>
       <div className="nyf-scroll">
-        <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={16} /> Member announcement</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>This appears near the top of every member’s Today page.</p><textarea className="nyf-input" rows="3" maxLength="500" value={announcementText} onChange={(e) => { setAnnouncementText(e.target.value); setAnnouncementSaved(false); }} placeholder="Studio news, challenge reminder or encouragement…" /><button className="nyf-btn full" onClick={saveAnnouncement}>{announcementText.trim() ? "Publish announcement" : "Clear announcement"}</button>{announcementSaved && <div className="nyf-product-card">Announcement updated.</div>}</div>
         <div className="nyf-card gold">
           <div className="nyf-section-title"><UserPlus size={16} /> Add a member</div>
           <label className="nyf-field-label">Member name</label>
