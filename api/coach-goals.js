@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     if (!code) return res.status(400).json({ error: "Member code required" });
     const redis = getRedis(); const key = `nyf:data:${code}`; const raw = await redis.get(key);
     const data = !raw ? {} : typeof raw === "string" ? JSON.parse(raw) : raw;
-    const clean = { calorieGoal: +goals.calorieGoal || 0, proteinGoal: +goals.proteinGoal || 0, carbGoal: +goals.carbGoal || 0, fatGoal: +goals.fatGoal || 0, exerciseCredit: [0, 50, 100].includes(+goals.exerciseCredit) ? +goals.exerciseCredit : 50, coachControlled: true };
+    const clean = { calorieGoal: +goals.calorieGoal || 0, proteinGoal: +goals.proteinGoal || 0, carbGoal: +goals.carbGoal || 0, fatGoal: +goals.fatGoal || 0, exerciseCredit: [0, 50, 100].includes(+goals.exerciseCredit) ? +goals.exerciseCredit : 50, expectedWeeklyLoss: Math.min(1.5, Math.max(0.1, +goals.expectedWeeklyLoss || 0.5)), coachControlled: true };
     const updated = { ...data, profile: { ...(data.profile || {}), ...clean }, updatedAt: new Date().toISOString() };
     await redis.set(key, JSON.stringify(updated));
     return res.status(200).json({ data: updated });

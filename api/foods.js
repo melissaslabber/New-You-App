@@ -1,3 +1,5 @@
+import { getRedis } from "./_redis.js";
+
 function servingMeasures(name, unit = "g") {
   const value = String(name).toLowerCase();
   if (unit === "ml" || value.includes("milk")) return { tsp: 5, tbsp: 15, cup: 250 };
@@ -200,7 +202,13 @@ export default async function handler(req, res) {
     const includeBrands = String(req.query?.more || "") === "1";
     if (query.length < 2) return res.status(400).json({ error: "Enter at least two characters" });
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    const local = COMMON_FOODS.filter((item) => words.every((word) => `${item.name} ${item.brand} ${item.aliases || ""}`.toLowerCase().includes(word)));
+    let approved = [];
+    try {
+      const raw = await getRedis().get("nyf:foods:approved");
+      const stored = !raw ? [] : typeof raw === "string" ? JSON.parse(raw) : raw;
+      approved = Array.isArray(stored) ? stored.map((item) => ({ ...item, measures: servingMeasures(item.name, item.unit), verified: true })) : [];
+    } catch { /* Built-in and public foods remain available if Redis is temporarily unavailable. */ }
+    const local = [...approved, ...COMMON_FOODS].filter((item) => words.every((word) => `${item.name} ${item.brand} ${item.aliases || ""}`.toLowerCase().includes(word)));
     if (local.length && !includeBrands) return res.status(200).json({ results: local.slice(0, 12), hasMore: true });
     let remote = [];
     try {
