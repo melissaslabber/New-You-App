@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 01:15 SAST.
-const APP_RELEASE = "2026-09-07-0115";
+// Consolidated New You release: 07 September 2026, 01:40 SAST.
+const APP_RELEASE = "2026-09-07-0140";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -2021,7 +2021,43 @@ function FoodSubmissionForm({ initialName = "" }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: initialName, brand: "", barcode: "", servingSize: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
   const [status, setStatus] = useState("");
+  const [photos, setPhotos] = useState({ barcode: null, label: null });
   useEffect(() => { if (!open && initialName) setForm((value) => ({ ...value, name: initialName })); }, [initialName, open]);
+
+  function preparePhoto(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not open the photo"));
+      reader.onload = () => {
+        const image = new Image(); image.onerror = () => reject(new Error("Could not read the photo"));
+        image.onload = () => {
+          const max = 1100; const scale = Math.min(1, max / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas"); canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
+          canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+          resolve({ dataUrl, mimeType: "image/jpeg", data: dataUrl.split(",")[1] });
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  async function selectPhoto(kind, file) {
+    if (!file) return;
+    try { setStatus("preparing"); const photo = await preparePhoto(file); setPhotos((value) => ({ ...value, [kind]: photo })); setStatus(""); } catch (error) { setStatus(error.message); }
+  }
+  async function analysePhotos() {
+    const images = [photos.barcode, photos.label].filter(Boolean).map(({ data, mimeType }) => ({ data, mimeType }));
+    if (!images.length) return;
+    setStatus("analysing");
+    try {
+      const response = await fetch("/api/food-label", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ images }) });
+      const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not read photos");
+      const item = result.product || {};
+      setForm((value) => ({ ...value, name: item.name || value.name, brand: item.brand || value.brand, barcode: item.barcode || value.barcode, servingSize: String(item.servingSize || value.servingSize), unit: item.unit || value.unit, cal: item.cal ? String(item.cal) : value.cal, protein: String(item.protein ?? value.protein), carb: String(item.carb ?? value.carb), fat: String(item.fat ?? value.fat) }));
+      setStatus(`review-${item.confidence || "low"}`);
+    } catch (error) { setStatus(error.message); }
+  }
   async function submit() {
     setStatus("saving");
     try {
@@ -2030,8 +2066,9 @@ function FoodSubmissionForm({ initialName = "" }) {
       setStatus("sent"); setOpen(false);
     } catch (error) { setStatus(error.message); }
   }
-  if (!open) return <div style={{ marginBottom: 12 }}><button className="nyf-link-btn" onClick={() => { setStatus(""); setOpen(true); }}>Food still missing? Submit it to New You</button>{status === "sent" && <div className="nyf-product-card">Sent to your coach for verification. Once approved, every member can find it.</div>}</div>;
-  return <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Submit a missing food</strong><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Copy the values per 100 g or 100 ml from the nutrition label.</p><label className="nyf-field-label">Product name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><label className="nyf-field-label">Brand</label><input className="nyf-input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="e.g. Woolworths, Ouma or Albany" /><label className="nyf-field-label">Barcode (optional)</label><input className="nyf-input" inputMode="numeric" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /><div className="nyf-grid2"><div><label className="nyf-field-label">Normal serving</label><input className="nyf-input" type="number" value={form.servingSize} onChange={(e) => setForm({ ...form, servingSize: e.target.value })} /></div><div><label className="nyf-field-label">Unit</label><select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}><option value="g">grams</option><option value="ml">millilitres</option></select></div></div><div className="nyf-grid2">{[["cal","Calories"],["protein","Protein"],["carb","Carbs"],["fat","Fat"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} per 100</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>{status && !["saving","sent"].includes(status) && <div className="nyf-lookup-error">{status}</div>}<button className="nyf-btn full" onClick={submit} disabled={!form.name || !form.cal || status === "saving"}>{status === "saving" ? "Submitting…" : "Send for coach approval"}</button><button className="nyf-link-btn" onClick={() => setOpen(false)} style={{ display: "block", margin: "10px auto 0" }}>Cancel</button></div>;
+  if (!open) return <div style={{ marginBottom: 12 }}><button className="nyf-link-btn" onClick={() => { setStatus(""); setOpen(true); }}>Food still missing? Add it from photos</button>{status === "sent" && <div className="nyf-product-card">Saved to the shared New You food directory. Other members can now find it.</div>}</div>;
+  const busy = ["preparing", "analysing", "saving"].includes(status);
+  return <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Photograph a missing product</strong><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Take clear, close photos in good light. The app will fill the form; you must check it before saving.</p><div className="nyf-grid2"><label className="nyf-btn ghost" style={{ textAlign: "center" }}><Barcode size={15} /> Barcode photo<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => selectPhoto("barcode", e.target.files?.[0])} /></label><label className="nyf-btn ghost" style={{ textAlign: "center" }}><Camera size={15} /> Nutrition label<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => selectPhoto("label", e.target.files?.[0])} /></label></div>{(photos.barcode || photos.label) && <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>{photos.barcode && <img src={photos.barcode.dataUrl} alt="Barcode preview" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6 }} />}{photos.label && <img src={photos.label.dataUrl} alt="Nutrition label preview" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6 }} />}</div>}<button className="nyf-btn full" onClick={analysePhotos} disabled={busy || (!photos.barcode && !photos.label)}>{status === "analysing" ? "Reading photos…" : "Read photos and fill values"}</button>{status.startsWith("review-") && <div className="nyf-product-card" style={{ marginTop: 8 }}>Photo reading confidence: <strong>{status.replace("review-", "")}</strong>. Check every value against the label before saving.</div>}<label className="nyf-field-label">Product name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><label className="nyf-field-label">Brand</label><input className="nyf-input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="e.g. Woolworths, Ouma or Albany" /><label className="nyf-field-label">Barcode</label><input className="nyf-input" inputMode="numeric" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /><div className="nyf-grid2"><div><label className="nyf-field-label">Normal serving</label><input className="nyf-input" type="number" value={form.servingSize} onChange={(e) => setForm({ ...form, servingSize: e.target.value })} /></div><div><label className="nyf-field-label">Unit</label><select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}><option value="g">grams</option><option value="ml">millilitres</option></select></div></div><div className="nyf-grid2">{[["cal","Calories"],["protein","Protein"],["carb","Carbs"],["fat","Fat"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} per 100</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>{status && !busy && !status.startsWith("review-") && status !== "sent" && <div className="nyf-lookup-error">{status}</div>}<button className="nyf-btn full" onClick={submit} disabled={!form.name || !form.cal || busy}>{status === "saving" ? "Saving…" : "Save to shared food directory"}</button><button className="nyf-link-btn" onClick={() => setOpen(false)} style={{ display: "block", margin: "10px auto 0" }}>Cancel</button></div>;
 }
 
 function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
@@ -2851,7 +2888,6 @@ function CoachDashboard({ onLogout }) {
   const [memberSearch, setMemberSearch] = useState("");
   const [memberFilter, setMemberFilter] = useState("all");
   const [backupLoading, setBackupLoading] = useState(false);
-  const [foodSubmissions, setFoodSubmissions] = useState([]);
 
   async function memberAction(action, extra = {}) {
     const response = await fetch("/api/members", {
@@ -2869,16 +2905,7 @@ function CoachDashboard({ onLogout }) {
   useEffect(() => {
     memberAction("list").catch((e) => setError(e.message)).finally(() => setLoading(false));
     fetch("/api/coach-overview", { credentials: "same-origin" }).then((response) => response.json()).then((result) => setSummaries(Object.fromEntries((result.summaries || []).map((item) => [item.code, item])))).catch(() => {});
-    loadFoodSubmissions();
   }, []);
-
-  async function loadFoodSubmissions() {
-    try { const response = await fetch("/api/food-submissions", { credentials: "same-origin" }); const result = await response.json(); if (response.ok) setFoodSubmissions(result.pending || []); } catch { /* Directory approval is optional if offline. */ }
-  }
-  async function reviewFood(id, action) {
-    setError("");
-    try { const response = await fetch("/api/food-submissions", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, action }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not review food"); setFoodSubmissions((items) => items.filter((item) => item.id !== id)); } catch (e) { setError(e.message); }
-  }
 
   async function addMember() {
     setError("");
@@ -3023,10 +3050,6 @@ function CoachDashboard({ onLogout }) {
           </div>
           {error && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{error}</div>}
           <button className="nyf-btn full" onClick={addMember} disabled={!name.trim() || !code.trim()}>Add &amp; activate</button>
-        </div>
-        <div className="nyf-card">
-          <div className="nyf-section-title"><UtensilsCrossed size={17} /> Foods awaiting approval ({foodSubmissions.length})</div>
-          {foodSubmissions.length === 0 ? <div className="nyf-empty">No food submissions waiting.</div> : foodSubmissions.map((item) => <div className="nyf-log-item" key={item.id} style={{ display: "block" }}><div className="nyf-log-name">{item.brand ? `${item.brand} · ` : ""}{item.name}</div><div className="nyf-log-macro">Per 100{item.unit}: {item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}{item.barcode ? ` · Barcode ${item.barcode}` : ""}</div><div style={{ display: "flex", gap: 8, marginTop: 9 }}><button className="nyf-btn" onClick={() => reviewFood(item.id, "approve")}>Approve</button><button className="nyf-btn ghost" onClick={() => reviewFood(item.id, "reject")}>Reject</button></div></div>)}
         </div>
         <div className="nyf-card">
           <div className="nyf-section-title">Members ({members.filter((m) => m.active).length} active)</div>
