@@ -33,3 +33,4 @@ add members. Selecting a member opens their coach profile.
 
 Run `npm install`, followed by `npm run dev`. Run `npm run build` before
 deploying changes.
+Deployment refresh
