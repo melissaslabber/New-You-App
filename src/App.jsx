@@ -711,6 +711,7 @@ function MainApp({ onLogout, memberName }) {
   const [dailyHabits, setDailyHabits] = useState({});
   const [progressPhotos, setProgressPhotos] = useState([]);
   const [coachMessages, setCoachMessages] = useState([]);
+  const [readCoachMessageIds, setReadCoachMessageIds] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
   const [announcement, setAnnouncement] = useState(null);
@@ -736,6 +737,7 @@ function MainApp({ onLogout, memberName }) {
           if (d.dailyHabits) setDailyHabits(d.dailyHabits);
           if (d.progressPhotos) setProgressPhotos(d.progressPhotos);
           if (d.coachMessages) setCoachMessages(d.coachMessages);
+          if (d.readCoachMessageIds) setReadCoachMessageIds(d.readCoachMessageIds);
           if (d.exerciseLogs) setExerciseLogs(d.exerciseLogs);
           if (d.savedMeals) setSavedMeals(d.savedMeals);
         } else if (memberName) {
@@ -756,7 +758,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("saving");
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals } }) });
+          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, readCoachMessageIds, exerciseLogs, savedMeals } }) });
           if (!response.ok) throw new Error("Save failed");
           setSaveStatus("saved"); return;
         } catch (e) {
@@ -766,7 +768,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("error");
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals, loaded, saveRetry]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, readCoachMessageIds, exerciseLogs, savedMeals, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -1034,6 +1036,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             weeklyCheckIns={weeklyCheckIns}
             addWeeklyCheckIn={addWeeklyCheckIn}
             coachMessages={coachMessages}
+            readCoachMessageIds={readCoachMessageIds}
+            markCoachMessageRead={(id) => setReadCoachMessageIds((current) => current.includes(id) ? current : [...current, id])}
             addCoachMessage={addCoachMessage}
             foodLogs={foodLogs}
             weightLogs={weightLogs}
@@ -1088,7 +1092,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} onDeleteData={deleteProgressData} coachMessages={coachMessages} readCoachMessageIds={readCoachMessageIds} />}
       </div>
 
       <FooterLogo />
@@ -1294,7 +1298,7 @@ function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits
   return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Your last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{foodDays ? Math.round(calories / foodDays) : "—"}</strong><span>Avg kcal</span></div><div className="nyf-progress-tile"><strong>{foodDays ? `${Math.round(protein / foodDays)}g` : "—"}</strong><span>Avg protein</span></div><div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Weight change</span></div></div><div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Exercise recorded: <strong>{Math.round(exercise)} kcal</strong> · Habits completed: <strong>{habitDone}/28</strong> · Food logged: <strong>{foodDays}/7 days</strong></div>{foodDays > 0 && <div style={{ marginTop: 9, fontSize: 11.5, color: "var(--ink-soft)" }}>Calorie target: {profile.calorieGoal} kcal · Protein target: {profile.proteinGoal}g</div>}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, announcement }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, readCoachMessageIds, markCoachMessageRead, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, announcement }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
@@ -1307,7 +1311,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <div className="nyf-motivation-quote">“{motivation}”</div>
       </div>
       {announcement?.text && <div className="nyf-card nyf-announcement"><div className="nyf-section-title"><Sparkles size={16} /> From Coach Martin</div><div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{announcement.text}</div></div>}
-      <MemberCoachInbox messages={coachMessages} />
+      <MemberCoachInbox messages={coachMessages} readIds={readCoachMessageIds} onRead={markCoachMessageRead} />
       <PushNotificationCard />
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
@@ -1366,15 +1370,16 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   );
 }
 
-function MemberCoachInbox({ messages = [] }) {
-  const coachMessages = messages.filter((message) => message.role === "coach").slice(-3).reverse();
+function MemberCoachInbox({ messages = [], readIds = [], onRead }) {
+  const coachMessages = messages.filter((message) => message.role === "coach" && !readIds.includes(message.id)).slice(-3).reverse();
   if (!coachMessages.length) return null;
-  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> Messages from your coach</div>{coachMessages.map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>)}</div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> New message from your coach</div>{coachMessages.map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small><button className="nyf-btn full" style={{ marginTop: 9 }} onClick={() => onRead(message.id)}><Check size={14} /> Mark as read</button></div>)}</div>;
 }
 
 function PushNotificationCard() {
   const [status, setStatus] = useState("checking");
-  const [publicKey, setPublicKey] = useState("");
+  const defaultPublicKey = "BKU_PP8G86YRWIKxqQvhRLFMOunGHmxdt9si4AlGFQ01tMkn91C7xymhgWJbx8Igk4YdzAWPOL1niT_LrgILgZE";
+  const [publicKey, setPublicKey] = useState(defaultPublicKey);
   const [error, setError] = useState("");
   const supported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
   useEffect(() => {
@@ -1383,8 +1388,8 @@ function PushNotificationCard() {
       try {
         const response = await fetch("/api/push-subscription", { credentials: "same-origin" });
         const data = await response.json();
-        if (!response.ok) { setStatus(response.status === 503 ? "unconfigured" : "off"); return; }
-        setPublicKey(data.publicKey);
+        if (!response.ok) { setStatus("off"); return; }
+        setPublicKey(data.publicKey || defaultPublicKey);
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
         setStatus(subscription ? "on" : Notification.permission === "denied" ? "denied" : "off");
@@ -1421,8 +1426,8 @@ function PushNotificationCard() {
       setStatus("off");
     } catch { setError("Could not turn notifications off right now."); setStatus("on"); }
   }
-  if (["checking", "unconfigured"].includes(status)) return null;
-  return <div className="nyf-card"><div className="nyf-section-title"><Bell size={17} /> Coach-message notifications</div>{status === "unsupported" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Push notifications are not supported by this browser. You can still read coach messages here in the app.</p> : status === "denied" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Notifications are blocked. Open your phone’s site settings for New You and allow notifications.</p> : <><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{status === "on" ? "Notifications are on. You’ll be alerted when Coach Martin sends you a message." : "Turn this on to receive an alert when Coach Martin sends you a message."}</p><button className={`nyf-btn ${status === "on" ? "ghost" : "gold"} full`} disabled={status === "working" || !publicKey} onClick={status === "on" ? disable : enable}>{status === "working" ? "Please wait…" : status === "on" ? "Turn notifications off" : "Enable notifications"}</button></>}{error && <div className="nyf-lookup-error" style={{ marginTop: 8 }}>{error}</div>}</div>;
+  if (["checking", "unconfigured", "on"].includes(status)) return null;
+  return <div className="nyf-card"><div className="nyf-section-title"><Bell size={17} /> Coach-message notifications</div>{status === "unsupported" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Push notifications are not supported by this browser. You can still read coach messages here in the app.</p> : status === "denied" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Notifications are blocked. Open your phone’s site settings for New You and allow notifications.</p> : <><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Turn this on to receive an alert when Coach Martin sends you a message.</p><button className="nyf-btn gold full" disabled={status === "working"} onClick={enable}>{status === "working" ? "Please wait…" : "Enable notifications"}</button></>}{error && <div className="nyf-lookup-error" style={{ marginTop: 8 }}>{error}</div>}</div>;
 }
 
 const HABITS = [["water", "Water target"], ["steps", "Steps target"], ["protein", "Protein target"], ["training", "Training / movement"]];
@@ -1888,7 +1893,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteData, coachMessages = [], readCoachMessageIds = [] }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -1944,6 +1949,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onExport, onDeleteD
         </button>
       )}
       </div>
+      <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Coach message history</div>{coachMessages.filter((message) => message.role === "coach" && readCoachMessageIds.includes(message.id)).length ? coachMessages.filter((message) => message.role === "coach" && readCoachMessageIds.includes(message.id)).slice().reverse().map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</small></div>) : <div className="nyf-empty">Messages you mark as read will be saved here.</div>}</div>
       <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
     </>
   );
