@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, Bell } from "lucide-react";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1308,6 +1308,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       </div>
       {announcement?.text && <div className="nyf-card nyf-announcement"><div className="nyf-section-title"><Sparkles size={16} /> From Coach Martin</div><div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{announcement.text}</div></div>}
       <MemberCoachInbox messages={coachMessages} />
+      <PushNotificationCard />
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
@@ -1369,6 +1370,59 @@ function MemberCoachInbox({ messages = [] }) {
   const coachMessages = messages.filter((message) => message.role === "coach").slice(-3).reverse();
   if (!coachMessages.length) return null;
   return <div className="nyf-card gold"><div className="nyf-section-title"><User size={17} /> Messages from your coach</div>{coachMessages.map((message) => <div className="nyf-message coach" key={message.id}><strong>Coach Martin</strong><div>{message.text}</div><small>{new Date(message.date).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>)}</div>;
+}
+
+function PushNotificationCard() {
+  const [status, setStatus] = useState("checking");
+  const [publicKey, setPublicKey] = useState("");
+  const [error, setError] = useState("");
+  const supported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  useEffect(() => {
+    if (!supported) { setStatus("unsupported"); return; }
+    (async () => {
+      try {
+        const response = await fetch("/api/push-subscription", { credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok) { setStatus(response.status === 503 ? "unconfigured" : "off"); return; }
+        setPublicKey(data.publicKey);
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        setStatus(subscription ? "on" : Notification.permission === "denied" ? "denied" : "off");
+      } catch { setStatus("off"); }
+    })();
+  }, []);
+  function decodeKey(value) {
+    const padding = "=".repeat((4 - value.length % 4) % 4);
+    const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+    return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+  }
+  async function enable() {
+    setError(""); setStatus("working");
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") { setStatus(permission === "denied" ? "denied" : "off"); return; }
+      const registration = await navigator.serviceWorker.ready;
+      const existing = await registration.pushManager.getSubscription();
+      const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: decodeKey(publicKey) });
+      const response = await fetch("/api/push-subscription", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subscription: subscription.toJSON() }) });
+      if (!response.ok) throw new Error("Could not save notification permission");
+      setStatus("on");
+    } catch (e) { setError(e.message || "Could not enable notifications"); setStatus("off"); }
+  }
+  async function disable() {
+    setError(""); setStatus("working");
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await fetch("/api/push-subscription", { method: "DELETE", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: subscription.endpoint }) });
+        await subscription.unsubscribe();
+      }
+      setStatus("off");
+    } catch { setError("Could not turn notifications off right now."); setStatus("on"); }
+  }
+  if (["checking", "unconfigured"].includes(status)) return null;
+  return <div className="nyf-card"><div className="nyf-section-title"><Bell size={17} /> Coach-message notifications</div>{status === "unsupported" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Push notifications are not supported by this browser. You can still read coach messages here in the app.</p> : status === "denied" ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Notifications are blocked. Open your phone’s site settings for New You and allow notifications.</p> : <><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{status === "on" ? "Notifications are on. You’ll be alerted when Coach Martin sends you a message." : "Turn this on to receive an alert when Coach Martin sends you a message."}</p><button className={`nyf-btn ${status === "on" ? "ghost" : "gold"} full`} disabled={status === "working" || !publicKey} onClick={status === "on" ? disable : enable}>{status === "working" ? "Please wait…" : status === "on" ? "Turn notifications off" : "Enable notifications"}</button></>}{error && <div className="nyf-lookup-error" style={{ marginTop: 8 }}>{error}</div>}</div>;
 }
 
 const HABITS = [["water", "Water target"], ["steps", "Steps target"], ["protein", "Protein target"], ["training", "Training / movement"]];
