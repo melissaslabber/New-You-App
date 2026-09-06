@@ -226,6 +226,8 @@ const STYLE = `
 .nyf-announcement { background: linear-gradient(135deg, #FFF7DE, #F7E7B8); border: 1px solid #E6C56E; border-left: 4px solid var(--gold); color: #4D390E; }
 .nyf-consent { display: flex; align-items: flex-start; gap: 9px; font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); margin: 12px 0; }
 .nyf-consent input { margin-top: 3px; accent-color: var(--forest); }
+.nyf-save-state { margin-top: 6px; font-size: 10.5px; font-weight: 700; color: #C9D9E8; }
+.nyf-save-state.error { color: #FFD0C9; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -494,6 +496,8 @@ function MainApp({ onLogout, memberName }) {
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
   const [announcement, setAnnouncement] = useState(null);
+  const [saveStatus, setSaveStatus] = useState("saved");
+  const [saveRetry, setSaveRetry] = useState(0);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -531,20 +535,20 @@ function MainApp({ onLogout, memberName }) {
     if (!loaded) return;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      try {
-        const response = await fetch("/api/data", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals } }),
-        });
-        if (!response.ok) throw new Error("Save failed");
-      } catch (e) {
-        console.error("save failed", e);
+      setSaveStatus("saving");
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals } }) });
+          if (!response.ok) throw new Error("Save failed");
+          setSaveStatus("saved"); return;
+        } catch (e) {
+          if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 700 * (attempt + 1)));
+        }
       }
+      setSaveStatus("error");
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals, loaded]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, coachMessages, exerciseLogs, savedMeals, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -781,6 +785,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       <div className="nyf-header">
         <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
+        <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
 
       <div className="nyf-scroll">
@@ -2375,6 +2380,7 @@ function CoachDashboard({ onLogout }) {
   const [announcementSaved, setAnnouncementSaved] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberFilter, setMemberFilter] = useState("all");
+  const [backupLoading, setBackupLoading] = useState(false);
 
   async function memberAction(action, extra = {}) {
     const response = await fetch("/api/members", {
@@ -2433,6 +2439,11 @@ function CoachDashboard({ onLogout }) {
   async function saveAnnouncement() {
     setAnnouncementSaved(false); const response = await fetch("/api/announcement", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: announcementText }) });
     if (!response.ok) { const result = await response.json(); setError(result.error || "Could not save announcement"); return; } setAnnouncementSaved(true);
+  }
+  async function downloadBackup() {
+    setBackupLoading(true); setError("");
+    try { const response = await fetch("/api/backup", { credentials: "same-origin" }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not create backup"); const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: "application/json" })); const link = document.createElement("a"); link.href = url; link.download = `new-you-backup-${todayStr()}.json`; link.click(); URL.revokeObjectURL(url); } catch (e) { setError(e.message); }
+    setBackupLoading(false);
   }
 
   if (selected) {
@@ -2564,7 +2575,8 @@ function CoachDashboard({ onLogout }) {
               </div>
             ))}
         </div>
-        <button className="nyf-btn ghost full" onClick={onLogout}><LogOut size={15} /> Sign out</button>
+        <button className="nyf-btn ghost full" onClick={downloadBackup} disabled={backupLoading}>{backupLoading ? "Preparing backup…" : "Download complete member backup"}</button>
+        <button className="nyf-btn ghost full" style={{ marginTop: 10 }} onClick={onLogout}><LogOut size={15} /> Sign out</button>
       </div>
       <FooterLogo />
     </div>
