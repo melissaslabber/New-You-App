@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 06 September 2026, 14:45 SAST.
-const APP_RELEASE = "2026-09-06-1445";
+// Consolidated New You release: 06 September 2026, 23:05 SAST.
+const APP_RELEASE = "2026-09-06-2305";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -713,6 +713,7 @@ function MainApp({ onLogout, memberName }) {
   const [dailyHabits, setDailyHabits] = useState({});
   const [progressPhotos, setProgressPhotos] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
+  const [stepLogs, setStepLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
   const [saveStatus, setSaveStatus] = useState("saved");
   const [saveRetry, setSaveRetry] = useState(0);
@@ -736,6 +737,7 @@ function MainApp({ onLogout, memberName }) {
           if (d.dailyHabits) setDailyHabits(d.dailyHabits);
           if (d.progressPhotos) setProgressPhotos(d.progressPhotos);
           if (d.exerciseLogs) setExerciseLogs(d.exerciseLogs);
+          if (d.stepLogs) setStepLogs(d.stepLogs);
           if (d.savedMeals) setSavedMeals(d.savedMeals);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
@@ -754,7 +756,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("saving");
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, savedMeals } }) });
+          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals } }) });
           if (!response.ok) throw new Error("Save failed");
           setSaveStatus("saved"); return;
         } catch (e) {
@@ -764,7 +766,7 @@ function MainApp({ onLogout, memberName }) {
       setSaveStatus("error");
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, savedMeals, loaded, saveRetry]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const totals = useMemo(
@@ -781,6 +783,7 @@ function MainApp({ onLogout, memberName }) {
     [todayLogs]
   );
   const todayExercise = useMemo(() => exerciseLogs.filter((item) => item.date === todayStr()), [exerciseLogs]);
+  const todaySteps = stepLogs.find((item) => item.date === todayStr()) || null;
   const exerciseCalories = useMemo(() => todayExercise.reduce((sum, item) => sum + (Number(item.calories) || 0), 0), [todayExercise]);
   const creditedExerciseCalories = Math.round(exerciseCalories * ((profile.exerciseCredit ?? 50) / 100));
 
@@ -800,6 +803,11 @@ function MainApp({ onLogout, memberName }) {
   }
   function removeExercise(id) {
     setExerciseLogs((prev) => prev.filter((item) => item.id !== id));
+  }
+  function saveSteps(steps, goal) {
+    const entry = { id: uid(), date: todayStr(), steps: Math.max(0, Number(steps) || 0), goal: Math.max(1000, Number(goal) || 8000) };
+    setStepLogs((prev) => [...prev.filter((item) => item.date !== entry.date), entry]);
+    setDailyHabits((prev) => ({ ...prev, [entry.date]: { ...(prev[entry.date] || {}), steps: entry.steps >= entry.goal } }));
   }
   function saveMeal(entry) {
     setSavedMeals((prev) => [{ id: uid(), ...entry }, ...prev.filter((item) => item.name.toLowerCase() !== entry.name.toLowerCase())].slice(0, 20));
@@ -983,6 +991,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     weightLogs.forEach((item) => rows.push(["Weight", item.date, "Weight kg", item.weight, "", "", item.bodyFat ? `Body fat ${item.bodyFat}%` : ""]));
     foodLogs.forEach((item) => rows.push(["Food", item.date, item.name, item.cal, item.protein, item.carb, item.fat]));
     exerciseLogs.forEach((item) => rows.push(["Exercise", item.date, item.activity, item.calories, "", "", ""]));
+    stepLogs.forEach((item) => rows.push(["Steps", item.date, "Daily steps", item.steps, "", "", `Goal ${item.goal}`]));
     measurementLogs.forEach((item) => Object.entries(item).filter(([key]) => !["id","date"].includes(key)).forEach(([key,value]) => value && rows.push(["Measurement", item.date, `${key} cm`, value, "", "", ""])));
     weeklyCheckIns.forEach((item) => rows.push(["Weekly check-in", item.date, "Energy/Hunger/Sleep/Training", `${item.energy}/${item.hunger}/${item.sleep}/${item.training}`, "", "", item.win || item.struggle || ""]));
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -1037,6 +1046,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeExercise={removeExercise}
             exerciseLogs={exerciseLogs}
             dailyHabits={dailyHabits}
+            todaySteps={todaySteps}
+            saveSteps={saveSteps}
           />
         )}
         {tab === "track" && (
@@ -1058,6 +1069,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             progressPhotos={progressPhotos}
             addProgressPhoto={addProgressPhoto}
             removeProgressPhoto={removeProgressPhoto}
+            todaySteps={todaySteps}
+            saveSteps={saveSteps}
           />
         )}
         {tab === "workout" && <WorkoutTab setTab={setTab} />}
@@ -1306,7 +1319,17 @@ function BeginnerDailyGuide({ profile, totals, foodLogs, todayExercise, dailyHab
   return <div className="nyf-card gold"><div className="nyf-section-title"><Check size={17} /> Your simple plan for today</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Do these four things. You do not need a perfect day—just keep moving forward.</p><div className="nyf-product-card"><strong>{completed}/4 complete · {badge}</strong></div>{tasks.map((task) => <button className={`nyf-habit${task.done ? " done" : ""}`} style={{ width: "100%", marginTop: 8 }} key={task.label} onClick={task.action}><span className="nyf-habit-dot">{task.done ? <Check size={14} /> : null}</span><span>{task.label}</span></button>)}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits }) {
+function StepsCard({ entry, onSave, compact = false }) {
+  const [steps, setSteps] = useState(String(entry?.steps || ""));
+  const [goal, setGoal] = useState(String(entry?.goal || 8000));
+  useEffect(() => { setSteps(String(entry?.steps || "")); setGoal(String(entry?.goal || 8000)); }, [entry?.steps, entry?.goal]);
+  const current = Number(steps) || 0;
+  const target = Math.max(1000, Number(goal) || 8000);
+  const percentage = Math.min(100, Math.round((current / target) * 100));
+  return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{current.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{target.toLocaleString()}</strong><span>Daily goal</span></div><div className="nyf-progress-tile"><strong>{percentage}%</strong><span>Complete</span></div></div><div className="nyf-grid2"><div><label className="nyf-field-label">Your steps</label><input className="nyf-input" type="number" inputMode="numeric" min="0" step="100" value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 6500" /></div><div><label className="nyf-field-label">Step goal</label><input className="nyf-input" type="number" inputMode="numeric" min="1000" step="500" value={goal} onChange={(e) => setGoal(e.target.value)} /></div></div><button className={`nyf-btn${compact ? " ghost" : ""} full`} onClick={() => onSave(current, target)} disabled={!current}>Save today's steps</button>{entry && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>{entry.steps >= entry.goal ? "Step goal reached — well done!" : `${Math.max(0, entry.goal - entry.steps).toLocaleString()} steps remaining.`}</p>}</div>;
+}
+
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, todaySteps, saveSteps }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
@@ -1332,6 +1355,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         </button>
       </div>
 
+      <StepsCard entry={todaySteps} onSave={saveSteps} compact />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
 
@@ -1398,10 +1422,11 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, progressPhotos, addProgressPhoto, removeProgressPhoto }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
+      <StepsCard entry={todaySteps} onSave={saveSteps} />
       <div className="nyf-card">
         <div className="nyf-section-title">Today's totals</div>
         <Bar label="Calories" value={totals.cal} goal={profile.calorieGoal} unit=" kcal" />
@@ -1651,23 +1676,16 @@ function MealsTab({
   const hasGoals = profile.calorieGoal > 0;
   const favoriteNames = new Set(favoriteMeals.map((m) => m.name));
   const basicPlan = useMemo(() => {
-    const eggs = 3, yoghurt = 400, peanutButter = 5, blueberries = 150, biltong = 30, salad = 250;
-    const toast = Math.max(1, Math.min(8, Math.round((profile.carbGoal - 68) / 16)));
-    const proteinBeforeWheyChicken = 62 + toast * 4;
-    const proteinNeeded = Math.max(0, profile.proteinGoal - proteinBeforeWheyChicken);
-    const whey = Math.max(10, Math.round((proteinNeeded * 0.25 / 0.8) / 5) * 5);
-    const chicken = Math.max(60, Math.round(((proteinNeeded - whey * 0.8) / 0.31) / 10) * 10);
-    const fatBeforeOil = eggs * 4.8 + toast * 1.2 + yoghurt * 0.002 + peanutButter * 0.5 + blueberries * 0.003 + biltong * 0.05 + chicken * 0.036 + salad * 0.002 + whey * 0.06;
-    const oliveOil = Math.max(0, Math.round(profile.fatGoal - fatBeforeOil));
+    const eggs = 2, toast = 2, yoghurt = 300, peanutButter = 10, whey = 32, blueberries = 30, biltong = 60, chicken = 150, salad = 250, oliveOil = 10;
     const meals = [
-      { name: "Breakfast · Scrambled eggs on toast", serving: `${eggs} eggs + ${toast} slices whole-wheat toast`, cal: eggs * 72 + toast * 90, protein: eggs * 6.3 + toast * 4, carb: eggs * 0.4 + toast * 16, fat: eggs * 4.8 + toast * 1.2 },
-      { name: "Lunch · Protein yoghurt bowl", serving: `${yoghurt}g plain fat-free yoghurt + 1 tsp (${peanutButter}g) peanut butter + ${whey}g whey + ${blueberries}g blueberries + cinnamon`, cal: yoghurt * 0.56 + peanutButter * 5.88 + whey * 4 + blueberries * 0.57, protein: yoghurt * 0.057 + peanutButter * 0.25 + whey * 0.8 + blueberries * 0.007, carb: yoghurt * 0.077 + peanutButter * 0.2 + whey * 0.08 + blueberries * 0.145, fat: yoghurt * 0.002 + peanutButter * 0.5 + whey * 0.06 + blueberries * 0.003 },
+      { name: "Breakfast · Scrambled eggs on toast", serving: `${eggs} eggs + ${toast} slices Sasko Oats & Honey toast`, cal: eggs * 72 + toast * 90, protein: eggs * 6.3 + toast * 4, carb: eggs * 0.4 + toast * 16, fat: eggs * 4.8 + toast * 1.2 },
+      { name: "Lunch · Protein yoghurt bowl", serving: `${yoghurt}g plain Greek yoghurt (full-fat or low-fat) + ${whey}g whey + ${blueberries}g blueberries + ${peanutButter}g peanut butter + cinnamon`, cal: yoghurt * 0.85 + peanutButter * 5.88 + whey * 4 + blueberries * 0.57, protein: yoghurt * 0.085 + peanutButter * 0.25 + whey * 0.8 + blueberries * 0.007, carb: yoghurt * 0.04 + peanutButter * 0.2 + whey * 0.08 + blueberries * 0.145, fat: yoghurt * 0.035 + peanutButter * 0.5 + whey * 0.06 + blueberries * 0.003 },
       { name: "Snack · Lean biltong", serving: `${biltong}g lean biltong`, cal: biltong * 2.5, protein: biltong * 0.5, carb: biltong * 0.03, fat: biltong * 0.05 },
-      { name: "Dinner · Chicken and salad", serving: `${chicken}g cooked chicken breast + ${salad}g mixed salad${oliveOil ? ` + ${oliveOil}g olive oil/lemon dressing` : " + lemon dressing"}`, cal: chicken * 1.65 + salad * 0.25 + oliveOil * 9, protein: chicken * 0.31 + salad * 0.012, carb: salad * 0.05, fat: chicken * 0.036 + salad * 0.002 + oliveOil },
+      { name: "Dinner · Chicken and salad", serving: `${chicken}g cooked chicken breast + ${salad}g mixed salad + ${oliveOil}g olive oil/lemon dressing`, cal: chicken * 1.65 + salad * 0.25 + oliveOil * 9, protein: chicken * 0.31 + salad * 0.012, carb: salad * 0.05, fat: chicken * 0.036 + salad * 0.002 + oliveOil },
     ];
     const totals = meals.reduce((sum, meal) => ({ cal: sum.cal + meal.cal, protein: sum.protein + meal.protein, carb: sum.carb + meal.carb, fat: sum.fat + meal.fat }), { cal: 0, protein: 0, carb: 0, fat: 0 });
     return { meals, totals };
-  }, [profile.calorieGoal, profile.proteinGoal, profile.carbGoal, profile.fatGoal]);
+  }, []);
 
   const groceryItems = useMemo(() => {
     const seen = new Map(); // lowercased item -> original casing
@@ -1685,7 +1703,7 @@ function MealsTab({
       <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
       <EasyFoodSwaps />
       <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
-      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>Portions are automatically adjusted from your calorie and macro goals. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g</span></div></div>
+      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women, with protein included across every meal. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g. Choose low-fat yoghurt when a lighter option is needed.</span></div></div>
       <div className="nyf-card">
         <div className="nyf-section-title">Foods you actually like</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
@@ -2075,16 +2093,16 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     const per100 = { cal: item.cal, protein: item.protein, carb: item.carb, fat: item.fat };
     const qty = Number(item.defaultQty) || 100;
     const factor = qty / 100;
-    setProduct({ name: item.name, per100 });
+    setProduct({ name: item.name, per100, baseUnit: item.unit || "g", measures: item.measures || {}, defaultQty: qty });
     setForm({
       mealType: form.mealType,
       name: item.name,
       qty: String(qty),
       unit: item.unit || "g",
       cal: String(Math.round(item.cal * factor)),
-      protein: String(Math.round(item.protein * factor)),
-      carb: String(Math.round(item.carb * factor)),
-      fat: String(Math.round(item.fat * factor)),
+      protein: String(Math.round(item.protein * factor * 10) / 10),
+      carb: String(Math.round(item.carb * factor * 10) / 10),
+      fat: String(Math.round(item.fat * factor * 10) / 10),
     });
     setFoodResults([]);
     setFoodSearchError("");
@@ -2109,7 +2127,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
           carb: p.carb,
           fat: p.fat,
         };
-        setProduct({ name: p.name || "Unnamed product", per100 });
+        setProduct({ name: p.name || "Unnamed product", per100, baseUnit: p.unit || "g", measures: p.measures || {}, defaultQty: 100 });
         const qty = 100;
         setForm({
           mealType: form.mealType,
@@ -2128,19 +2146,35 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     setLookupLoading(false);
   }
 
-  function applyQty(newQty) {
-    setForm((f) => ({ ...f, qty: newQty }));
+  function equivalentAmount(qty, unit) {
+    const number = Number(qty) || 0;
+    if (unit === "tsp") return number * (product?.measures?.tsp || 5);
+    if (unit === "tbsp") return number * (product?.measures?.tbsp || 15);
+    if (unit === "cup") return number * (product?.measures?.cup || 240);
+    if (unit === "serving") return number * (product?.defaultQty || 100);
+    return number;
+  }
+
+  function applyQty(newQty, unitOverride = form.unit) {
+    setForm((f) => ({ ...f, qty: newQty, unit: unitOverride }));
     if (product) {
-      const factor = (Number(newQty) || 0) / 100;
+      const factor = equivalentAmount(newQty, unitOverride) / 100;
       setForm((f) => ({
         ...f,
         qty: newQty,
+        unit: unitOverride,
         cal: String(Math.round(product.per100.cal * factor)),
-        protein: String(Math.round(product.per100.protein * factor)),
-        carb: String(Math.round(product.per100.carb * factor)),
-        fat: String(Math.round(product.per100.fat * factor)),
+        protein: String(Math.round(product.per100.protein * factor * 10) / 10),
+        carb: String(Math.round(product.per100.carb * factor * 10) / 10),
+        fat: String(Math.round(product.per100.fat * factor * 10) / 10),
       }));
     }
+  }
+
+  function changeUnit(unit) {
+    if (!product) { setForm((f) => ({ ...f, unit })); return; }
+    const qty = ["tsp", "tbsp", "cup", "serving"].includes(unit) ? "1" : String(product.defaultQty || 100);
+    applyQty(qty, unit);
   }
 
   return (
@@ -2264,7 +2298,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                 onChange={(e) => applyQty(e.target.value)}
                 placeholder="e.g. 150"
               />
-              <select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
+              <select className="nyf-select" value={form.unit} onChange={(e) => changeUnit(e.target.value)}>
                 <option value="g">grams (g)</option>
                 <option value="ml">millilitres (ml)</option>
                 <option value="tsp">teaspoons</option>
@@ -2273,7 +2307,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                 <option value="serving">servings</option>
               </select>
             </div>
-            {product && <div className="nyf-portion-row">{[50, 100, 150, 200].map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : "g"}</button>)}</div>}
+            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "cup", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div><p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>Spoon and cup values use the selected food's standard weight, so 1 teaspoon is not treated as 1 gram.</p></>}
 
             <label className="nyf-field-label">Calories (kcal)</label>
             <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
