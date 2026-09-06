@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 00:20 SAST.
-const APP_RELEASE = "2026-09-07-0020";
+// Consolidated New You release: 07 September 2026, 00:45 SAST.
+const APP_RELEASE = "2026-09-07-0045";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -2267,7 +2267,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                     value={foodQuery}
                     onChange={(e) => setFoodQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && searchFoods(foodQuery)}
-                    placeholder="e.g. chicken breast, yoghurt or Weet-Bix"
+                    placeholder="e.g. Ouma rusks, Albany bread or milk"
                   />
                   <button className="nyf-btn" onClick={() => searchFoods()} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
                     {foodSearchLoading ? "…" : <Search size={15} />}
@@ -2284,7 +2284,8 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                     ))}
                   </div>
                 )}
-                {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands"}</button>}
+                {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands (English)"}</button>}
+                <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "2px 0 10px" }}>For the exact product, search its brand and name or scan/type the barcode. If it is not listed yet, use the nutrition label to enter it manually.</p>
               </>
             )}
             <label className="nyf-field-label">Meal</label>
