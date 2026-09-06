@@ -232,6 +232,11 @@ const STYLE = `
 .nyf-learn-path div { border-radius: 12px; padding: 12px; background: #F3F7FB; border: 1px solid var(--line); }
 .nyf-learn-path strong { display: block; color: var(--forest); font-size: 12px; margin-bottom: 4px; }
 .nyf-learn-path span { display: block; color: var(--ink-soft); font-size: 10.5px; line-height: 1.4; }
+.nyf-install-guide { position: fixed; inset: 0; z-index: 50; background: rgba(3,20,40,.68); backdrop-filter: blur(5px); display: flex; align-items: flex-end; justify-content: center; }
+.nyf-install-sheet { width: min(100%, 480px); background: #fff; border-radius: 24px 24px 0 0; padding: 22px 22px calc(24px + env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px rgba(3,20,40,.25); }
+.nyf-install-icon { width: 66px; height: 66px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 5px; box-shadow: 0 8px 20px rgba(3,29,58,.1); }
+.nyf-install-step { display: flex; gap: 10px; align-items: flex-start; margin: 11px 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+.nyf-install-step strong { width: 24px; height: 24px; border-radius: 50%; background: var(--gold-soft); color: #76510D; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -2206,7 +2211,12 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
   );
 }
 
-function LandingScreen({ onMember, onStaff, onInstall }) {
+function InstallGuide({ onClose, onInstall }) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  return <div className="nyf-install-guide" onClick={onClose}><div className="nyf-install-sheet" onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 14 }}><img className="nyf-install-icon" src="/new-you-logo.png" alt="New You" /><div><div className="nyf-step">Quick setup</div><h2 style={{ fontSize: 23 }}>Add New You to your phone</h2></div></div>{isIOS ? <><div className="nyf-install-step"><strong>1</strong><span>Make sure this page is open in <b>Safari</b>.</span></div><div className="nyf-install-step"><strong>2</strong><span>Tap the <b>Share</b> button at the bottom of Safari.</span></div><div className="nyf-install-step"><strong>3</strong><span>Select <b>Add to Home Screen</b>, turn on <b>Open as Web App</b>, then tap Add.</span></div></> : onInstall ? <><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Install New You for faster access and an app icon on your home screen.</p><button className="nyf-btn gold full" onClick={() => { onInstall(); onClose(); }} style={{ marginTop: 10 }}>Install New You</button></> : <><div className="nyf-install-step"><strong>1</strong><span>Open your browser menu using the three dots.</span></div><div className="nyf-install-step"><strong>2</strong><span>Choose <b>Install app</b> or <b>Add to Home screen</b>.</span></div><div className="nyf-install-step"><strong>3</strong><span>Confirm to place the New You icon on your phone.</span></div></>}<button className="nyf-btn ghost full" onClick={onClose} style={{ marginTop: 10 }}>Maybe later</button></div></div>;
+}
+
+function LandingScreen({ onMember, onStaff, onInstall, showInstallGuide, onCloseInstallGuide }) {
   return (
     <div className="nyf nyf-landing">
       <style>{STYLE}</style>
@@ -2222,6 +2232,7 @@ function LandingScreen({ onMember, onStaff, onInstall }) {
         {onInstall && <button className="nyf-link-btn" onClick={onInstall} style={{ display: "block", margin: "10px auto 0", color: "#fff" }}>Install New You on this phone</button>}
         <div style={{ textAlign: "center", color: "#C9D9E8", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
       </div>
+      {showInstallGuide && <InstallGuide onClose={onCloseInstallGuide} onInstall={onInstall} />}
     </div>
   );
 }
@@ -2352,12 +2363,15 @@ export default function App() {
   const [memberName, setMemberName] = useState("");
   const [pausedNotice, setPausedNotice] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   useEffect(() => {
     const manifest = document.createElement("link"); manifest.rel = "manifest"; manifest.href = "/manifest.webmanifest"; document.head.appendChild(manifest);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     const captureInstall = (event) => { event.preventDefault(); setInstallPrompt(event); };
     window.addEventListener("beforeinstallprompt", captureInstall);
+    const standalone = window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone;
+    if (!standalone && !localStorage.getItem("nyf_install_guide_seen")) setTimeout(() => setShowInstallGuide(true), 900);
     (async () => {
       try {
         const response = await fetch("/api/auth?action=session", { credentials: "same-origin" });
@@ -2378,6 +2392,7 @@ export default function App() {
   }, []);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); setInstallPrompt(null); }
+  function closeInstallGuide() { localStorage.setItem("nyf_install_guide_seen", "1"); setShowInstallGuide(false); }
 
   async function memberLogin(code) {
     const response = await fetch("/api/auth", {
@@ -2422,7 +2437,7 @@ export default function App() {
   if (view === "app") return <MainApp onLogout={logout} memberName={memberName} />;
   if (view === "admin") return <CoachDashboard onLogout={logout} />;
   if (view === "staff-login") return <CentralStaffLogin onBack={() => setView("login")} onLogin={staffLogin} />;
-  if (view === "landing") return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt ? installApp : null} />;
+  if (view === "landing") return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} />;
   return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} onBack={() => setView("landing")} />;
 }
 
