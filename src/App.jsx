@@ -223,6 +223,9 @@ const STYLE = `
 .nyf-calorie-equation div { background: #F3F7FB; border: 1px solid var(--line); border-radius: 11px; padding: 10px 5px; text-align: center; }
 .nyf-calorie-equation strong { display: block; font-size: 17px; color: var(--forest); font-family: 'Outfit', sans-serif; }
 .nyf-calorie-equation span { display: block; color: var(--ink-soft); font-size: 9.5px; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+.nyf-announcement { background: linear-gradient(135deg, #FFF7DE, #F7E7B8); border: 1px solid #E6C56E; border-left: 4px solid var(--gold); color: #4D390E; }
+.nyf-consent { display: flex; align-items: flex-start; gap: 9px; font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); margin: 12px 0; }
+.nyf-consent input { margin-top: 3px; accent-color: var(--forest); }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -490,6 +493,7 @@ function MainApp({ onLogout, memberName }) {
   const [coachMessages, setCoachMessages] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
+  const [announcement, setAnnouncement] = useState(null);
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -518,6 +522,7 @@ function MainApp({ onLogout, memberName }) {
       } catch (e) {
         // no saved data yet
       }
+      try { const response = await fetch("/api/announcement", { credentials: "same-origin" }); const result = await response.json(); if (response.ok) setAnnouncement(typeof result.announcement === "string" ? JSON.parse(result.announcement) : result.announcement); } catch {}
       setLoaded(true);
     })();
   }, []);
@@ -741,6 +746,16 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   function removeProgressPhoto(id) {
     setProgressPhotos((prev) => prev.filter((item) => item.id !== id));
   }
+  function exportProgress() {
+    const rows = [["Type","Date","Name / field","Value","Protein","Carbs","Fat"]];
+    weightLogs.forEach((item) => rows.push(["Weight", item.date, "Weight kg", item.weight, "", "", item.bodyFat ? `Body fat ${item.bodyFat}%` : ""]));
+    foodLogs.forEach((item) => rows.push(["Food", item.date, item.name, item.cal, item.protein, item.carb, item.fat]));
+    exerciseLogs.forEach((item) => rows.push(["Exercise", item.date, item.activity, item.calories, "", "", ""]));
+    measurementLogs.forEach((item) => Object.entries(item).filter(([key]) => !["id","date"].includes(key)).forEach(([key,value]) => value && rows.push(["Measurement", item.date, `${key} cm`, value, "", "", ""])));
+    weeklyCheckIns.forEach((item) => rows.push(["Weekly check-in", item.date, "Energy/Hunger/Sleep/Training", `${item.energy}/${item.hunger}/${item.sleep}/${item.training}`, "", "", item.win || item.struggle || ""]));
+    const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = `new-you-progress-${todayStr()}.csv`; link.click(); URL.revokeObjectURL(url);
+  }
 
   if (!loaded) {
     return (
@@ -786,6 +801,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeExercise={removeExercise}
             exerciseLogs={exerciseLogs}
             dailyHabits={dailyHabits}
+            announcement={announcement}
           />
         )}
         {tab === "track" && (
@@ -828,7 +844,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onExport={exportProgress} />}
       </div>
 
       <FooterLogo />
@@ -885,8 +901,8 @@ function Bar({ label, value, goal, unit }) {
 
 function Onboarding({ profile, onComplete, onLogout }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375" });
-  const ready = form.age && form.height && form.weight && form.goalWeight;
+  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375", consent: false });
+  const ready = form.age && form.height && form.weight && form.goalWeight && form.consent;
   function finish() {
     const weight = Number(form.weight);
     const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
@@ -895,7 +911,8 @@ function Onboarding({ profile, onComplete, onLogout }) {
     const proteinGoal = Math.round(weight * 1.8);
     const fatGoal = Math.round(weight * 0.7);
     const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
-    onComplete({ ...profile, ...form, age: Number(form.age), height: Number(form.height), weight, goalWeight: Number(form.goalWeight), maintenance, calorieGoal, proteinGoal, carbGoal, fatGoal, onboardingComplete: true });
+    const { consent, ...details } = form;
+    onComplete({ ...profile, ...details, age: Number(form.age), height: Number(form.height), weight, goalWeight: Number(form.goalWeight), maintenance, calorieGoal, proteinGoal, carbGoal, fatGoal, privacyConsentAt: new Date().toISOString(), onboardingComplete: true });
   }
   return (
     <div className="nyf">
@@ -916,6 +933,7 @@ function Onboarding({ profile, onComplete, onLogout }) {
             <div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div><div><label className="nyf-field-label">Goal weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.goalWeight} onChange={(e) => setForm({ ...form, goalWeight: e.target.value })} /></div></div>
             <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3–5 days</option><option value="1.725">Very active</option></select>
             <p className="nyf-range-note">We’ll calculate maintenance calories, a moderate fat-loss target and your daily macros. You can edit them later under Goals.</p>
+            <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so my coach can support me. I understand that this app provides general guidance and not medical treatment.</span></label>
             <button className="nyf-btn gold full" onClick={finish} disabled={!ready}><Sparkles size={15} /> Create my plan</button>
             <button className="nyf-link-btn" onClick={() => setStep(1)}>Back</button>
           </div>
@@ -998,7 +1016,7 @@ function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits
   return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Your last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{foodDays ? Math.round(calories / foodDays) : "—"}</strong><span>Avg kcal</span></div><div className="nyf-progress-tile"><strong>{foodDays ? `${Math.round(protein / foodDays)}g` : "—"}</strong><span>Avg protein</span></div><div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Weight change</span></div></div><div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Exercise recorded: <strong>{Math.round(exercise)} kcal</strong> · Habits completed: <strong>{habitDone}/28</strong> · Food logged: <strong>{foodDays}/7 days</strong></div>{foodDays > 0 && <div style={{ marginTop: 9, fontSize: 11.5, color: "var(--ink-soft)" }}>Calorie target: {profile.calorieGoal} kcal · Protein target: {profile.proteinGoal}g</div>}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, coachMessages, addCoachMessage, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, announcement }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   const startOfYear = new Date(new Date().getFullYear(), 0, 0);
@@ -1010,6 +1028,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <div className="nyf-motivation-label"><Sparkles size={13} /> Today's motivation</div>
         <div className="nyf-motivation-quote">“{motivation}”</div>
       </div>
+      {announcement?.text && <div className="nyf-card nyf-announcement"><div className="nyf-section-title"><Sparkles size={16} /> From Coach Martin</div><div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{announcement.text}</div></div>}
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
@@ -1495,7 +1514,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onExport }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -1551,6 +1570,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout }) {
         </button>
       )}
       </div>
+      <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button></div>
     </>
   );
 }
@@ -2337,6 +2357,8 @@ function CoachDashboard({ onLogout }) {
   const [selected, setSelected] = useState(null);
   const [memberData, setMemberData] = useState(null);
   const [summaries, setSummaries] = useState({});
+  const [announcementText, setAnnouncementText] = useState("");
+  const [announcementSaved, setAnnouncementSaved] = useState(false);
 
   async function memberAction(action, extra = {}) {
     const response = await fetch("/api/members", {
@@ -2354,6 +2376,7 @@ function CoachDashboard({ onLogout }) {
   useEffect(() => {
     memberAction("list").catch((e) => setError(e.message)).finally(() => setLoading(false));
     fetch("/api/coach-overview", { credentials: "same-origin" }).then((response) => response.json()).then((result) => setSummaries(Object.fromEntries((result.summaries || []).map((item) => [item.code, item])))).catch(() => {});
+    fetch("/api/announcement", { credentials: "same-origin" }).then((response) => response.json()).then((result) => { const value = typeof result.announcement === "string" ? JSON.parse(result.announcement) : result.announcement; setAnnouncementText(value?.text || ""); }).catch(() => {});
   }, []);
 
   async function addMember() {
@@ -2390,6 +2413,10 @@ function CoachDashboard({ onLogout }) {
   async function saveCoachGoals(goals) {
     const response = await fetch("/api/coach-goals", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: selected.code, goals }) });
     const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not save goals"); setMemberData(result.data);
+  }
+  async function saveAnnouncement() {
+    setAnnouncementSaved(false); const response = await fetch("/api/announcement", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: announcementText }) });
+    if (!response.ok) { const result = await response.json(); setError(result.error || "Could not save announcement"); return; } setAnnouncementSaved(true);
   }
 
   if (selected) {
@@ -2483,6 +2510,7 @@ function CoachDashboard({ onLogout }) {
         <div className="nyf-greeting">Coach dashboard</div>
       </div>
       <div className="nyf-scroll">
+        <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={16} /> Member announcement</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>This appears near the top of every member’s Today page.</p><textarea className="nyf-input" rows="3" maxLength="500" value={announcementText} onChange={(e) => { setAnnouncementText(e.target.value); setAnnouncementSaved(false); }} placeholder="Studio news, challenge reminder or encouragement…" /><button className="nyf-btn full" onClick={saveAnnouncement}>{announcementText.trim() ? "Publish announcement" : "Clear announcement"}</button>{announcementSaved && <div className="nyf-product-card">Announcement updated.</div>}</div>
         <div className="nyf-card gold">
           <div className="nyf-section-title"><UserPlus size={16} /> Add a member</div>
           <label className="nyf-field-label">Member name</label>
