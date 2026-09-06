@@ -228,6 +228,10 @@ const STYLE = `
 .nyf-consent input { margin-top: 3px; accent-color: var(--forest); }
 .nyf-save-state { margin-top: 6px; font-size: 10.5px; font-weight: 700; color: #C9D9E8; }
 .nyf-save-state.error { color: #FFD0C9; }
+.nyf-learn-path { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.nyf-learn-path div { border-radius: 12px; padding: 12px; background: #F3F7FB; border: 1px solid var(--line); }
+.nyf-learn-path strong { display: block; color: var(--forest); font-size: 12px; margin-bottom: 4px; }
+.nyf-learn-path span { display: block; color: var(--ink-soft); font-size: 10.5px; line-height: 1.4; }
 
 .nyf-chip-group { margin-bottom: 14px; }
 .nyf-chip-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
@@ -405,6 +409,96 @@ const ARTICLES = [
       "Maintenance calories are a range, not one perfect number. A small initial increase on the scale can be glycogen, water and greater food volume rather than immediate fat regain.",
       "Keep regular weighing, protein-centred meals, strength training, movement and some planning. Choose a comfortable weight range and respond calmly if the weekly trend exceeds it for several weeks.",
       "Difficult seasons may require a simpler version of the plan. Maintaining through holidays, injury or work stress is still success. Practical step: define three habits you will keep and the warning signs that trigger a routine review.",
+    ],
+  },
+  {
+    title: "19. Macros made simple",
+    body: [
+      "Macros is short for macronutrients: protein, carbohydrate and fat. They are nutrients your body needs in relatively large amounts, and together they make up nearly all the calories in food.",
+      "Protein and carbohydrate each provide about 4 calories per gram, while fat provides about 9. Alcohol provides about 7 calories per gram but is not an essential nutrient. This is why a small amount of oil or peanut butter can contain many calories.",
+      "Calories determine the size of your energy budget; macros describe what that budget contains. For fat loss, total calories and adequate protein usually deserve the most attention. Carbs and fats can then be divided according to preference, health and training needs.",
+      "You do not need to hit every macro exactly. Treat targets as useful ranges. A day that is five grams away from a target is still a successful day.",
+    ],
+  },
+  {
+    title: "20. Carbohydrates are fuel, not the enemy",
+    body: [
+      "Carbohydrates break down mainly into glucose, a useful fuel for your brain, muscles and higher-intensity exercise. Rice, potatoes, oats, bread, fruit, vegetables, beans and milk all contain carbohydrate.",
+      "Carbohydrates also store with water as glycogen. Eating more carbs can temporarily increase scale weight without adding body fat. Eating fewer can cause a quick water-weight drop that is not the same as fat loss.",
+      "Choose mostly fibre-rich sources and use portions that fit your calorie target. Place some carbohydrate around training if it helps energy and performance.",
+      "Sugar is a carbohydrate. It can fit in moderation, but sugary drinks and sweets are easy to consume without feeling full. The goal is sensible quantity, not fear.",
+    ],
+  },
+  {
+    title: "21. Dietary fat and why your body needs it",
+    body: [
+      "Dietary fat helps form cell membranes, supports hormone production, carries flavour and helps absorb vitamins A, D, E and K. Examples include olive oil, avocado, nuts, seeds, eggs, dairy and oily fish.",
+      "Fat is calorie dense at about 9 calories per gram. Healthy fats are still calories, so measure oils, nuts, cheese, mayonnaise and peanut butter when fat loss is the goal.",
+      "Unsaturated fats from plants and fish are generally useful everyday choices. Saturated fat does not need to be eliminated, but it is sensible to keep it moderate within an overall balanced diet.",
+      "Very low-fat eating is not automatically better. Aim for a sensible amount that fits your targets and makes meals enjoyable enough to sustain.",
+    ],
+  },
+  {
+    title: "22. Fibre, digestion and feeling full",
+    body: [
+      "Fibre is the part of plant food your body does not fully digest. It supports bowel regularity, feeds helpful gut bacteria, slows digestion and can make meals more filling.",
+      "Fruit, vegetables, beans, lentils, oats, whole grains, nuts and seeds are useful sources. Increase fibre gradually and drink enough fluid; adding a large amount overnight can cause bloating or discomfort.",
+      "Many adults benefit from roughly 25–30 grams daily, although individual needs differ. You do not need to track it perfectly—include plants at most meals and vary your choices.",
+      "A practical plate starts with protein and vegetables, then adds a suitable carbohydrate and measured fat. That combination usually controls hunger better than calories from drinks or highly processed snacks.",
+    ],
+  },
+  {
+    title: "23. How to read a food label",
+    body: [
+      "Start with the serving size. Nutrition values may be listed per serving and per 100 grams. If the serving is 30 grams but you eat 60 grams, double every listed number.",
+      "South African labels often use kilojoules. Divide kilojoules by 4.184 for calories. For a quick estimate, divide by four; 840 kJ is approximately 200 calories.",
+      "Compare similar products per 100 grams. Then check protein, carbohydrate, sugar, fat, saturated fat, fibre and sodium according to what matters for your goals.",
+      "Marketing words such as natural, high-protein, low-carb or fitness do not automatically make a product low-calorie. The nutrition table and actual portion tell the useful story.",
+    ],
+  },
+  {
+    title: "24. Strength-training words beginners hear",
+    body: [
+      "A repetition, or rep, is one complete movement. A set is a group of repetitions. Three sets of ten squats means performing ten squats, resting, and repeating that sequence three times.",
+      "Resistance is the load your muscles work against: body weight, bands, dumbbells, barbells or machines. Good form means controlling the movement in a way that suits your body and keeps the intended muscles working.",
+      "Progressive overload means gradually asking your body to do slightly more—an extra rep, a little more weight, better control or a greater comfortable range of motion. It does not mean lifting maximally every session.",
+      "RPE describes effort from 1 to 10. An RPE of 7–8 usually means you could perform about two or three more good reps. Beginners can make excellent progress without training to complete failure.",
+    ],
+  },
+  {
+    title: "25. What happens during a New You class",
+    body: [
+      "A class normally starts with a warm-up to raise body temperature, practise movements and prepare joints and muscles. The coach then explains the workout and demonstrates exercise options.",
+      "Strength work challenges muscles with controlled resistance. Conditioning raises heart rate and improves work capacity. Both can be adjusted to your fitness, confidence and injury history.",
+      "Choose the level that lets you move well—not the one that looks most impressive. Reducing weight, range, speed or impact is intelligent coaching, not failure.",
+      "Tell the coach about pain, pregnancy, surgery or medical limitations before training. Normal effort and muscle fatigue feel different from sharp, sudden or worsening pain.",
+    ],
+  },
+  {
+    title: "26. Soreness, pain and recovery",
+    body: [
+      "Delayed-onset muscle soreness can appear 12–48 hours after unfamiliar training and usually settles within several days. You can have a productive workout without becoming very sore.",
+      "Sharp pain, joint pain, numbness, swelling, chest pain, faintness or pain that worsens is not something to push through. Stop and tell your coach; seek appropriate medical help when symptoms are concerning.",
+      "Recovery includes sleep, adequate protein and calories, hydration, easier movement and sensible spacing between hard sessions. More training is not always more progress.",
+      "Build gradually. Your muscles, tendons, joints and confidence all need time to adapt, especially when returning after a long break.",
+    ],
+  },
+  {
+    title: "27. Water, supplements and protein powder",
+    body: [
+      "Hydration needs change with body size, heat, sweat and activity. Pale-yellow urine and normal thirst are useful everyday guides. Drink more around hot or sweaty training without forcing extreme amounts.",
+      "Supplements cannot replace an appropriate calorie intake, adequate protein, fruit and vegetables, sleep and training. Most products add small benefits only after the basics are consistent.",
+      "Whey protein is simply a convenient protein-rich food. Look at protein per serving, calories, ingredients, taste, price and whether it agrees with your digestion. It is not required if food already meets your needs.",
+      "Creatine monohydrate is well researched for strength and muscle performance, but it can increase water stored inside muscle. Discuss supplements with a healthcare professional if you are pregnant, breastfeeding, under 18, take medication or have a medical condition.",
+    ],
+  },
+  {
+    title: "28. Your first four weeks",
+    body: [
+      "Week one is for learning: log honestly, learn common portions, choose manageable classes and notice hunger. Do not react dramatically to every scale movement.",
+      "Week two is for repetition: keep calories in a reasonable range, include protein at meals, improve steps and repeat the exercises with better control.",
+      "Weeks three and four provide enough information to begin seeing patterns. Review average weight, waist, food consistency, energy, hunger, sleep and training—not only the best or worst day.",
+      "If the plan is working and feels manageable, continue. If progress, recovery or adherence is poor, discuss one small change with your coach. The goal is to build skills you can keep using after motivation fades.",
     ],
   },
 ];
@@ -1232,9 +1326,22 @@ function FoodPicksCard() {
 function LearnTab({ openArticle, setOpenArticle }) {
   return (
     <>
+      <div className="nyf-card gold">
+        <div className="nyf-section-title"><BookOpen size={17} /> Start here: your beginner learning path</div>
+        <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>You do not need to understand everything at once. Read one short lesson at a time and practise one idea during the week.</p>
+        <div className="nyf-learn-path"><div><strong>1 · Understand</strong><span>Calories, macros and fat loss</span></div><div><strong>2 · Build</strong><span>Protein-rich, filling meals</span></div><div><strong>3 · Train</strong><span>Strength, cardio and steps</span></div><div><strong>4 · Continue</strong><span>Recovery, plateaus and maintenance</span></div></div>
+      </div>
+      <div className="nyf-card">
+        <div className="nyf-section-title">Five words to know first</div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Calories</div><div className="nyf-log-macro">The energy supplied by food and used by your body.</div></div></div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Macros</div><div className="nyf-log-macro">Protein, carbohydrates and fats—the main nutrients that contain calories.</div></div></div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Maintenance</div><div className="nyf-log-macro">The approximate calories that keep average body weight stable.</div></div></div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Calorie deficit</div><div className="nyf-log-macro">Eating less energy than your body uses over time.</div></div></div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Progressive overload</div><div className="nyf-log-macro">Gradually increasing training difficulty as you become stronger.</div></div></div>
+      </div>
       <FoodPicksCard />
       <div className="nyf-card">
-      <div className="nyf-section-title">Weight loss, plainly explained</div>
+      <div className="nyf-section-title">Beginner lessons ({ARTICLES.length})</div>
       {ARTICLES.map((a, i) => (
         <div className="nyf-accordion-item" key={i}>
           <button className="nyf-accordion-head" onClick={() => setOpenArticle(openArticle === i ? null : i)}>
