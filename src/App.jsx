@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 02:05 SAST.
-const APP_RELEASE = "2026-09-07-0205";
+// Consolidated New You release: 07 September 2026, 02:35 SAST.
+const APP_RELEASE = "2026-09-07-0235";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1022,7 +1022,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   }
 
   if (!profile.onboardingComplete) {
-    return <Onboarding profile={profile} onComplete={setProfile} onLogout={onLogout} />;
+    return <Onboarding profile={profile} initialFoods={likedFoods} onComplete={(nextProfile, foods) => { setLikedFoods(foods); setProfile(nextProfile); }} onLogout={onLogout} />;
   }
 
   return (
@@ -1196,45 +1196,52 @@ function Bar({ label, value, goal, unit }) {
   );
 }
 
-function Onboarding({ profile, onComplete, onLogout }) {
+function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375", consent: false });
-  const ready = form.age && form.height && form.weight && form.goalWeight && form.consent;
+  const [foods, setFoods] = useState(initialFoods);
+  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
+  const calculate = () => {
+    const weight = Number(form.weight); const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
+    const maintenance = Math.round(bmr * Number(form.activity)); const calorieGoal = Math.max(form.sex === "male" ? 1500 : 1200, Math.round((maintenance - 400) / 10) * 10);
+    const proteinGoal = Math.round(weight * 1.8); const fatGoal = Math.round(weight * 0.7); const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
+    return { weight, maintenance, calorieGoal, proteinGoal, fatGoal, carbGoal };
+  };
+  const targets = form.age && form.height && form.weight ? calculate() : null;
+  const toggleFood = (item) => setFoods((items) => items.includes(item) ? items.filter((food) => food !== item) : [...items, item]);
   function finish() {
-    const weight = Number(form.weight);
-    const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
-    const maintenance = Math.round(bmr * Number(form.activity));
-    const calorieGoal = Math.max(1200, Math.round((maintenance - 400) / 10) * 10);
-    const proteinGoal = Math.round(weight * 1.8);
-    const fatGoal = Math.round(weight * 0.7);
-    const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
     const { consent, ...details } = form;
-    onComplete({ ...profile, ...details, age: Number(form.age), height: Number(form.height), weight, goalWeight: Number(form.goalWeight), maintenance, calorieGoal, proteinGoal, carbGoal, fatGoal, privacyConsentAt: new Date().toISOString(), onboardingComplete: true });
+    onComplete({ ...profile, ...details, age: Number(form.age), height: Number(form.height), ...targets, goalWeight: Number(form.goalWeight), privacyConsentAt: new Date().toISOString(), onboardingComplete: true }, foods);
   }
+  const next = () => setStep((value) => Math.min(6, value + 1)); const back = () => setStep((value) => Math.max(1, value - 1));
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className="nyf-header"><div className="nyf-step">Step {step} of 2</div><div className="nyf-greeting">Let's personalise your plan</div><div className="nyf-sub">A few details help us calculate a sensible starting point.</div></div>
+      <div className="nyf-header"><div className="nyf-step">Step {step} of 6</div><div className="nyf-greeting">{["Let's get to know you", "Choose your goal", "Your starting targets", "Foods you enjoy", "Set up your meals", "How to use New You"][step - 1]}</div><div className="nyf-sub">{Math.round((step / 6) * 100)}% of setup complete</div></div>
       <div className="nyf-scroll">
-        {step === 1 ? (
+        {step === 1 && (
           <div className="nyf-card gold">
             <div className="nyf-section-title"><User size={17} /> About you</div>
             <label className="nyf-field-label">Name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <label className="nyf-field-label">Sex used for the calorie equation</label><select className="nyf-select" value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}><option value="female">Woman</option><option value="male">Man</option></select>
             <div className="nyf-grid2"><div><label className="nyf-field-label">Age</label><input className="nyf-input" type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></div><div><label className="nyf-field-label">Height (cm)</label><input className="nyf-input" type="number" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} /></div></div>
-            <button className="nyf-btn full" onClick={() => setStep(2)} disabled={!form.age || !form.height}>Continue</button>
+            <button className="nyf-btn full" onClick={next} disabled={!form.name.trim() || !form.age || !form.height}>Continue</button>
           </div>
-        ) : (
+        )}
+        {step === 2 && (
           <div className="nyf-card gold">
             <div className="nyf-section-title"><Calculator size={17} /> Your starting point</div>
             <div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div><div><label className="nyf-field-label">Goal weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.goalWeight} onChange={(e) => setForm({ ...form, goalWeight: e.target.value })} /></div></div>
             <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3–5 days</option><option value="1.725">Very active</option></select>
-            <p className="nyf-range-note">We’ll calculate maintenance calories, a moderate fat-loss target and your daily macros. You can edit them later under Goals.</p>
+            <p className="nyf-range-note">Choose what describes your normal week—not the week you hope to have.</p>
             <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so my coach can support me. I understand that this app provides general guidance and not medical treatment.</span></label>
-            <button className="nyf-btn gold full" onClick={finish} disabled={!ready}><Sparkles size={15} /> Create my plan</button>
-            <button className="nyf-link-btn" onClick={() => setStep(1)}>Back</button>
+            <button className="nyf-btn gold full" onClick={next} disabled={!form.weight || !form.goalWeight || !form.consent}>Calculate my targets</button>
+            <button className="nyf-link-btn" onClick={back}>Back</button>
           </div>
         )}
+        {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Fat-loss kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates, not a promise of a specific weekly loss. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
+        {step === 4 && <div className="nyf-card"><div className="nyf-section-title"><Heart size={17} /> Choose foods you actually like</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Tap everything you would happily eat. Meal suggestions will use these choices first.</p>{FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${foods.includes(item) ? " selected" : ""}`} onClick={() => toggleFood(item)}>{item}</button>)}</div></div>)}<div className="nyf-product-card">{foods.length} foods selected</div><button className="nyf-btn full" onClick={next} disabled={foods.length < 3}>Continue</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
+        {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4–5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
+        {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Workout","Choose home or gym training and Level 1, 2 or 3."],["Learn & Goals","Understand fat loss, review targets and add the app to your phone."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal.<br />2. Add today's steps.<br />3. Record your starting weight.</div><button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         <button className="nyf-link-btn" onClick={onLogout}>Sign out</button>
       </div>
       <FooterLogo />
