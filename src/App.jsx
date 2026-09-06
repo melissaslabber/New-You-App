@@ -2073,16 +2073,18 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
 
   function chooseFood(item) {
     const per100 = { cal: item.cal, protein: item.protein, carb: item.carb, fat: item.fat };
+    const qty = Number(item.defaultQty) || 100;
+    const factor = qty / 100;
     setProduct({ name: item.name, per100 });
     setForm({
       mealType: form.mealType,
       name: item.name,
-      qty: "100",
+      qty: String(qty),
       unit: item.unit || "g",
-      cal: String(item.cal),
-      protein: String(item.protein),
-      carb: String(item.carb),
-      fat: String(item.fat),
+      cal: String(Math.round(item.cal * factor)),
+      protein: String(Math.round(item.protein * factor)),
+      carb: String(Math.round(item.carb * factor)),
+      fat: String(Math.round(item.fat * factor)),
     });
     setFoodResults([]);
     setFoodSearchError("");
