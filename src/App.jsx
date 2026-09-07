@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1300";
+const APP_RELEASE = "2026-09-07-1410";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -53,6 +53,15 @@ const STYLE = `
   box-shadow: 0 -8px 24px rgba(3, 29, 58, 0.06);
 }
 .nyf-logo-strip img { display: block; width: 132px; height: 72px; object-fit: contain; }
+
+.nyf-review-card { overflow: hidden; background: linear-gradient(145deg, #031D3A, #07539E); color: #fff; border-left-color: var(--gold); }
+.nyf-review-stars { color: #F5C451; font-size: 19px; letter-spacing: 2px; margin: 8px 0 12px; }
+.nyf-review-quote { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 650; line-height: 1.45; min-height: 104px; margin: 0; }
+.nyf-review-meta { color: #D7E7F7; font-size: 11.5px; margin-top: 12px; }
+.nyf-review-dots { display: flex; justify-content: center; gap: 7px; margin: 15px 0 12px; }
+.nyf-review-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.35); }
+.nyf-review-dot.active { width: 22px; border-radius: 8px; background: var(--gold); }
+.nyf-review-link { display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 12px; padding: 12px; background: #fff; color: var(--forest); font-weight: 750; font-size: 12.5px; text-decoration: none; }
 
 .nyf-nav {
   position: sticky; bottom: 0;
@@ -1409,6 +1418,29 @@ function CoachMessagesCard({ memberName }) {
   return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Contact your coach</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Open WhatsApp to contact Coach Martin. Adding a message below is optional.</p><textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Optional message…" /><button className="nyf-btn gold full" onClick={send}>Open WhatsApp with Coach Martin</button></div>;
 }
 
+const COMMUNITY_REVIEWS = [
+  { text: "More than just a training facility! New You is a family! Amazing coach, well thought-out workouts and multiple levels.", name: "Wikus Potgieter", stars: 5, url: "https://share.google/J0pOBZ4DT9Usv5CVc" },
+  { text: "This is not just a gym, it’s a community. One that is led by a coach that believes in every single person.", name: "Nellie Honicke", stars: 5, url: "https://share.google/bz7wiQBxamIGBMZyx" },
+  { text: "The best way to get your health and self-esteem back on track quickly!", name: "Andre Gilliland", stars: 5, url: "https://share.google/km0ZHrcwilkeQkbD0" },
+  { text: "Martin is professional and the community at New You is welcoming and friendly. I have been very happy there.", name: "Michael Esmeraldo", stars: 5, url: "https://share.google/IwRErsmiU2HYuU5mq" },
+  { text: "Here we don't just exercise together, we grow together. Each person looks out for the next one.", name: "Jaco Stander", stars: 5, url: "https://share.google/TMevs864alETeG56h" },
+  { text: "The group classes keep you motivated, committed and challenged. They help and accept that you are unique!", name: "Gerrit Luzaan Bester", stars: 4, url: "https://share.google/9wy1mzWInxV0N6uIG" },
+  { text: "From beginner to advanced, New You will guide you all the way. Such a supportive and uplifting environment.", name: "Hugo Smit", stars: 5, url: "https://share.google/2Wt7inyqcRis93fqw" },
+  { text: "High-energy group classes with well-prepared workouts for all ages and fitness levels, with a qualified coach in support!", name: "Marko Roux", stars: 5, url: "https://share.google/R1DIF3Qt2kPSuj1VY" },
+  { text: "The coaches are supportive, motivating and genuinely invested in every person. Each session is different, exciting and designed to challenge you.", name: "Alicia Visser", stars: 5, url: "https://share.google/61GDWAK9JSlbbBTsM" },
+];
+
+function CommunityReviews() {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    if (COMMUNITY_REVIEWS.length < 2) return undefined;
+    const timer = window.setInterval(() => setActive((index) => (index + 1) % COMMUNITY_REVIEWS.length), 7000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const review = COMMUNITY_REVIEWS[active];
+  return <div className="nyf-card nyf-review-card"><div className="nyf-step" style={{ color: "#F5C451" }}>NEW YOU COMMUNITY WINS</div><div className="nyf-review-stars" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div><p className="nyf-review-quote">“{review.text}”</p><div className="nyf-review-meta"><strong>{review.name}</strong><br />Google review · <a href={review.url} target="_blank" rel="noopener noreferrer" style={{ color: "#fff" }}>View review</a></div><div className="nyf-review-dots">{COMMUNITY_REVIEWS.map((item, index) => <button key={item.url} className={`nyf-review-dot${active === index ? " active" : ""}`} aria-label={`Show review ${index + 1}`} onClick={() => setActive(index)} />)}</div><a className="nyf-review-link" href="https://g.page/r/CT1RPs6YPPb-EAE/review" target="_blank" rel="noopener noreferrer">Leave New You a Google review</a></div>;
+}
+
 function ProgressPhotosCard({ photos, onAdd, onRemove }) {
   const [busy, setBusy] = useState(false);
   async function choose(event) {
@@ -1499,6 +1531,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
       <CoachMessagesCard memberName={profile.name} />
+      <CommunityReviews />
     </>
   );
 }
