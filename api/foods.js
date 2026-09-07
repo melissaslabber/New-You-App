@@ -3,6 +3,7 @@ import { getRedis } from "./_redis.js";
 function servingMeasures(name, unit = "g") {
   const value = String(name).toLowerCase();
   if (unit === "ml" || value.includes("milk")) return { tsp: 5, tbsp: 15, cup: 250 };
+  if (value.includes("pb2") || value.includes("powdered peanut")) return { tsp: 2.2, tbsp: 6.5, cup: 104 };
   if (value.includes("peanut butter")) return { tsp: 5.3, tbsp: 16, cup: 258 };
   if (value.includes("oil")) return { tsp: 4.5, tbsp: 13.5, cup: 216 };
   if (value.includes("yoghurt") || value.includes("yogurt")) return { tsp: 5.1, tbsp: 15.3, cup: 245 };
@@ -57,6 +58,7 @@ const COMMON_FOODS = [
   ["peanut-butter", "Peanut butter, no added sugar", "", 588, 25, 20, 50],
   ["peanut-butter-smooth", "Smooth peanut butter", "", 588, 25, 20, 50, "peanut butter regular", 15],
   ["peanut-butter-crunchy", "Crunchy peanut butter", "", 594, 25, 20, 51, "peanut butter regular", 15],
+  ["pb2-original", "PB2 Original powdered peanut butter", "PB2 Foods", 462, 46.2, 38.5, 11.5, "pb2 powder peanut butter powdered peanut protein", 13],
   ["olive-oil", "Olive oil", "", 884, 0, 0, 100, "oil extra virgin", 5],
   ["sunflower-oil", "Sunflower oil", "", 884, 0, 0, 100, "cooking oil", 5],
   ["milk-fat-free", "Fat-free milk", "", 35, 3.4, 5, 0.1, "milk skim long life fresh", 250, "ml"],
