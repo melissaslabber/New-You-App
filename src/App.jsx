@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-2240";
+const APP_RELEASE = "2026-09-07-2330";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -81,7 +81,8 @@ const STYLE = `
 .nyf-player-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #E2AE3D, #07539E); transition: width .3s ease; }
 .nyf-demo-picture { position: relative; min-height: 245px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 22px; background: radial-gradient(circle at 70% 25%, #E7F5FF 0, #D7EAF8 28%, #EEF4FA 70%); border: 1px solid #D3E2EE; }
 .nyf-demo-picture::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 34px; height: 5px; border-radius: 50%; background: rgba(3,29,58,.12); filter: blur(2px); }
-.nyf-demo-picture svg { position: relative; z-index: 1; width: 210px; height: 190px; }
+.nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations.webp'); background-size: 900% 100%; background-repeat: no-repeat; }
+.nyf-exercise-photo::after { content: "Photo form guide"; position: absolute; right: 10px; bottom: 9px; padding: 5px 8px; border-radius: 999px; color: #fff; background: rgba(3,29,58,.72); font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .nyf-player-counter { text-align: center; }
 .nyf-player-counter strong { display: block; font-family: 'Outfit', sans-serif; font-size: 58px; line-height: 1; color: var(--forest); }
 .nyf-player-counter span { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; font-weight: 750; letter-spacing: .11em; }
@@ -341,13 +342,13 @@ const STYLE = `
 .nyf-player.work .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#E7F5FF,#D7EAF8 30%,#EEF4FA 72%); }
 .nyf-player.rest .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#FFF4D7,#F8E5AA 32%,#FFF9EB 72%); }
 .nyf-player.rest .nyf-player-counter strong { color: #A66B00; }
-.nyf-player.work .nyf-demo-picture svg { animation: nyf-demo-move 1.3s ease-in-out infinite alternate; transform-origin: 50% 85%; }
+.nyf-player.work .nyf-exercise-photo { animation: nyf-photo-focus 2.2s ease-in-out infinite alternate; }
 .nyf-player.finished .nyf-card { background: linear-gradient(145deg,#fff,#F1FBF5); }
 .nyf-meal-photo { width: 100%; height: 118px; object-fit: cover; border-radius: 16px; margin: 2px 0 13px; box-shadow: 0 8px 20px rgba(3,29,58,.1); }
 .nyf-week-chart { height: 138px; margin: 5px -10px -8px; }
 .nyf-achievement { position: relative; overflow: hidden; }
 .nyf-achievement::after { content: "✦"; position: absolute; right: 14px; top: 11px; color: var(--gold); font-size: 18px; animation: nyf-celebrate 1.2s ease-in-out infinite alternate; }
-@keyframes nyf-demo-move { from { transform: translateY(2px) rotate(-1deg); } to { transform: translateY(-5px) rotate(1deg); } }
+@keyframes nyf-photo-focus { from { transform: scale(1); } to { transform: scale(1.025); } }
 @keyframes nyf-celebrate { from { opacity: .45; transform: scale(.8) rotate(-10deg); } to { opacity: 1; transform: scale(1.18) rotate(9deg); } }
 .nyf-navbtn { transition: color .18s ease,background .18s ease,transform .18s ease; }
 .nyf-navbtn.active { border-radius: 15px; transform: translateY(-2px); }
@@ -1345,18 +1346,16 @@ function movementCue(name) {
 
 function ExerciseIllustration({ name }) {
   const value = name.toLowerCase();
-  const floor = ["plank", "push-up", "bug", "bridge", "bird dog", "bicycle", "mountain", "thread", "cobra", "child's"].some((word) => value.includes(word));
-  const lunge = value.includes("lunge") || value.includes("hip-flexor");
-  const squat = value.includes("squat");
-  const stretch = ["stretch", "fold", "opener", "release", "rotation", "mobility"].some((word) => value.includes(word));
-  const weight = ["row", "press", "hinge", "barbell", "dumbbell", "cable"].some((word) => value.includes(word));
-  const common = { fill: "none", stroke: "#07539E", strokeWidth: 9, strokeLinecap: "round", strokeLinejoin: "round" };
-  if (floor) return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="188" cy="76" r="16" fill="#E2AE3D" /><path {...common} d="M172 91 L135 111 L92 108 L52 132 M135 111 L163 142 M91 108 L72 78 M52 132 L28 134 M163 142 L197 143" /><path d="M22 151 H215" stroke="#9BB7CC" strokeWidth="5" strokeLinecap="round" /></svg>;
-  if (lunge) return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="120" cy="32" r="16" fill="#E2AE3D" /><path {...common} d="M120 50 L116 96 M116 66 L82 85 M116 67 L151 80 M116 96 L82 126 L48 145 M116 96 L151 119 L185 119 M151 119 L151 148" /><path d="M35 153 H202" stroke="#9BB7CC" strokeWidth="5" strokeLinecap="round" /></svg>;
-  if (squat) return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="119" cy="34" r="16" fill="#E2AE3D" /><path {...common} d="M119 52 L116 98 M116 67 L78 70 M116 67 L154 70 M116 98 L82 117 L59 146 M116 98 L151 117 L177 146" /><path d="M43 153 H193" stroke="#9BB7CC" strokeWidth="5" strokeLinecap="round" /></svg>;
-  if (stretch) return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="121" cy="49" r="16" fill="#E2AE3D" /><path {...common} d="M121 67 L118 112 M119 80 L76 48 M119 80 L165 43 M118 112 L88 153 M118 112 L151 153" /><path d="M66 160 H172" stroke="#9BB7CC" strokeWidth="5" strokeLinecap="round" /></svg>;
-  if (weight) return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="120" cy="39" r="16" fill="#E2AE3D" /><path {...common} d="M120 57 L120 111 M120 72 L79 91 M120 72 L161 91 M120 111 L89 153 M120 111 L151 153" /><path d="M58 91 H182" stroke="#031D3A" strokeWidth="8" strokeLinecap="round" /><path d="M49 76 V106 M191 76 V106" stroke="#031D3A" strokeWidth="11" strokeLinecap="round" /></svg>;
-  return <svg viewBox="0 0 240 190" role="img" aria-label={`Illustration for ${name}`}><circle cx="121" cy="36" r="16" fill="#E2AE3D" /><path {...common} d="M121 54 L115 104 M117 70 L79 92 M117 70 L155 57 M115 104 L80 140 M115 104 L158 132 M80 140 L57 143 M158 132 L185 119" /><path d="M42 153 H198" stroke="#9BB7CC" strokeWidth="5" strokeLinecap="round" /></svg>;
+  let panel = 8;
+  if (["arm circle", "step jack", "shoulder roll"].some((word) => value.includes(word))) panel = 0;
+  else if (value.includes("squat") || value.includes("wall ball")) panel = 1;
+  else if (value.includes("lunge") || value.includes("split squat")) panel = 2;
+  else if (value.includes("push-up") || value.includes("press-up")) panel = 3;
+  else if (["plank", "mountain", "dead bug", "bird dog", "bridge", "bicycle", "core"].some((word) => value.includes(word))) panel = 4;
+  else if (["deadlift", "hinge", "good morning", "barbell", "dumbbell", "press", "clean", "thruster"].some((word) => value.includes(word))) panel = 5;
+  else if (["row", "pull", "lat", "trx"].some((word) => value.includes(word))) panel = 6;
+  else if (["stretch", "fold", "opener", "release", "rotation", "mobility", "hip-flexor", "cobra", "child's"].some((word) => value.includes(word))) panel = 7;
+  return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${(panel / 8) * 100}% center` }} />;
 }
 
 function WorkoutPlayer({ title, steps, onExit, onComplete }) {
