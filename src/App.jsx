@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-2030";
+const APP_RELEASE = "2026-09-07-2145";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -292,6 +292,56 @@ const STYLE = `
   cursor: pointer;
 }
 .nyf-chip.selected { background: var(--forest); border-color: var(--forest); color: #fff; }
+
+/* Premium experience */
+@keyframes nyf-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes nyf-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.nyf-scroll > * { animation: nyf-rise .34s ease both; }
+.nyf-header { position: relative; overflow: hidden; padding: 25px 22px 22px; }
+.nyf-header::after { content: ""; position: absolute; width: 180px; height: 180px; right: -70px; top: -105px; border-radius: 50%; background: rgba(255,255,255,.075); }
+.nyf-header-kicker { color: #F2C75C; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 5px; }
+.nyf-greeting { font-size: 29px; line-height: 1.08; position: relative; z-index: 1; }
+.nyf-card { border: 1px solid rgba(211,224,237,.85); border-left: 0; border-radius: 22px; padding: 20px; box-shadow: 0 13px 35px rgba(3,29,58,.075); }
+.nyf-card.gold { border-left: 0; box-shadow: inset 4px 0 0 var(--gold), 0 13px 35px rgba(3,29,58,.075); }
+.nyf-card.clay { border-left: 0; box-shadow: inset 4px 0 0 var(--clay), 0 13px 35px rgba(3,29,58,.075); }
+.nyf-section-title { font-size: 17px; letter-spacing: -.02em; }
+.nyf-btn { min-height: 46px; border-radius: 14px; box-shadow: 0 9px 20px rgba(7,53,107,.18); }
+.nyf-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(7,53,107,.22); }
+.nyf-dashboard-card { position: relative; overflow: hidden; padding: 21px; color: #fff; border: 0; background: linear-gradient(145deg,#031D3A 0%,#07457F 57%,#0877BA 100%); box-shadow: 0 18px 38px rgba(3,29,58,.22); }
+.nyf-dashboard-card::after { content: ""; position: absolute; width: 180px; height: 180px; right: -65px; top: -75px; border-radius: 50%; background: rgba(255,255,255,.075); }
+.nyf-dashboard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: relative; z-index: 1; }
+.nyf-goal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #F8D77E; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.nyf-ring { --value: 0; width: 132px; height: 132px; flex: 0 0 132px; border-radius: 50%; padding: 10px; background: conic-gradient(#F3C956 calc(var(--value) * 1%),rgba(255,255,255,.14) 0); box-shadow: 0 10px 28px rgba(0,0,0,.14); }
+.nyf-ring-inner { height: 100%; border-radius: 50%; background: #052D58; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.nyf-ring-inner strong { font: 800 27px/1 'Outfit',sans-serif; }
+.nyf-ring-inner span { margin-top: 4px; color: #CDE0F1; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.nyf-dashboard-copy { padding-top: 10px; }
+.nyf-dashboard-copy strong { display: block; font: 800 32px/1 'Outfit',sans-serif; }
+.nyf-dashboard-copy span { display: block; color: #CDE0F1; font-size: 11px; line-height: 1.4; margin-top: 7px; }
+.nyf-dashboard-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin: 18px 0 15px; position: relative; z-index: 1; }
+.nyf-dashboard-tile { padding: 10px 4px; text-align: center; border-radius: 13px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+.nyf-dashboard-tile strong { display: block; font: 750 14px/1.15 'Outfit',sans-serif; }
+.nyf-dashboard-tile span { display: block; color: #CDE0F1; font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+.nyf-dashboard-card .nyf-bar-label { color: #D7E7F7; }
+.nyf-dashboard-card .nyf-bar-track { background: rgba(255,255,255,.14); }
+.nyf-dashboard-card .nyf-bar-fill { background: linear-gradient(90deg,#F1BC43,#FFE69A); }
+.nyf-dashboard-card .nyf-btn { position: relative; z-index: 1; }
+.nyf-overview-card { padding: 17px 18px; }
+.nyf-overview-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.nyf-overview-icon { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: #EEF6FD; color: var(--forest); }
+.nyf-overview-value { font: 800 23px/1 'Outfit',sans-serif; }
+.nyf-overview-label { color: var(--ink-soft); font-size: 10px; margin-top: 4px; }
+.nyf-skeleton-wrap { padding: 24px 18px; }
+.nyf-skeleton { border-radius: 18px; background: linear-gradient(90deg,#E7EEF5 25%,#F7FAFC 45%,#E7EEF5 65%); background-size: 220% 100%; animation: nyf-shimmer 1.25s infinite; }
+.nyf-skeleton.hero { height: 190px; margin-bottom: 16px; }
+.nyf-skeleton.row { height: 92px; margin-bottom: 12px; }
+.nyf-player.work .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#E7F5FF,#D7EAF8 30%,#EEF4FA 72%); }
+.nyf-player.rest .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#FFF4D7,#F8E5AA 32%,#FFF9EB 72%); }
+.nyf-player.rest .nyf-player-counter strong { color: #A66B00; }
+.nyf-player.finished .nyf-card { background: linear-gradient(145deg,#fff,#F1FBF5); }
+.nyf-navbtn { transition: color .18s ease,background .18s ease,transform .18s ease; }
+.nyf-navbtn.active { border-radius: 15px; transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .nyf-scroll > *, .nyf-skeleton { animation: none; } .nyf-btn,.nyf-navbtn { transition: none; } }
 `;
 
 const ARTICLES = [
@@ -1113,7 +1163,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     return (
       <div className="nyf">
         <style>{STYLE}</style>
-        <div className="nyf-empty">Loading your dashboard…</div>
+        <div className="nyf-header"><div className="nyf-header-kicker">New You</div><div className="nyf-greeting">Preparing your day</div><div className="nyf-sub">Your progress is loading</div></div>
+        <div className="nyf-skeleton-wrap"><div className="nyf-skeleton hero" /><div className="nyf-skeleton row" /><div className="nyf-skeleton row" /></div>
       </div>
     );
   }
@@ -1126,7 +1177,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     <div className="nyf">
       <style>{STYLE}</style>
       <div className="nyf-header">
-        <div className="nyf-greeting">{tab === "home" ? "Today" : tab === "workout" ? "Workout of the day" : tab === "track" ? "Track" : tab === "meals" ? "Meal suggestions" : tab === "learn" ? "Learn" : "Goals"}</div>
+        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "New You"}</div>
+        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "learn" ? "Learn" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
@@ -1217,7 +1269,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => changeTab("home")} />
         <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => changeTab("track")} />
         <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => changeTab("meals")} />
-        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => changeTab("workout")} />
+        <NavBtn icon={<Flame size={19} />} label="Train" active={tab === "workout"} onClick={() => changeTab("workout")} />
         <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => changeTab("profile")} />
       </div>
 
@@ -1345,8 +1397,8 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
   }, [running, seconds, phase, index, finished, soundOn]);
   const goTo = (next) => { const safe = Math.max(0, Math.min(steps.length - 1, next)); setIndex(safe); setPhase("work"); setSeconds(steps[safe].duration); setFinished(false); };
   const formatTime = (value) => `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
-  if (finished) return <div className="nyf-player"><button className="nyf-btn ghost" onClick={onExit}>Back</button><div className="nyf-card gold" style={{ textAlign: "center", padding: "44px 20px" }}><Check size={64} color="var(--success)" /><h2 style={{ fontSize: 28, marginTop: 14 }}>Workout completed!</h2><p style={{ color: "var(--ink-soft)", lineHeight: 1.5 }}>Well done for showing up and finishing {title}.</p><button className="nyf-btn gold full" onClick={onComplete}>Save workout and finish</button><button className="nyf-link-btn" onClick={() => goTo(0)}>Repeat workout</button></div></div>;
-  return <div className="nyf-player"><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><button className="nyf-btn ghost" onClick={() => setSoundOn((value) => !value)}>{soundOn ? "Sound on" : "Sound off"}</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? `${step.rest || 0} SEC REST` : `${step.duration} SEC WORK`}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => { if (!running) playBeep(1120, 0.42, 0.8); setRunning((value) => !value); }}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
+  if (finished) return <div className="nyf-player finished"><button className="nyf-btn ghost" onClick={onExit}>Back</button><div className="nyf-card gold" style={{ textAlign: "center", padding: "44px 20px" }}><Check size={64} color="var(--success)" /><h2 style={{ fontSize: 28, marginTop: 14 }}>Workout completed!</h2><p style={{ color: "var(--ink-soft)", lineHeight: 1.5 }}>Well done for showing up and finishing {title}.</p><button className="nyf-btn gold full" onClick={onComplete}>Save workout and finish</button><button className="nyf-link-btn" onClick={() => goTo(0)}>Repeat workout</button></div></div>;
+  return <div className={`nyf-player ${phase}`}><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><button className="nyf-btn ghost" onClick={() => setSoundOn((value) => !value)}>{soundOn ? "Sound on" : "Sound off"}</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? `${step.rest || 0} SEC REST` : `${step.duration} SEC WORK`}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => { if (!running) playBeep(1120, 0.42, 0.8); setRunning((value) => !value); }}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
 }
 
 function WorkoutTab({ setTab, addExercise }) {
@@ -1713,6 +1765,9 @@ function StepsCard({ entry, onSave, compact = false }) {
 function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, exerciseLogs, dailyHabits, todaySteps, setShowFoodModal }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
+  const available = profile.calorieGoal + creditedExerciseCalories;
+  const calorieProgress = Math.min(100, Math.round((totals.cal / Math.max(1, available)) * 100));
+  const goalLabel = profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss";
   function weightChange(days) {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days); cutoff.setHours(0, 0, 0, 0);
     const entries = [...weightLogs].filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff).sort((a, b) => a.date.localeCompare(b.date));
@@ -1724,20 +1779,20 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   const formatChange = (value) => value === null ? "-" : `${value > 0 ? "+" : ""}${value.toFixed(1)}kg`;
   return (
     <>
-      <div className="nyf-card">
-        <div className="nyf-section-title"><Flame size={17} /> Today's calorie overview</div>
-        <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
-        <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
-        <div className="nyf-calorie-equation"><div><strong>{profile.calorieGoal + creditedExerciseCalories}</strong><span>Available</span></div><div><strong>{totals.cal}</strong><span>Food used</span></div><div><strong>{Math.max(0, remaining)}</strong><span>Left</span></div></div>
-        <div style={{ height: 14 }} />
+      <div className="nyf-card nyf-dashboard-card">
+        <div className="nyf-dashboard-top">
+          <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left today after your exercise credit" : `${Math.abs(remaining)} kcal over today's adjusted goal`}</span></div>
+          <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>used today</span></div></div>
+        </div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><strong>{available}</strong><span>Available</span></div><div className="nyf-dashboard-tile"><strong>{totals.cal}</strong><span>Food</span></div><div className="nyf-dashboard-tile"><strong>{todaySteps?.steps?.toLocaleString() || "-"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><strong>{exerciseCalories || 0}</strong><span>Exercise</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
-        <button className="nyf-btn full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
-        <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 7 }}>Exercise credit included: {creditedExerciseCalories} kcal ({profile.exerciseCredit ?? 50}% of the recorded estimate).</div>
+        <button className="nyf-btn gold full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
+        <div style={{ fontSize: 10.5, color: "#CDE0F1", marginTop: 9, position: "relative", zIndex: 1 }}>Includes {creditedExerciseCalories} kcal exercise credit at {profile.exerciseCredit ?? 50}%.</div>
       </div>
-      <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div>{todaySteps ? <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{todaySteps.steps.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{todaySteps.goal.toLocaleString()}</strong><span>Goal</span></div><div className="nyf-progress-tile"><strong>{Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}%</strong><span>Complete</span></div></div> : <div className="nyf-empty">No steps logged today.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{todaySteps ? "Update steps in Track" : "Log steps in Track"}</button></div>
-      <div className="nyf-card"><div className="nyf-section-title"><Dumbbell size={17} /> Exercise today</div>{todayExercise.length ? <>{todayExercise.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Recorded in Track</div></div><strong>{item.calories} kcal</strong></div>)}<div className="nyf-product-card"><strong>{exerciseCalories} kcal</strong> total exercise estimate</div></> : <div className="nyf-empty">No exercise logged today.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{todayExercise.length ? "Update exercise in Track" : "Log exercise in Track"}</button></div>
+      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "No steps yet"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} step goal` : "Add today's movement in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit" : "Add"}</button></div></div>
+      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? `${exerciseCalories} kcal` : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => item.activity).join(", ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "Edit" : "Add"}</button></div></div>
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
       <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
