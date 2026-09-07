@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1015";
+const APP_RELEASE = "2026-09-07-1215";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -813,6 +813,9 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     setFoodLogs((prev) => [...prev, { id: uid(), date: todayStr(), ...entry }]);
     setShowFoodModal(false);
   }
+  function addFoodAndContinue(entry) {
+    setFoodLogs((prev) => [...prev, { id: uid(), date: todayStr(), ...entry }]);
+  }
   function removeFood(id) {
     setFoodLogs((prev) => prev.filter((f) => f.id !== id));
   }
@@ -1158,7 +1161,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => changeTab("profile")} />
       </div>
 
-      {showFoodModal && <FoodModal onAdd={addFood} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} savedMeals={savedMeals} onSaveMeal={saveMeal} />}
+      {showFoodModal && <FoodModal onAdd={addFood} onAddAndContinue={addFoodAndContinue} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} savedMeals={savedMeals} onSaveMeal={saveMeal} />}
       {showWeightModal && <WeightModal onAdd={addWeight} onClose={() => setShowWeightModal(false)} />}
       {showInstallGuide && <InstallGuide onClose={onCloseInstallGuide} onInstall={onInstall} />}
       {loaded && profile.onboardingComplete && !dailyHabits[todayStr()]?.sleepQuality && <SleepCheckIn onSelect={saveSleepQuality} />}
@@ -2171,7 +2174,7 @@ function FoodSubmissionForm({ initialName = "" }) {
   return <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Photograph a missing product</strong><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Take clear, close photos in good light. The app will fill the form; you must check it before saving.</p><div className="nyf-grid2"><label className="nyf-btn ghost" style={{ textAlign: "center" }}><Barcode size={15} /> Barcode photo<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => selectPhoto("barcode", e.target.files?.[0])} /></label><label className="nyf-btn ghost" style={{ textAlign: "center" }}><Camera size={15} /> Nutrition label<input type="file" accept="image/*" capture="environment" hidden onChange={(e) => selectPhoto("label", e.target.files?.[0])} /></label></div>{(photos.barcode || photos.label) && <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>{photos.barcode && <img src={photos.barcode.dataUrl} alt="Barcode preview" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6 }} />}{photos.label && <img src={photos.label.dataUrl} alt="Nutrition label preview" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6 }} />}</div>}<button className="nyf-btn full" onClick={analysePhotos} disabled={busy || (!photos.barcode && !photos.label)}>{status === "analysing" ? "Reading photos…" : "Read photos and fill values"}</button>{status.startsWith("review-") && <div className="nyf-product-card" style={{ marginTop: 8 }}>Photo reading confidence: <strong>{status.replace("review-", "")}</strong>. Check every value against the label before saving.</div>}<label className="nyf-field-label">Product name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><label className="nyf-field-label">Brand</label><input className="nyf-input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="e.g. Woolworths, Ouma or Albany" /><label className="nyf-field-label">Barcode</label><input className="nyf-input" inputMode="numeric" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /><div className="nyf-grid2"><div><label className="nyf-field-label">Normal serving</label><input className="nyf-input" type="number" value={form.servingSize} onChange={(e) => setForm({ ...form, servingSize: e.target.value })} /></div><div><label className="nyf-field-label">Unit</label><select className="nyf-select" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}><option value="g">grams</option><option value="ml">millilitres</option></select></div></div><div className="nyf-grid2">{[["cal","Calories"],["protein","Protein"],["carb","Carbs"],["fat","Fat"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} per 100</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div>{status && !busy && !status.startsWith("review-") && status !== "sent" && <div className="nyf-lookup-error">{status}</div>}<button className="nyf-btn full" onClick={submit} disabled={!form.name || !form.cal || busy}>{status === "saving" ? "Saving…" : "Save to shared food directory"}</button><button className="nyf-link-btn" onClick={() => setOpen(false)} style={{ display: "block", margin: "10px auto 0" }}>Cancel</button></div>;
 }
 
-function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
+function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
   const [mode, setMode] = useState("manual");
   const defaultMealType = new Date().getHours() < 10 ? "Breakfast" : new Date().getHours() < 14 ? "Lunch" : new Date().getHours() < 18 ? "Snack" : "Dinner";
   const [form, setForm] = useState({ mealType: defaultMealType, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
@@ -2243,8 +2246,11 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     setCameraError("");
     const imageUrl = URL.createObjectURL(file);
     try {
-      const result = await new BrowserMultiFormatReader().decodeFromImageUrl(imageUrl);
-      const value = result.getText();
+      let value = "";
+      if ("BarcodeDetector" in window) {
+        try { const image = new Image(); image.src = imageUrl; await image.decode(); const codes = await new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] }).detect(image); value = codes[0]?.rawValue || ""; } catch { /* ZXing fallback below */ }
+      }
+      if (!value) value = (await new BrowserMultiFormatReader().decodeFromImageUrl(imageUrl)).getText();
       setBarcode(value);
       await lookupBarcode(value);
     } catch {
@@ -2334,7 +2340,6 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
     const number = Number(qty) || 0;
     if (unit === "tsp") return number * (product?.measures?.tsp || 5);
     if (unit === "tbsp") return number * (product?.measures?.tbsp || 15);
-    if (unit === "cup") return number * (product?.measures?.cup || 240);
     if (unit === "serving") return number * (product?.defaultQty || 100);
     return number;
   }
@@ -2357,8 +2362,12 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
 
   function changeUnit(unit) {
     if (!product) { setForm((f) => ({ ...f, unit })); return; }
-    const qty = ["tsp", "tbsp", "cup", "serving"].includes(unit) ? "1" : String(product.defaultQty || 100);
+    const qty = ["tsp", "tbsp", "serving"].includes(unit) ? "1" : String(product.defaultQty || 100);
     applyQty(qty, unit);
+  }
+
+  function currentEntry() {
+    return { mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 };
   }
 
   return (
@@ -2371,20 +2380,15 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
 
         <div className="nyf-tabswitch">
           <button className={mode === "manual" ? "active" : ""} onClick={() => { stopScan(); setMode("manual"); }}>
-            <Plus size={13} /> Manual
+            <Search size={13} /> Search food
           </button>
           <button className={mode === "barcode" ? "active" : ""} onClick={() => setMode("barcode")}>
             <Barcode size={13} /> Barcode
           </button>
         </div>
 
-        {quickFoods.length > 0 && (
-          <div style={{ marginBottom: 5 }}>
-            <label className="nyf-field-label">Recently logged · tap to add again</label>
-            <div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: item.mealType || defaultMealType, name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div>
-          </div>
-        )}
-        {savedMeals.length > 0 && <div style={{ marginBottom: 5 }}><label className="nyf-field-label">Saved meals · one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: item.mealType || defaultMealType, name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>★ {item.name}</strong><span>{item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}</span></button>)}</div></div>}
+        <label className="nyf-field-label">1. Which meal are you logging?</label>
+        <select className="nyf-select" value={form.mealType} onChange={(e) => setForm({ ...form, mealType: e.target.value })}><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
 
         {mode === "barcode" && (
           <>
@@ -2422,11 +2426,11 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                     </button>
                   </div>
                 )}
-                {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
-                <label className="nyf-btn ghost full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Photograph or upload the barcode<input type="file" accept="image/*" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
-                <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>Live scanning works in current Safari, Chrome, Samsung Internet and other modern browsers. On an older phone, use the barcode photo option or type the digits printed below the barcode.</p>
               </>
             )}
+            {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
+            <label className="nyf-btn gold full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Take or upload a barcode photo<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
+            <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>If live scanning does not work on your phone, photograph the barcode close-up or type the digits printed underneath it.</p>
             {product && (
               <div className="nyf-product-card">
                 Found: <strong>{product.name}</strong> - values below are per 100g/ml, adjust the amount to match your portion.
@@ -2441,18 +2445,23 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
             <div style={{ height: mode === "barcode" ? 4 : 0 }} />
             {mode === "manual" && (
               <>
-                <label className="nyf-field-label">Search for a food or product</label>
+                <div style={{ background: "linear-gradient(135deg, #FFF4D7, #FFF9EA)", border: "2px solid var(--gold)", borderRadius: 16, padding: "15px 14px 12px", margin: "4px 0 14px", boxShadow: "0 8px 20px rgba(226,174,61,.18)" }}>
+                <label className="nyf-field-label" style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "Outfit, sans-serif", fontSize: 20, lineHeight: 1.2, fontWeight: 800, color: "var(--forest-deep)", margin: "0 0 10px" }}><Search size={21} color="var(--gold)" /> 2. Search for a food or product</label>
                 <div className="nyf-lookup-row">
                   <input
                     className="nyf-input"
+                    style={{ border: "2px solid var(--gold)", background: "#FFFDF7", fontSize: 16 }}
                     value={foodQuery}
                     onChange={(e) => setFoodQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && searchFoods(foodQuery)}
                     placeholder="e.g. Ouma rusks, Albany bread or milk"
                   />
-                  <button className="nyf-btn" onClick={() => searchFoods()} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
-                    {foodSearchLoading ? "…" : <Search size={15} />}
+                  <button className="nyf-btn gold" onClick={() => searchFoods()} disabled={foodSearchLoading || foodQuery.trim().length < 2}>
+                    {foodSearchLoading ? "…" : <><Search size={15} /> Search</>}
                   </button>
+                </div>
+                <div className="nyf-quick-scroll" style={{ margin: "8px 0" }}>{["Eggs", "Chicken breast", "Apple", "Banana", "Milk", "PB2", "Biltong", "Yoghurt"].map((name) => <button className="nyf-quick-food" key={name} onClick={() => { setFoodQuery(name); searchFoods(name); }}><strong>{name}</strong></button>)}</div>
+                <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "6px 0 0" }}>Start typing a food or brand, then tap the correct option.</p>
                 </div>
                 {foodSearchError && <div className="nyf-lookup-error">{foodSearchError}</div>}
                 {foodResults.length > 0 && (
@@ -2466,12 +2475,12 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                   </div>
                 )}
                 {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands (English)"}</button>}
+                {quickFoods.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Recently logged - tap to add again</label><div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div></div>}
+                {savedMeals.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Saved meals - one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>★ {item.name}</strong><span>{item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}</span></button>)}</div></div>}
                 <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "2px 0 10px" }}>For the exact product, search its brand and name or scan/type the barcode. If it is not listed yet, use the nutrition label to enter it manually.</p>
                 <FoodSubmissionForm initialName={foodQuery} />
               </>
             )}
-            <label className="nyf-field-label">Meal</label>
-            <select className="nyf-select" value={form.mealType} onChange={(e) => setForm({ ...form, mealType: e.target.value })}><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
             <label className="nyf-field-label">Meal or food name</label>
             <input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Chicken & rice bowl" />
 
@@ -2487,13 +2496,12 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
               <select className="nyf-select" value={form.unit} onChange={(e) => changeUnit(e.target.value)}>
                 <option value="g">grams (g)</option>
                 <option value="ml">millilitres (ml)</option>
-                <option value="tsp">teaspoons</option>
-                <option value="tbsp">tablespoons</option>
-                <option value="cup">cups</option>
+                {product?.measures?.tsp && <option value="tsp">teaspoons</option>}
+                {product?.measures?.tbsp && <option value="tbsp">tablespoons</option>}
                 <option value="serving">servings</option>
               </select>
             </div>
-            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "cup", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div><p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>Spoon and cup values use the selected food's standard weight, so 1 teaspoon is not treated as 1 gram.</p></>}
+            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>{["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit) * 10) / 10}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{form.cal || 0} kcal · P{form.protein || 0}g · C{form.carb || 0}g · F{form.fat || 0}g</strong></div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
 
             <label className="nyf-field-label">Calories (kcal)</label>
             <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
@@ -2512,18 +2520,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
             <button
               className="nyf-btn full"
               disabled={!valid}
-              onClick={() =>
-                onAdd({
-                  mealType: form.mealType,
-                  name: form.name,
-                  qty: form.qty || null,
-                  unit: form.unit,
-                  cal: Number(form.cal) || 0,
-                  protein: Number(form.protein) || 0,
-                  carb: Number(form.carb) || 0,
-                  fat: Number(form.fat) || 0,
-                })
-              }
+              onClick={() => onAdd(currentEntry())}
               style={{ marginTop: 4 }}
             >
               Add to today
