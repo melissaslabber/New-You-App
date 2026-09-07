@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-2145";
+const APP_RELEASE = "2026-09-07-2240";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -311,20 +311,23 @@ const STYLE = `
 .nyf-dashboard-card::after { content: ""; position: absolute; width: 180px; height: 180px; right: -65px; top: -75px; border-radius: 50%; background: rgba(255,255,255,.075); }
 .nyf-dashboard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: relative; z-index: 1; }
 .nyf-goal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #F8D77E; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.nyf-ring { --value: 0; width: 132px; height: 132px; flex: 0 0 132px; border-radius: 50%; padding: 10px; background: conic-gradient(#F3C956 calc(var(--value) * 1%),rgba(255,255,255,.14) 0); box-shadow: 0 10px 28px rgba(0,0,0,.14); }
+.nyf-ring { --value: 0; width: 112px; height: 112px; flex: 0 0 112px; border-radius: 50%; padding: 8px; background: conic-gradient(#42A5D9 calc(var(--value) * 1%),rgba(255,255,255,.14) 0); box-shadow: 0 10px 28px rgba(0,0,0,.14); }
 .nyf-ring-inner { height: 100%; border-radius: 50%; background: #052D58; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.nyf-ring-inner strong { font: 800 27px/1 'Outfit',sans-serif; }
+.nyf-ring-inner strong { font: 800 24px/1 'Outfit',sans-serif; }
 .nyf-ring-inner span { margin-top: 4px; color: #CDE0F1; font-size: 9px; font-weight: 700; text-transform: uppercase; }
 .nyf-dashboard-copy { padding-top: 10px; }
 .nyf-dashboard-copy strong { display: block; font: 800 32px/1 'Outfit',sans-serif; }
 .nyf-dashboard-copy span { display: block; color: #CDE0F1; font-size: 11px; line-height: 1.4; margin-top: 7px; }
-.nyf-dashboard-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; margin: 18px 0 15px; position: relative; z-index: 1; }
-.nyf-dashboard-tile { padding: 10px 4px; text-align: center; border-radius: 13px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+.nyf-dashboard-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 13px 0 11px; position: relative; z-index: 1; }
+.nyf-dashboard-tile { min-width: 0; padding: 8px 3px; text-align: center; border-radius: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+.nyf-dashboard-tile svg { display: block; margin: 0 auto 4px; color: #8DD6F4; }
 .nyf-dashboard-tile strong { display: block; font: 750 14px/1.15 'Outfit',sans-serif; }
-.nyf-dashboard-tile span { display: block; color: #CDE0F1; font-size: 8px; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+.nyf-dashboard-tile span { display: block; color: #E1EDF8; font-size: clamp(7px,2.1vw,8.5px); line-height: 1.15; font-weight: 750; text-transform: uppercase; margin-top: 4px; overflow-wrap: anywhere; }
 .nyf-dashboard-card .nyf-bar-label { color: #D7E7F7; }
 .nyf-dashboard-card .nyf-bar-track { background: rgba(255,255,255,.14); }
-.nyf-dashboard-card .nyf-bar-fill { background: linear-gradient(90deg,#F1BC43,#FFE69A); }
+.nyf-dashboard-card .nyf-bar-row { margin-bottom: 8px; }
+.nyf-dashboard-card .nyf-bar-track { height: 7px; }
+.nyf-dashboard-card .nyf-bar-fill { background: linear-gradient(90deg,#168DCE,#71D4F4); }
 .nyf-dashboard-card .nyf-btn { position: relative; z-index: 1; }
 .nyf-overview-card { padding: 17px 18px; }
 .nyf-overview-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -338,10 +341,18 @@ const STYLE = `
 .nyf-player.work .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#E7F5FF,#D7EAF8 30%,#EEF4FA 72%); }
 .nyf-player.rest .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#FFF4D7,#F8E5AA 32%,#FFF9EB 72%); }
 .nyf-player.rest .nyf-player-counter strong { color: #A66B00; }
+.nyf-player.work .nyf-demo-picture svg { animation: nyf-demo-move 1.3s ease-in-out infinite alternate; transform-origin: 50% 85%; }
 .nyf-player.finished .nyf-card { background: linear-gradient(145deg,#fff,#F1FBF5); }
+.nyf-meal-photo { width: 100%; height: 118px; object-fit: cover; border-radius: 16px; margin: 2px 0 13px; box-shadow: 0 8px 20px rgba(3,29,58,.1); }
+.nyf-week-chart { height: 138px; margin: 5px -10px -8px; }
+.nyf-achievement { position: relative; overflow: hidden; }
+.nyf-achievement::after { content: "✦"; position: absolute; right: 14px; top: 11px; color: var(--gold); font-size: 18px; animation: nyf-celebrate 1.2s ease-in-out infinite alternate; }
+@keyframes nyf-demo-move { from { transform: translateY(2px) rotate(-1deg); } to { transform: translateY(-5px) rotate(1deg); } }
+@keyframes nyf-celebrate { from { opacity: .45; transform: scale(.8) rotate(-10deg); } to { opacity: 1; transform: scale(1.18) rotate(9deg); } }
 .nyf-navbtn { transition: color .18s ease,background .18s ease,transform .18s ease; }
 .nyf-navbtn.active { border-radius: 15px; transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) { .nyf-scroll > *, .nyf-skeleton { animation: none; } .nyf-btn,.nyf-navbtn { transition: none; } }
+@media (max-width: 365px) { .nyf-dashboard-card { padding: 17px 15px; } .nyf-dashboard-copy strong { font-size: 28px; } .nyf-dashboard-tile strong { font-size: 12.5px; } .nyf-ring { width: 102px; height: 102px; flex-basis: 102px; } }
 `;
 
 const ARTICLES = [
@@ -1768,6 +1779,11 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   const available = profile.calorieGoal + creditedExerciseCalories;
   const calorieProgress = Math.min(100, Math.round((totals.cal / Math.max(1, available)) * 100));
   const goalLabel = profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss";
+  const weeklyCalories = Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(); date.setDate(date.getDate() - (6 - offset));
+    const key = date.toISOString().slice(0, 10);
+    return { day: date.toLocaleDateString("en-ZA", { weekday: "narrow" }), calories: Math.round(foodLogs.filter((item) => item.date === key).reduce((sum, item) => sum + (+item.cal || 0), 0)) };
+  });
   function weightChange(days) {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days); cutoff.setHours(0, 0, 0, 0);
     const entries = [...weightLogs].filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff).sort((a, b) => a.date.localeCompare(b.date));
@@ -1779,19 +1795,20 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   const formatChange = (value) => value === null ? "-" : `${value > 0 ? "+" : ""}${value.toFixed(1)}kg`;
   return (
     <>
-      <div className="nyf-card nyf-dashboard-card">
+      <div className={`nyf-card nyf-dashboard-card${totals.protein >= profile.proteinGoal ? " nyf-achievement" : ""}`}>
         <div className="nyf-dashboard-top">
           <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left today after your exercise credit" : `${Math.abs(remaining)} kcal over today's adjusted goal`}</span></div>
           <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>calories used</span></div></div>
         </div>
-        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><strong>{available}</strong><span>Calorie target</span></div><div className="nyf-dashboard-tile"><strong>{totals.cal}</strong><span>Calories used</span></div><div className="nyf-dashboard-tile"><strong>{todaySteps?.steps?.toLocaleString() || "-"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><strong>{exerciseCalories || 0}</strong><span>Exercise</span></div></div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Calorie target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories used</span></div><div className="nyf-dashboard-tile"><PersonStanding size={14} /><strong>{todaySteps?.steps?.toLocaleString() || "0"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise kcal</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
         <button className="nyf-btn gold full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
         <div style={{ fontSize: 10.5, color: "#CDE0F1", marginTop: 9, position: "relative", zIndex: 1 }}>Includes {creditedExerciseCalories} kcal exercise credit at {profile.exerciseCredit ?? 50}%.</div>
       </div>
-      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "No steps yet"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} step goal` : "Add today's movement in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit" : "Add"}</button></div></div>
+      <div className="nyf-card"><div className="nyf-section-title"><TrendingUp size={17} /> Your calorie week</div><div style={{ color: "var(--ink-soft)", fontSize: 11.5 }}>Daily calories logged against your {profile.calorieGoal} kcal target.</div><div className="nyf-week-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={weeklyCalories} margin={{ top: 12, right: 12, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4ECF4" /><XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94A3B8" }} /><Tooltip formatter={(value) => [`${value} kcal`, "Calories"]} /><Line type="monotone" dataKey="calories" stroke="#0878C9" strokeWidth={3} dot={{ r: 3, fill: "#0878C9", strokeWidth: 0 }} activeDot={{ r: 5, fill: "#E2AE3D" }} /></LineChart></ResponsiveContainer></div></div>
+      <div className={`nyf-card nyf-overview-card${todaySteps && todaySteps.steps >= todaySteps.goal ? " nyf-achievement" : ""}`}><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "0 steps"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} step goal` : "Add today's movement in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit" : "Add"}</button></div></div>
       <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? `${exerciseCalories} kcal` : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => item.activity).join(", ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "Edit" : "Add"}</button></div></div>
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
       <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
@@ -2159,7 +2176,7 @@ function MealsTab({
       <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
       <EasyFoodSwaps />
       <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
-      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women, with protein included across every meal. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g. Choose low-fat yoghurt when a lighter option is needed.</span></div></div>
+      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><img className="nyf-meal-photo" src="/new-you-meals.webp" alt="Scrambled eggs, protein yoghurt, chicken salad and biltong meal ideas" /><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women, with protein included across every meal. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g. Choose low-fat yoghurt when a lighter option is needed.</span></div></div>
       <div className="nyf-card">
         <div className="nyf-section-title">Foods you actually like</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
