@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0310";
+const APP_RELEASE = "2026-09-07-0405";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -718,6 +718,17 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const [saveStatus, setSaveStatus] = useState("saved");
   const [saveRetry, setSaveRetry] = useState(0);
   const saveTimer = useRef(null);
+  const scrollRef = useRef(null);
+
+  function changeTab(nextTab) {
+    setTab(nextTab);
+    requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" }));
+  }
+
+  function saveSleepQuality(checkIn) {
+    const date = todayStr();
+    setDailyHabits((prev) => ({ ...prev, [date]: { ...(prev[date] || {}), ...checkIn, sleepAnsweredAt: new Date().toISOString() } }));
+  }
 
   useEffect(() => {
     (async () => {
@@ -1034,7 +1045,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
 
-      <div className="nyf-scroll">
+      <div className="nyf-scroll" ref={scrollRef}>
         {tab === "home" && (
           <HomeTab
             profile={profile}
@@ -1043,7 +1054,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             aiText={aiText}
             aiLoading={aiLoading}
             getAiInsight={getAiInsight}
-            setTab={setTab}
+            setTab={changeTab}
             weeklyCheckIns={weeklyCheckIns}
             addWeeklyCheckIn={addWeeklyCheckIn}
             foodLogs={foodLogs}
@@ -1084,7 +1095,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             saveSteps={saveSteps}
           />
         )}
-        {tab === "workout" && <WorkoutTab setTab={setTab} />}
+        {tab === "workout" && <WorkoutTab setTab={changeTab} />}
         {tab === "learn" && <LearnTab openArticle={openArticle} setOpenArticle={setOpenArticle} />}
         {tab === "meals" && (
           <MealsTab
@@ -1095,7 +1106,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             loading={mealsLoading}
             error={mealsError}
             getMealSuggestions={getMealSuggestions}
-            setTab={setTab}
+            setTab={changeTab}
             favoriteMeals={favoriteMeals}
             toggleFavoriteMeal={toggleFavoriteMeal}
             removeFavoriteMeal={removeFavoriteMeal}
@@ -1106,22 +1117,54 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
       </div>
 
       <FooterLogo />
       <div className="nyf-nav">
-        <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => setTab("home")} />
-        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => setTab("workout")} />
-        <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => setTab("track")} />
-        <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => setTab("meals")} />
-        <NavBtn icon={<BookOpen size={19} />} label="Learn" active={tab === "learn"} onClick={() => setTab("learn")} />
-        <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => setTab("profile")} />
+        <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => changeTab("home")} />
+        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => changeTab("workout")} />
+        <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => changeTab("track")} />
+        <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => changeTab("meals")} />
+        <NavBtn icon={<BookOpen size={19} />} label="Learn" active={tab === "learn"} onClick={() => changeTab("learn")} />
+        <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => changeTab("profile")} />
       </div>
 
       {showFoodModal && <FoodModal onAdd={addFood} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} savedMeals={savedMeals} onSaveMeal={saveMeal} />}
       {showWeightModal && <WeightModal onAdd={addWeight} onClose={() => setShowWeightModal(false)} />}
       {showInstallGuide && <InstallGuide onClose={onCloseInstallGuide} onInstall={onInstall} />}
+      {loaded && profile.onboardingComplete && !dailyHabits[todayStr()]?.sleepQuality && <SleepCheckIn onSelect={saveSleepQuality} />}
+    </div>
+  );
+}
+
+function SleepCheckIn({ onSelect }) {
+  const [hours, setHours] = useState("");
+  const [quality, setQuality] = useState("");
+  const [feelings, setFeelings] = useState([]);
+  const feelingOptions = ["Happy", "Rested", "Content", "Stressed", "Anxious", "Depressed", "Sad", "Overwhelmed", "Excited"];
+  function toggleFeeling(feeling) {
+    setFeelings((current) => current.includes(feeling) ? current.filter((item) => item !== feeling) : [...current, feeling]);
+  }
+  return (
+    <div className="nyf-modal-backdrop">
+      <div className="nyf-modal" style={{ marginTop: "5vh", borderRadius: 24, maxWidth: 520 }}>
+        <div className="nyf-card gold" style={{ marginBottom: 0 }}>
+          <div className="nyf-section-title">Good morning — your daily check-in</div>
+          <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Sleep and mood can affect hunger, energy and recovery. Be honest—there are no wrong answers.</p>
+          <label className="nyf-field-label">How many hours did you sleep?</label>
+          <input className="nyf-input" type="number" inputMode="decimal" min="0" max="16" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} placeholder="e.g. 7.5 hours" />
+          <label className="nyf-field-label">How was your sleep?</label>
+          <div className="nyf-chips" style={{ marginBottom: 16 }}>
+            {[['solid','Solid'],['okay','Okay'],['interrupted','Interrupted']].map(([value, label]) => <button key={value} className={`nyf-chip${quality === value ? " selected" : ""}`} onClick={() => setQuality(value)}>{label}</button>)}
+          </div>
+          <label className="nyf-field-label">How are you feeling today?</label>
+          <div className="nyf-chips" style={{ marginBottom: 16 }}>
+            {feelingOptions.map((feeling) => <button key={feeling} className={`nyf-chip${feelings.includes(feeling) ? " selected" : ""}`} onClick={() => toggleFeeling(feeling)}>{feeling}</button>)}
+          </div>
+          <button className="nyf-btn full" disabled={!hours || Number(hours) <= 0 || !quality || feelings.length === 0} onClick={() => onSelect({ sleepHours: Number(hours), sleepQuality: quality, feelings })}>Save my check-in</button>
+        </div>
+      </div>
     </div>
   );
 }
