@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0745";
+const APP_RELEASE = "2026-09-07-0830";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -715,6 +715,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [stepLogs, setStepLogs] = useState([]);
   const [savedMeals, setSavedMeals] = useState([]);
+  const [inbodyAssessments, setInbodyAssessments] = useState([]);
   const [saveStatus, setSaveStatus] = useState("saved");
   const [saveRetry, setSaveRetry] = useState(0);
   const saveTimer = useRef(null);
@@ -750,6 +751,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
           if (d.exerciseLogs) setExerciseLogs(d.exerciseLogs);
           if (d.stepLogs) setStepLogs(d.stepLogs);
           if (d.savedMeals) setSavedMeals(d.savedMeals);
+          if (d.inbodyAssessments) setInbodyAssessments(d.inbodyAssessments);
         } else if (memberName) {
           setProfile((current) => ({ ...current, name: memberName }));
         }
@@ -767,7 +769,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
       setSaveStatus("saving");
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals } }) });
+          const response = await fetch("/api/data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, inbodyAssessments } }) });
           if (!response.ok) throw new Error("Save failed");
           setSaveStatus("saved"); return;
         } catch (e) {
@@ -777,7 +779,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
       setSaveStatus("error");
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, loaded, saveRetry]);
+  }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, inbodyAssessments, loaded, saveRetry]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const previousDayLogs = useMemo(() => {
@@ -1021,6 +1023,12 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   function removeProgressPhoto(id) {
     setProgressPhotos((prev) => prev.filter((item) => item.id !== id));
   }
+  function addInbodyAssessment(assessment) {
+    setInbodyAssessments((prev) => [{ id: uid(), uploadedAt: new Date().toISOString(), ...assessment }, ...prev]);
+  }
+  function removeInbodyAssessment(id) {
+    setInbodyAssessments((prev) => prev.filter((item) => item.id !== id));
+  }
   function exportProgress() {
     const rows = [["Type","Date","Name / field","Value","Protein","Carbs","Fat"]];
     weightLogs.forEach((item) => rows.push(["Weight", item.date, "Weight kg", item.weight, "", "", item.bodyFat ? `Body fat ${item.bodyFat}%` : ""]));
@@ -1028,6 +1036,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     exerciseLogs.forEach((item) => rows.push(["Exercise", item.date, item.activity, item.calories, "", "", ""]));
     stepLogs.forEach((item) => rows.push(["Steps", item.date, "Daily steps", item.steps, "", "", `Goal ${item.goal}`]));
     measurementLogs.forEach((item) => Object.entries(item).filter(([key]) => !["id","date"].includes(key)).forEach(([key,value]) => value && rows.push(["Measurement", item.date, `${key} cm`, value, "", "", ""])));
+    inbodyAssessments.forEach((item) => rows.push(["InBody", item.testDate, "Assessment", `Weight ${item.weight ?? "-"}kg`, `Muscle ${item.skeletalMuscleMass ?? "-"}kg`, "", `Body fat ${item.percentBodyFat ?? "-"}%`]));
     weeklyCheckIns.forEach((item) => rows.push(["Weekly check-in", item.date, "Energy/Hunger/Sleep/Training", `${item.energy}/${item.hunger}/${item.sleep}/${item.training}`, "", "", item.win || item.struggle || ""]));
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = `new-you-progress-${todayStr()}.csv`; link.click(); URL.revokeObjectURL(url);
@@ -1109,6 +1118,9 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             exerciseCalories={exerciseCalories}
             addExercise={addExercise}
             removeExercise={removeExercise}
+            inbodyAssessments={inbodyAssessments}
+            addInbodyAssessment={addInbodyAssessment}
+            removeInbodyAssessment={removeInbodyAssessment}
           />
         )}
         {tab === "workout" && <WorkoutTab setTab={changeTab} />}
@@ -1464,7 +1476,51 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "-"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "-"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "-"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise }) {
+const INBODY_FIELDS = [
+  ["weight", "Weight", "kg"], ["skeletalMuscleMass", "Skeletal muscle", "kg"],
+  ["bodyFatMass", "Body fat mass", "kg"], ["percentBodyFat", "Body fat", "%"],
+  ["bmi", "BMI", ""], ["score", "InBody score", "/100"],
+  ["visceralFatLevel", "Visceral fat level", ""], ["waistHipRatio", "Waist-hip ratio", ""],
+  ["totalBodyWater", "Body water", "L"], ["bmr", "BMR", " kcal"],
+];
+
+function InBodyCard({ assessments, onAdd, onRemove }) {
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
+  const ordered = [...assessments].sort((a, b) => String(b.testDate || b.uploadedAt).localeCompare(String(a.testDate || a.uploadedAt)));
+  const latest = ordered[0];
+  const previous = ordered[1];
+  const change = (key) => latest?.[key] != null && previous?.[key] != null ? Number(latest[key]) - Number(previous[key]) : null;
+  const formatChange = (key, unit) => {
+    const value = change(key);
+    return value == null ? null : `${value > 0 ? "+" : ""}${Math.round(value * 10) / 10}${unit}`;
+  };
+  const feedback = [];
+  if (previous && latest) {
+    const weight = change("weight"); const muscle = change("skeletalMuscleMass"); const fat = change("bodyFatMass"); const percent = change("percentBodyFat");
+    if (fat != null) feedback.push(fat < 0 ? `Body fat mass decreased by ${Math.abs(fat).toFixed(1)}kg.` : fat > 0 ? `Body fat mass increased by ${fat.toFixed(1)}kg. Review the recent trend with your coach.` : "Body fat mass stayed stable.");
+    if (muscle != null) feedback.push(muscle > 0 ? `Skeletal muscle increased by ${muscle.toFixed(1)}kg - excellent progress.` : muscle < 0 ? `Skeletal muscle decreased by ${Math.abs(muscle).toFixed(1)}kg. Prioritise protein, strength training and recovery.` : "Skeletal muscle stayed stable.");
+    if (weight != null) feedback.push(`Scale weight ${weight < 0 ? "decreased" : weight > 0 ? "increased" : "stayed stable"}${weight ? ` by ${Math.abs(weight).toFixed(1)}kg` : ""}.`);
+    if (percent != null && Math.abs(percent) >= 0.1) feedback.push(`Body fat percentage moved ${percent < 0 ? "down" : "up"} by ${Math.abs(percent).toFixed(1)} percentage points.`);
+  }
+  async function upload(file) {
+    setError("");
+    if (!file || file.type !== "application/pdf") return setError("Please choose an InBody report in PDF format.");
+    if (file.size > 2500000) return setError("This PDF is too large. Please upload a PDF smaller than 2.5 MB.");
+    setStatus("Reading your InBody report...");
+    try {
+      const data = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => resolve(String(reader.result).split(",")[1]); reader.readAsDataURL(file); });
+      const response = await fetch("/api/inbody", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pdf: { data, mimeType: "application/pdf", fileName: file.name } }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The report could not be read");
+      onAdd({ ...result.assessment, fileName: file.name });
+      setStatus("Assessment saved and compared.");
+    } catch (uploadError) { setError(uploadError.message || "The report could not be uploaded."); setStatus(""); }
+  }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Calculator size={17} /> InBody assessments</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Upload the PDF from your InBody assessment. New You will save the extracted results and compare each new assessment with your previous one.</p><label className="nyf-btn full" style={{ display: "flex", cursor: status.startsWith("Reading") ? "wait" : "pointer" }}><Plus size={15} /> {status.startsWith("Reading") ? status : "Upload InBody PDF"}<input type="file" accept="application/pdf,.pdf" style={{ display: "none" }} disabled={status.startsWith("Reading")} onChange={(event) => { const file = event.target.files?.[0]; upload(file); event.target.value = ""; }} /></label>{error && <div className="nyf-error" style={{ marginTop: 10 }}>{error}</div>}{status && !status.startsWith("Reading") && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}{latest && <><div className="nyf-chip-heading" style={{ marginTop: 16 }}>Latest assessment - {latest.testDate || "date not found"}</div><div className="nyf-progress-summary">{INBODY_FIELDS.slice(0, 3).map(([key,label,unit]) => <div className="nyf-progress-tile" key={key}><strong>{latest[key] ?? "-"}{latest[key] != null ? unit : ""}</strong><span>{label}</span>{previous && formatChange(key, unit) && <small>{formatChange(key, unit)}</small>}</div>)}</div>{feedback.length ? <div className="nyf-ai-box"><strong>What changed</strong>{feedback.map((line) => <p key={line} style={{ margin: "7px 0 0" }}>{line}</p>)}<p style={{ margin: "9px 0 0", fontSize: 11 }}>InBody readings can shift with hydration, food, exercise and test timing. Compare reports taken under similar conditions.</p></div> : <div className="nyf-product-card">This is your first uploaded assessment. Your next report will be compared with this baseline.</div>}</>}{ordered.length > 0 && <div style={{ marginTop: 14 }}>{ordered.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.testDate || "InBody assessment"}</div><div className="nyf-log-macro">{item.fileName} · Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.percentBodyFat ?? "-"}%</div></div><button className="nyf-close-btn" onClick={() => onRemove(item.id)} aria-label="Remove assessment"><Trash2 size={13} /></button></div>)}</div>}</div>;
+}
+
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
@@ -1545,6 +1601,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
       </div>
       <MeasurementsCard entries={measurementLogs} onAdd={addMeasurements} />
       <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
+      <InBodyCard assessments={inbodyAssessments} onAdd={addInbodyAssessment} onRemove={removeInbodyAssessment} />
     </>
   );
 }
@@ -3016,6 +3073,7 @@ function CoachDashboard({ onLogout, onReturnToMember }) {
     const foods = [...(memberData?.foodLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
     const checkIns = [...(memberData?.weeklyCheckIns || [])].sort((a, b) => b.date.localeCompare(a.date));
     const measurements = [...(memberData?.measurementLogs || [])].sort((a, b) => b.date.localeCompare(a.date));
+    const inbody = [...(memberData?.inbodyAssessments || [])].sort((a, b) => String(b.testDate || b.uploadedAt).localeCompare(String(a.testDate || a.uploadedAt)));
     const memberHabits = memberData?.dailyHabits || {};
     const profile = memberData?.profile || {};
     const latestCoachWeight = weights[0]?.weight;
@@ -3068,6 +3126,7 @@ function CoachDashboard({ onLogout, onReturnToMember }) {
                 )) : <div className="nyf-empty">No weekly check-ins yet.</div>}
               </div>
               {(memberData?.progressPhotos || []).length > 0 && <div className="nyf-card"><div className="nyf-section-title">Progress photos</div><div className="nyf-photo-grid">{memberData.progressPhotos.map((photo) => <div className="nyf-photo" key={photo.id}><img src={photo.image} alt={`Member progress ${photo.date}`} /></div>)}</div><p style={{ fontSize: 10.5, color: "var(--ink-soft)" }}>Private coach view · do not share without the member’s permission.</p></div>}
+              {inbody.length > 0 && <div className="nyf-card gold"><div className="nyf-section-title">InBody assessments</div>{inbody.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.testDate || "Assessment"}</div><div className="nyf-log-macro">Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.bodyFatMass ?? "-"}kg ({item.percentBodyFat ?? "-"}%) · Score {item.score ?? "-"}/100</div></div></div>)}</div>}
               <div className="nyf-card">
                 <div className="nyf-section-title">Weight and body fat</div>
                 {weights.length ? weights.map((item) => (
