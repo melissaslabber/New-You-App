@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1815";
+const APP_RELEASE = "2026-09-07-1915";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1320,7 +1320,10 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
       else {
         const nextSecond = seconds - 1;
         setSeconds(nextSecond);
-        if (phase === "work" && nextSecond <= 5) playBeep(nextSecond === 1 ? 980 : 820, nextSecond === 1 ? 0.28 : 0.14, nextSecond === 1 ? 0.75 : 0.58);
+        if (nextSecond <= 5) {
+          const warningFrequency = phase === "rest" ? 1040 : 820;
+          playBeep(nextSecond === 1 ? 1180 : warningFrequency, nextSecond === 1 ? 0.3 : 0.15, nextSecond === 1 ? 0.82 : 0.62);
+        }
       }
     }, 1000);
     return () => window.clearTimeout(timer);
@@ -1391,15 +1394,53 @@ function WorkoutTab({ setTab, addExercise }) {
     ...Array.from({ length: 3 }, (_, round) => quick.exercises.map((name, index) => ({ label: `ROUND ${round + 1} · EXERCISE ${index + 1}`, name, duration: 40, rest: 20 }))).flat(),
   ];
   const stretchPlayerSteps = Array.from({ length: 2 }, (_, round) => stretch.moves.map((name, index) => ({ label: `ROUND ${round + 1} · STRETCH ${index + 1}`, name, duration: 45, rest: 15 }))).flat();
-  const hyroxGymExercises = ["SkiErg", "Sled push", "Sled pull", "Burpee broad jump", "RowErg", "Farmer carry", "Sandbag walking lunge", "Wall balls"];
-  const hyroxHomeExercises = ["High knees or fast march", "Heavy backpack push march", "Towel row or band row", "Burpee broad jump or step-back", "Fast mountain climber", "Farmer carry", "Backpack walking lunge", "Squat to press"];
-  const hyroxExercises = venue === "gym" ? hyroxGymExercises : hyroxHomeExercises;
+  const hyroxWeek = [
+    { title: "Aerobic base", gym: ["Treadmill run", "SkiErg", "RowErg", "Farmer carry", "Walking lunge", "Wall balls"], home: ["Brisk march", "Step jacks", "Fast mountain climber", "Loaded carry", "Walking lunge", "Squat to press"] },
+    { title: "Sled strength", gym: ["Treadmill run", "Sled push", "Sled pull", "RowErg", "Farmer carry", "Wall balls"], home: ["Fast march", "Heavy backpack push march", "Band or towel row", "Mountain climber", "Loaded carry", "Squat to press"] },
+    { title: "Engine intervals", gym: ["SkiErg", "Treadmill run", "RowErg", "Burpee broad jump", "Sandbag lunge", "Wall balls"], home: ["Step jacks", "High knees", "Mountain climber", "Burpee broad jump", "Backpack lunge", "Squat to press"] },
+    { title: "Carry and core", gym: ["Incline treadmill", "Farmer carry", "Suitcase carry", "Sled pull", "Sandbag lunge", "Plank drag"], home: ["Brisk march", "Loaded carry", "Suitcase carry", "Band row", "Backpack lunge", "Plank shoulder tap"] },
+    { title: "Race stations", gym: ["Treadmill run", "SkiErg", "Sled push", "Burpee broad jump", "RowErg", "Wall balls"], home: ["High knees", "Step jacks", "Backpack push march", "Burpee broad jump", "Mountain climber", "Squat to press"] },
+    { title: "Strength endurance", gym: ["Sled push", "Farmer carry", "Sandbag lunge", "Wall balls", "RowErg", "Treadmill run"], home: ["Backpack squat", "Loaded carry", "Backpack lunge", "Squat to press", "Mountain climber", "Fast march"] },
+    { title: "HYROX challenge", gym: ["SkiErg", "Sled push", "Sled pull", "Burpee broad jump", "RowErg", "Farmer carry", "Sandbag lunge", "Wall balls"], home: ["Step jacks", "Backpack push march", "Band row", "Burpee broad jump", "Mountain climber", "Loaded carry", "Backpack lunge", "Squat to press"] },
+  ];
+  const hyroxLevelName = (name) => {
+    const options = {
+      "Treadmill run": ["Incline walk", "Steady treadmill run", "Fast treadmill run"], "SkiErg": ["Light SkiErg", "Moderate SkiErg", "Power SkiErg"], "RowErg": ["Easy RowErg", "Strong RowErg", "Race-pace RowErg"], "Sled push": ["Light sled push", "Moderate sled push", "Heavy sled push"], "Sled pull": ["Light sled pull", "Moderate sled pull", "Heavy sled pull"], "Burpee broad jump": ["Step-back burpee", "Burpee broad jump", "Long burpee broad jump"], "Wall balls": ["Light wall ball squat", "Wall balls", "Heavy wall balls"], "High knees": ["Fast march", "High knees", "Sprint high knees"], "Brisk march": ["Easy march", "Brisk march", "Jog in place"], "Fast march": ["Brisk march", "Fast march", "High knees"], "Walking lunge": ["Supported reverse lunge", "Walking lunge", "Loaded walking lunge"], "Sandbag lunge": ["Bodyweight reverse lunge", "Light sandbag lunge", "Heavy sandbag lunge"], "Backpack lunge": ["Supported reverse lunge", "Backpack lunge", "Heavy backpack lunge"], "Squat to press": ["Bodyweight squat to reach", "Light squat to press", "Fast or heavy squat to press"], "Mountain climber": ["Elevated slow climber", "Mountain climber", "Fast mountain climber"], "Fast mountain climber": ["Elevated slow climber", "Fast mountain climber", "Sprint mountain climber"], "Loaded carry": ["Light carry", "Moderate carry", "Heavy carry"], "Farmer carry": ["Light farmer carry", "Moderate farmer carry", "Heavy farmer carry"]
+    };
+    return options[name]?.[level - 1] || `${level === 1 ? "Easy" : level === 3 ? "Advanced" : "Standard"} ${name}`;
+  };
+  const hyroxDay = hyroxWeek[selectedDay];
+  const hyroxExercises = (venue === "gym" ? hyroxDay.gym : hyroxDay.home).map(hyroxLevelName);
+
+  const strengthWeek = [
+    { title: "Technique and recovery", exercises: ["Tempo goblet squat", "Paused bench press", "Cable row", "Dead bug", "Back extension"] },
+    { title: "Squat strength and core", exercises: ["Barbell back squat", "Paused squat", "Leg press", "Hanging knee raise", "Weighted plank"] },
+    { title: "Push strength", exercises: ["Barbell bench press", "Overhead press", "Incline dumbbell press", "Triceps pressdown", "Push-up"] },
+    { title: "Pull strength", exercises: ["Barbell deadlift", "Barbell row", "Lat pulldown", "Seated cable row", "Dumbbell curl"] },
+    { title: "Deadlift strength and abs", exercises: ["Barbell deadlift", "Romanian deadlift", "Front squat", "Cable crunch", "Pallof press"] },
+    { title: "Upper power", exercises: ["Paused bench press", "Push press", "Chest-supported row", "Weighted dip", "Face pull"] },
+    { title: "Full-body powerlifting", exercises: ["Barbell back squat", "Barbell bench press", "Barbell deadlift", "Overhead press", "Farmer carry"] },
+  ];
+  const hypertrophyWeek = [
+    { title: "Recovery pump", exercises: ["Goblet squat", "Machine chest press", "Lat pulldown", "Cable lateral raise", "Cable crunch"] },
+    { title: "Legs and abs", exercises: ["Hack squat", "Leg press", "Romanian deadlift", "Leg extension", "Hanging knee raise"] },
+    { title: "Push hypertrophy", exercises: ["Incline dumbbell press", "Machine chest press", "Seated shoulder press", "Lateral raise", "Cable triceps extension"] },
+    { title: "Pull hypertrophy", exercises: ["Lat pulldown", "Chest-supported row", "Seated cable row", "Rear-delt fly", "Dumbbell curl"] },
+    { title: "Glutes, hamstrings and core", exercises: ["Romanian deadlift", "Hip thrust", "Walking lunge", "Leg curl", "Cable crunch"] },
+    { title: "Upper-body volume", exercises: ["Dumbbell bench press", "Single-arm cable row", "Arnold press", "Lateral raise", "Biceps curl"] },
+    { title: "Full-body hypertrophy", exercises: ["Goblet squat", "Dumbbell bench press", "Lat pulldown", "Hip thrust", "Cable woodchop"] },
+  ];
+  const gymProgramme = section === "strength" ? strengthWeek[selectedDay] : hypertrophyWeek[selectedDay];
   const hyroxPlayerSteps = [
     ...Array.from({ length: 2 }, (_, round) => ["Easy jog or brisk march", "Bodyweight squat", "Reverse lunge", "Hip hinge and reach", "Arm circles and step jacks"].map((name, index) => ({ label: `HYROX WARM-UP ${round + 1} · ${index + 1}`, name, duration: 45, rest: 15, instructions: movementCue(name) }))).flat(),
     ...Array.from({ length: 5 }, (_, round) => hyroxExercises.map((name, index) => ({ label: `HYROX ROUND ${round + 1} · STATION ${index + 1}`, name, duration: 45, rest: 15, instructions: `${movementCue(name)} Level ${level}: ${level === 1 ? "Move steadily with a light load or low-impact option." : level === 2 ? "Use a moderate load and a controlled race-style pace." : "Use a challenging safe load and strong sustainable pace."}` }))).flat().slice(0, 35),
   ];
+  const gymProgrammeSteps = gymProgramme ? [
+    ...["Easy cardio machine", "Bodyweight squat", "Hip hinge and reach", "Arm circles", "Movement rehearsal"].map((name, index) => ({ label: `WARM-UP ${index + 1}`, name, duration: 45, rest: 15 })),
+    ...Array.from({ length: section === "strength" ? 4 : 5 }, (_, round) => gymProgramme.exercises.map((name, index) => ({ label: `SET ${round + 1} · EXERCISE ${index + 1}`, name, duration: 45, rest: section === "strength" ? 45 : 30, instructions: section === "strength" ? `${movementCue(name)} Use a controlled load for ${level === 1 ? "8" : level === 2 ? "6" : "3 to 5"} strong reps. Stop before technique breaks down.` : `${movementCue(name)} Complete ${level === 1 ? "10 to 12" : level === 2 ? "12 to 15" : "15 to 20"} controlled reps with good form.` }))).flat(),
+  ] : [];
   if (playerMode) {
-    const details = playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : playerMode === "hyrox" ? { title: `HYROX preparation - ${venue === "gym" ? "Gym" : "Home"}`, steps: hyroxPlayerSteps, calories: 350 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
+    const details = playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : playerMode === "hyrox" ? { title: `HYROX ${hyroxDay.title} - Level ${level}`, steps: hyroxPlayerSteps, calories: 350 } : playerMode === "strength" || playerMode === "weightlifting" ? { title: `${playerMode === "strength" ? "Strength" : "Weightlifting"} - ${gymProgramme.title}`, steps: gymProgrammeSteps, calories: playerMode === "strength" ? 220 : 260 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
     return <WorkoutPlayer title={details.title} steps={details.steps} onExit={() => setPlayerMode(null)} onComplete={() => { addExercise({ activity: details.title, calories: details.calories }); setPlayerMode(null); setTab("track"); }} />;
   }
 
@@ -1410,13 +1451,26 @@ function WorkoutTab({ setTab, addExercise }) {
       <button className="nyf-workout-choice quick" onClick={() => setSection("quick")}><div className="nyf-workout-visual"><div className="nyf-workout-minutes">15<small>MINUTES</small></div></div><div className="nyf-workout-choice-copy"><strong>Quick workout</strong><span>Short, focused and effective</span></div></button>
       <button className="nyf-workout-choice stretch" onClick={() => setSection("stretch")}><div className="nyf-workout-visual"><PersonStanding size={52} strokeWidth={1.7} /></div><div className="nyf-workout-choice-copy"><strong>Stretch</strong><span>10 min · Matched to today</span></div></button>
       <button className="nyf-workout-choice daily" onClick={() => setSection("hyrox")}><div className="nyf-workout-visual"><Flame size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>HYROX preparation</strong><span>45 min · Strength and engine</span></div></button>
+      <button className="nyf-workout-choice daily" onClick={() => { setVenue("gym"); setSection("strength"); }}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Strength training</strong><span>Gym only · Powerlifting and push/pull</span></div></button>
+      <button className="nyf-workout-choice quick" onClick={() => { setVenue("gym"); setSection("weightlifting"); }}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Weightlifting</strong><span>Gym only · Higher-rep hypertrophy</span></div></button>
     </div>
   </>;
+
+  if (section === "strength" || section === "weightlifting") {
+    const isStrength = section === "strength";
+    return <>
+      <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
+      <div className="nyf-card nyf-workout-hero"><div className="nyf-step">GYM ONLY · {isStrength ? "STRENGTH" : "HYPERTROPHY"}</div><h2 style={{ fontSize: 27 }}>{gymProgramme.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5 }}>{isStrength ? "Powerlifting foundations with push, pull and lower-body strength days." : "Higher-repetition training to build muscle and improve shape."}</p></div>
+      <div className="nyf-card"><label className="nyf-field-label">Choose a training day</label><select className="nyf-select" value={selectedDay} onChange={(event) => setSelectedDay(Number(event.target.value))}>{WORKOUTS.map((item, index) => <option value={index} key={item.day}>{item.day} - {(isStrength ? strengthWeek : hypertrophyWeek)[index].title}</option>)}</select><div className="nyf-section-title" style={{ marginTop: 16 }}>Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><div className="nyf-product-card" style={{ marginTop: 12 }}>{isStrength ? `Level ${level}: ${level === 1 ? "8 reps with lighter loads" : level === 2 ? "6 reps with moderate-heavy loads" : "3 to 5 reps with challenging safe loads"}. Rest 45 seconds between timed sets.` : `Level ${level}: ${level === 1 ? "10 to 12 reps" : level === 2 ? "12 to 15 reps" : "15 to 20 reps"}. Rest 30 seconds between timed sets.`}</div><button className="nyf-btn gold full" style={{ marginTop: 14 }} onClick={() => setPlayerMode(isStrength ? "strength" : "weightlifting")}><Dumbbell size={17} /> Start {isStrength ? "strength" : "weightlifting"} workout</button></div>
+      <div className="nyf-card gold"><div className="nyf-section-title">Today's exercises</div>{gymProgramme.exercises.map((name, index) => <div className="nyf-log-item" key={name}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div className="nyf-log-name">{name}</div><div className="nyf-log-macro">{isStrength ? "Strength-focused sets" : "Higher-repetition hypertrophy sets"}</div></div></div>)}</div>
+      <div className="nyf-card clay"><strong>Important</strong><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>Use safety bars and a spotter for heavy lifts. Beginners should first learn technique from a qualified coach. Stop a set when form changes.</p></div>
+    </>;
+  }
 
   if (section === "hyrox") return <>
     <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
     <div className="nyf-card nyf-workout-hero"><div className="nyf-step">HYROX PREPARATION</div><h2 style={{ fontSize: 27 }}>Build your strength and engine</h2><p style={{ color: "#D5E5F2", fontSize: 12.5 }}>Running-style conditioning alternated with functional stations.</p><span className="nyf-workout-time">45 minutes · 45 sec work + 15 sec rest</span></div>
-    <div className="nyf-card"><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch"><button className={venue === "home" ? "active" : ""} onClick={() => setVenue("home")}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => setVenue("gym")}>At the gym</button></div><div className="nyf-section-title" style={{ marginTop: 16 }}>Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><button className="nyf-btn gold full" style={{ marginTop: 14 }} onClick={() => setPlayerMode("hyrox")}><Flame size={17} /> Start HYROX workout</button></div>
+    <div className="nyf-card"><label className="nyf-field-label">Choose a training day</label><select className="nyf-select" value={selectedDay} onChange={(event) => setSelectedDay(Number(event.target.value))}>{hyroxWeek.map((item, index) => <option value={index} key={item.title}>{WORKOUTS[index].day} - {item.title}</option>)}</select><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch"><button className={venue === "home" ? "active" : ""} onClick={() => setVenue("home")}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => setVenue("gym")}>At the gym</button></div><div className="nyf-section-title" style={{ marginTop: 16 }}>Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Today's level is different:</strong> Exercise variations, impact, pace and loading change when you select another level.</div><button className="nyf-btn gold full" style={{ marginTop: 14 }} onClick={() => setPlayerMode("hyrox")}><Flame size={17} /> Start HYROX workout</button></div>
     <div className="nyf-card gold"><div className="nyf-section-title">Today's stations</div>{hyroxExercises.map((name, index) => <div className="nyf-log-item" key={name}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div className="nyf-log-name">{name}</div><div className="nyf-log-macro">45 sec work + 15 sec rest</div></div></div>)}</div>
     <div className="nyf-card clay"><strong>Train safely</strong><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>This is HYROX preparation, not an exact race simulation. Choose loads that keep your technique controlled. Stop for chest pain, faintness, sharp pain or unusual shortness of breath.</p></div>
   </>;
