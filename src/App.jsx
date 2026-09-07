@@ -1782,9 +1782,9 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <div className="nyf-card nyf-dashboard-card">
         <div className="nyf-dashboard-top">
           <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left today after your exercise credit" : `${Math.abs(remaining)} kcal over today's adjusted goal`}</span></div>
-          <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>used today</span></div></div>
+          <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>calories used</span></div></div>
         </div>
-        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><strong>{available}</strong><span>Available</span></div><div className="nyf-dashboard-tile"><strong>{totals.cal}</strong><span>Food</span></div><div className="nyf-dashboard-tile"><strong>{todaySteps?.steps?.toLocaleString() || "-"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><strong>{exerciseCalories || 0}</strong><span>Exercise</span></div></div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><strong>{available}</strong><span>Calorie target</span></div><div className="nyf-dashboard-tile"><strong>{totals.cal}</strong><span>Calories used</span></div><div className="nyf-dashboard-tile"><strong>{todaySteps?.steps?.toLocaleString() || "-"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><strong>{exerciseCalories || 0}</strong><span>Exercise</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
