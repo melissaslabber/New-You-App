@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const parsed = JSON.parse(raw);
     const assessment = { testDate: /^\d{4}-\d{2}-\d{2}$/.test(parsed.testDate || "") ? parsed.testDate : new Date().toISOString().slice(0, 10), confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "low", notes: String(parsed.notes || "").slice(0, 240) };
     ["weight", "skeletalMuscleMass", "bodyFatMass", "percentBodyFat", "bmi", "score", "visceralFatLevel", "waistHipRatio", "totalBodyWater", "bmr", "targetWeight", "weightControl", "fatControl", "muscleControl"].forEach((key) => { assessment[key] = numberOrNull(parsed[key]); });
-    if (assessment.weight === null && assessment.skeletalMuscleMass === null && assessment.percentBodyFat === null) return res.status(422).json({ error: "The main InBody results could not be read. Please upload the original clear PDF." });
+    if (assessment.weight === null && assessment.skeletalMuscleMass === null && assessment.percentBodyFat === null) return res.status(422).json({ error: "The main InBody results could not be read. Please upload a clear JPG image of the full report." });
     return res.status(200).json({ assessment });
   } catch (error) {
     return res.status(error?.name === "AbortError" ? 504 : 422).json({ error: error?.name === "AbortError" ? "Reading the report took too long. Please try again." : "The image could not be read. Please upload a clear photo of the full InBody sheet." });
