@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1915";
+const APP_RELEASE = "2026-09-07-2030";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -591,6 +591,19 @@ const FOOD_PREFERENCE_LIST = [
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const uid = () => Math.random().toString(36).slice(2, 10);
+const GOAL_SPLITS = {
+  fatloss: { label: "Fat loss" },
+  maintenance: { label: "Maintenance" },
+  leanbulk: { label: "Lean bulk" },
+};
+function macrosFromCalories(calories, weight) {
+  const kcal = Math.max(0, Math.round(Number(calories) || 0));
+  const kg = Math.max(0, Number(weight) || 0);
+  const proteinGoal = Math.round(kg * 2.2);
+  const fatGoal = Math.round((kcal * 0.25) / 9);
+  const carbGoal = Math.max(0, Math.round((kcal - proteinGoal * 4 - fatGoal * 9) / 4));
+  return { proteinGoal, carbGoal, fatGoal };
+}
 const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const DAILY_MOTIVATION = [
   "Consistency beats intensity when intensity cannot be sustained.",
@@ -728,7 +741,7 @@ const WORKOUT_PLANS = [
 function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstallGuide, onCloseInstallGuide, onShowInstallGuide }) {
   const [tab, setTab] = useState("home");
   const [loaded, setLoaded] = useState(false);
-  const [profile, setProfile] = useState({ name: memberName || "", calorieGoal: 1800, proteinGoal: 130, carbGoal: 180, fatGoal: 55, exerciseCredit: 50, onboardingComplete: false });
+  const [profile, setProfile] = useState({ name: memberName || "", goalType: "fatloss", weight: 70, calorieGoal: 1800, ...macrosFromCalories(1800, 70), exerciseCredit: 50, onboardingComplete: false });
   const [weightLogs, setWeightLogs] = useState([]);
   const [foodLogs, setFoodLogs] = useState([]);
   const [showFoodModal, setShowFoodModal] = useState(false);
@@ -772,7 +785,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
         if (!r.ok) throw new Error("Could not load member data");
         const d = await r.json();
         if (d && Object.keys(d).length) {
-          if (d.profile) setProfile({ ...d.profile, onboardingComplete: d.profile.onboardingComplete ?? true });
+          if (d.profile) setProfile({ goalType: "fatloss", ...d.profile, onboardingComplete: d.profile.onboardingComplete ?? true });
           if (d.weightLogs) setWeightLogs(d.weightLogs);
           if (d.foodLogs) setFoodLogs(d.foodLogs);
           if (d.favoriteMeals) setFavoriteMeals(d.favoriteMeals);
@@ -822,16 +835,18 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     return foodLogs.filter((item) => item.date === previousDate);
   }, [foodLogs]);
   const totals = useMemo(
-    () =>
-      todayLogs.reduce(
+    () => {
+      const summed = todayLogs.reduce(
         (acc, f) => ({
-          cal: acc.cal + f.cal,
-          protein: acc.protein + f.protein,
-          carb: acc.carb + f.carb,
-          fat: acc.fat + f.fat,
+          cal: acc.cal + (Number(f.cal) || 0),
+          protein: acc.protein + (Number(f.protein) || 0),
+          carb: acc.carb + (Number(f.carb) || 0),
+          fat: acc.fat + (Number(f.fat) || 0),
         }),
         { cal: 0, protein: 0, carb: 0, fat: 0 }
-      ),
+      );
+      return { cal: Math.round(summed.cal), protein: Math.round(summed.protein), carb: Math.round(summed.carb), fat: Math.round(summed.fat) };
+    },
     [todayLogs]
   );
   const todayExercise = useMemo(() => exerciseLogs.filter((item) => item.date === todayStr()), [exerciseLogs]);
@@ -1517,8 +1532,8 @@ function Bar({ label, value, goal, unit }) {
       <div className="nyf-bar-label">
         <span>{label}</span>
         <span>
-          {value}
-          {unit} / {goal}
+          {Math.round(Number(value) || 0)}
+          {unit} / {Math.round(Number(goal) || 0)}
           {unit}
         </span>
       </div>
@@ -1532,12 +1547,12 @@ function Bar({ label, value, goal, unit }) {
 function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
   const [step, setStep] = useState(1);
   const [foods, setFoods] = useState(initialFoods);
-  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
+  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", goalType: profile.goalType || "fatloss", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
   const calculate = () => {
     const weight = Number(form.weight); const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
-    const maintenance = Math.round(bmr * Number(form.activity)); const calorieGoal = Math.max(form.sex === "male" ? 1500 : 1200, Math.round((maintenance - 400) / 10) * 10);
-    const proteinGoal = Math.round(weight * 1.8); const fatGoal = Math.round(weight * 0.7); const carbGoal = Math.max(50, Math.round((calorieGoal - proteinGoal * 4 - fatGoal * 9) / 4));
-    return { weight, maintenance, calorieGoal, proteinGoal, fatGoal, carbGoal };
+    const maintenance = Math.round(bmr * Number(form.activity));
+    const calorieGoal = form.goalType === "maintenance" ? Math.round(maintenance / 10) * 10 : form.goalType === "leanbulk" ? Math.round((maintenance * 1.1) / 10) * 10 : Math.max(form.sex === "male" ? 1500 : 1200, Math.round((maintenance - 400) / 10) * 10);
+    return { weight, maintenance, calorieGoal, ...macrosFromCalories(calorieGoal, weight) };
   };
   const targets = form.age && form.height && form.weight ? calculate() : null;
   const toggleFood = (item) => setFoods((items) => items.includes(item) ? items.filter((food) => food !== item) : [...items, item]);
@@ -1564,6 +1579,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
           <div className="nyf-card gold">
             <div className="nyf-section-title"><Calculator size={17} /> Your starting point</div>
             <div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div><div><label className="nyf-field-label">Goal weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.goalWeight} onChange={(e) => setForm({ ...form, goalWeight: e.target.value })} /></div></div>
+            <label className="nyf-field-label">What is your main goal?</label><select className="nyf-select" value={form.goalType} onChange={(e) => setForm({ ...form, goalType: e.target.value })}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select>
             <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3-5 days</option><option value="1.725">Very active</option></select>
             <p className="nyf-range-note">Choose what describes your normal week-not the week you hope to have.</p>
             <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so my coach can support me. I understand that this app provides general guidance and not medical treatment.</span></label>
@@ -1571,7 +1587,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
             <button className="nyf-link-btn" onClick={back}>Back</button>
           </div>
         )}
-        {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Fat-loss kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates, not a promise of a specific weekly loss. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
+        {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-product-card"><strong>Goal: {GOAL_SPLITS[form.goalType].label}</strong><br />Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Daily kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
         {step === 4 && <div className="nyf-card"><div className="nyf-section-title"><Heart size={17} /> Choose foods you actually like</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Tap everything you would happily eat. Meal suggestions will use these choices first.</p>{FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${foods.includes(item) ? " selected" : ""}`} onClick={() => toggleFood(item)}>{item}</button>)}</div></div>)}<div className="nyf-product-card">{foods.length} foods selected</div><button className="nyf-btn full" onClick={next} disabled={foods.length < 3}>Continue</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4-5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Workout","Choose home or gym training and Level 1, 2 or 3."],["Learn & Goals","Understand fat loss, review targets and add the app to your phone."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal.<br />2. Add today's steps.<br />3. Record your starting weight.</div><button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
@@ -1828,7 +1844,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, ch
             <div className="nyf-log-item" key={f.id}>
               <div>
                 <div className="nyf-log-name">{f.name}{f.qty ? ` - ${f.qty}${f.unit}` : ""}</div>
-                <div className="nyf-log-macro">P{f.protein} · C{f.carb} · F{f.fat}</div>
+                <div className="nyf-log-macro">P{Math.round(Number(f.protein) || 0)} · C{Math.round(Number(f.carb) || 0)} · F{Math.round(Number(f.fat) || 0)}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span>{f.cal} kcal</span>
@@ -2218,6 +2234,7 @@ function MealsTab({
 }
 
 function GoalsCalculator({ onApply, initialGoalWeight }) {
+  const [goalType, setGoalType] = useState("fatloss");
   const [sex, setSex] = useState("woman");
   const [weight, setWeight] = useState("");
   const [goalWeight, setGoalWeight] = useState(initialGoalWeight || "");
@@ -2232,19 +2249,15 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
     if (!w || !h || !a) return;
     const bmr = sex === "woman" ? 10 * w + 6.25 * h - 5 * a - 161 : 10 * w + 6.25 * h - 5 * a + 5;
     const maintenance = bmr * Number(activity);
-    const target = maintenance * (1 - Number(deficit) / 100);
-    const proteinG = Math.round(w * 2); // fixed at 2g per kg of current body weight
-    const proteinCal = proteinG * 4;
-    const fatCal = target * 0.25;
-    const fatG = Math.round(fatCal / 9);
-    const carbCal = Math.max(target - proteinCal - fatCal, 0);
-    const carbG = Math.round(carbCal / 4);
+    const target = goalType === "maintenance" ? maintenance : goalType === "leanbulk" ? maintenance * 1.1 : maintenance * (1 - Number(deficit) / 100);
+    const roundedTarget = Math.round(target / 10) * 10;
+    const macros = macrosFromCalories(roundedTarget, w);
     setResult({
       maintenance: Math.round(maintenance / 10) * 10,
-      target: Math.round(target / 10) * 10,
-      proteinG,
-      fatG,
-      carbG,
+      target: roundedTarget,
+      proteinG: macros.proteinGoal,
+      fatG: macros.fatGoal,
+      carbG: macros.carbGoal,
     });
   }
 
@@ -2283,6 +2296,9 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
       <label className="nyf-field-label">Goal weight (kg)</label>
       <input className="nyf-input" type="number" value={goalWeight} onChange={(e) => setGoalWeight(e.target.value)} placeholder="What are you working towards?" />
 
+      <label className="nyf-field-label">What is your main goal?</label>
+      <select className="nyf-select" value={goalType} onChange={(e) => { setGoalType(e.target.value); setResult(null); }}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select>
+
       <label className="nyf-field-label">Activity level</label>
       <select className="nyf-select" value={activity} onChange={(e) => setActivity(e.target.value)}>
         <option value="1.20">Low - mostly seated, little structured activity</option>
@@ -2291,15 +2307,13 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
         <option value="1.70">High - physically demanding work and/or heavy training</option>
       </select>
 
-      <label className="nyf-field-label">Starting deficit (to work toward your goal weight)</label>
+      {goalType === "fatloss" && <><label className="nyf-field-label">Starting deficit (to work toward your goal weight)</label>
       <select className="nyf-select" value={deficit} onChange={(e) => setDeficit(e.target.value)}>
         <option value="10">10% - gentler, easier to sustain</option>
         <option value="15">15% - moderate starting option for many people</option>
         <option value="20">20% - faster on paper, harder on hunger and recovery</option>
-      </select>
-      <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "-6px 0 12px" }}>
-        Protein is set automatically at 2g per kg of your current weight - the New You default for protecting muscle while losing fat.
-      </p>
+      </select></>}
+      <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "-6px 0 12px" }}>Protein is 2.2g per kg of body weight. Fat uses 25% of calories, and the remaining calories become carbohydrates.</p>
 
       <button className="nyf-btn full" onClick={calculate} disabled={!weight || !height || !age} style={{ marginTop: 4 }}>
         Calculate my numbers
@@ -2308,15 +2322,15 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
       {result && (
         <>
           <div className="nyf-product-card" style={{ marginTop: 12 }}>
-            To <strong>maintain</strong> your current weight: <strong>{result.maintenance} kcal/day</strong>.
-            <br />To work toward <strong>{goalWeight ? `${goalWeight}kg` : "your goal weight"}</strong>: <strong>{result.target} kcal/day</strong>.
+            Goal: <strong>{GOAL_SPLITS[goalType].label}</strong>.<br />Estimated maintenance: <strong>{result.maintenance} kcal/day</strong>.
+            <br />Suggested daily target: <strong>{result.target} kcal/day</strong>.
             <br /><br />Protein <strong>{result.proteinG}g</strong> · Carbs <strong>{result.carbG}g</strong> · Fat <strong>{result.fatG}g</strong>
-            <br />(Fat is set at roughly 25% of calories, carbs fill the rest.)
+            <br />(Protein 2.2g/kg, fat 25%, carbohydrates use the calories left.)
           </div>
           <button
             className="nyf-btn gold full"
             style={{ marginTop: 10 }}
-            onClick={() => onApply({ calorieGoal: result.target, proteinGoal: result.proteinG, carbGoal: result.carbG, fatGoal: result.fatG, goalWeight })}
+            onClick={() => onApply({ goalType, weight: Math.round(Number(weight)), calorieGoal: result.target, proteinGoal: result.proteinG, carbGoal: result.carbG, fatGoal: result.fatG, goalWeight })}
           >
             <Check size={15} /> Use these as my goals
           </button>
@@ -2333,13 +2347,20 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
+  function updateNutrition(calories, goalType = local.goalType || "fatloss", weight = local.weight) {
+    const calorieGoal = Math.max(0, Math.round(Number(calories) || 0));
+    setLocal((current) => ({ ...current, goalType, weight, calorieGoal, ...macrosFromCalories(calorieGoal, weight) }));
+    setJustSaved(false);
+  }
   function save() {
     setProfile({
       ...local,
-      calorieGoal: Number(local.calorieGoal) || 0,
-      proteinGoal: Number(local.proteinGoal) || 0,
-      carbGoal: Number(local.carbGoal) || 0,
-      fatGoal: Number(local.fatGoal) || 0,
+      goalType: local.goalType || "fatloss",
+      weight: Math.round(Number(local.weight) || 0),
+      calorieGoal: Math.round(Number(local.calorieGoal) || 0),
+      proteinGoal: Math.round(Number(local.proteinGoal) || 0),
+      carbGoal: Math.round(Number(local.carbGoal) || 0),
+      fatGoal: Math.round(Number(local.fatGoal) || 0),
     });
     setJustSaved(true);
   }
@@ -2357,20 +2378,25 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
       <input className="nyf-input" value={local.name} onChange={(e) => setLocal({ ...local, name: e.target.value })} placeholder="Your name" />
       <label className="nyf-field-label">Goal weight (kg)</label>
       <input className="nyf-input" type="number" value={local.goalWeight || ""} onChange={(e) => setLocal({ ...local, goalWeight: e.target.value })} placeholder="What are you working towards?" />
+      <label className="nyf-field-label">Current weight (kg) - used for protein</label>
+      <input className="nyf-input" type="number" step="1" value={Math.round(Number(local.weight) || 0)} disabled={local.coachControlled} onChange={(e) => updateNutrition(local.calorieGoal, local.goalType || "fatloss", e.target.value)} />
+      <label className="nyf-field-label">Main goal</label>
+      <select className="nyf-select" value={local.goalType || "fatloss"} disabled={local.coachControlled} onChange={(e) => updateNutrition(local.calorieGoal, e.target.value)}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select>
+      <div className="nyf-product-card" style={{ marginTop: 10 }}>Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div>
       <label className="nyf-field-label">Daily calorie goal (kcal)</label>
-      <input className="nyf-input" type="number" value={local.calorieGoal} disabled={local.coachControlled} onChange={(e) => setLocal({ ...local, calorieGoal: e.target.value })} />
+      <input className="nyf-input" type="number" step="1" value={local.calorieGoal} disabled={local.coachControlled} onChange={(e) => updateNutrition(e.target.value)} />
       <div className="nyf-grid2">
         <div>
           <label className="nyf-field-label">Protein (g)</label>
-          <input className="nyf-input" type="number" value={local.proteinGoal} disabled={local.coachControlled} onChange={(e) => setLocal({ ...local, proteinGoal: e.target.value })} />
+          <input className="nyf-input" type="number" value={Math.round(Number(local.proteinGoal) || 0)} disabled />
         </div>
         <div>
           <label className="nyf-field-label">Carbs (g)</label>
-          <input className="nyf-input" type="number" value={local.carbGoal} disabled={local.coachControlled} onChange={(e) => setLocal({ ...local, carbGoal: e.target.value })} />
+          <input className="nyf-input" type="number" value={Math.round(Number(local.carbGoal) || 0)} disabled />
         </div>
       </div>
       <label className="nyf-field-label">Fat (g)</label>
-      <input className="nyf-input" type="number" value={local.fatGoal} disabled={local.coachControlled} onChange={(e) => setLocal({ ...local, fatGoal: e.target.value })} />
+      <input className="nyf-input" type="number" value={Math.round(Number(local.fatGoal) || 0)} disabled />
       <button className="nyf-btn full" onClick={save} style={{ marginTop: 4 }}>
         <Check size={15} /> Save goals
       </button>
@@ -2644,7 +2670,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   }
 
   function currentEntry() {
-    return { mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 };
+    return { mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Math.round(Number(form.cal) || 0), protein: Math.round(Number(form.protein) || 0), carb: Math.round(Number(form.carb) || 0), fat: Math.round(Number(form.fat) || 0) };
   }
 
   return (
@@ -2746,14 +2772,14 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                     {foodResults.map((item) => (
                       <button className="nyf-food-option" key={item.id} onClick={() => chooseFood(item)}>
                         <strong>{item.name}</strong>
-                        <span>{item.brand ? `${item.brand} · ` : ""}per 100{item.unit}: {item.cal} kcal · P{item.protein}g · C{item.carb}g · F{item.fat}g</span>
+                        <span>{item.brand ? `${item.brand} · ` : ""}per 100{item.unit}: {Math.round(Number(item.cal) || 0)} kcal · P{Math.round(Number(item.protein) || 0)}g · C{Math.round(Number(item.carb) || 0)}g · F{Math.round(Number(item.fat) || 0)}g</span>
                       </button>
                     ))}
                   </div>
                 )}
                 {foodResults.length > 0 && foodHasMore && <button className="nyf-btn ghost full" onClick={() => searchFoods(foodQuery, true)} disabled={foodSearchLoading} style={{ marginBottom: 10 }}><Search size={15} /> {foodSearchLoading ? "Searching brands…" : "Search South African brands (English)"}</button>}
-                {quickFoods.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Recently logged - tap to add again</label><div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{item.cal} kcal · P{item.protein}</span></button>)}</div></div>}
-                {savedMeals.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Saved meals - one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Number(item.cal) || 0, protein: Number(item.protein) || 0, carb: Number(item.carb) || 0, fat: Number(item.fat) || 0 })}><strong>★ {item.name}</strong><span>{item.cal} kcal · P{item.protein} · C{item.carb} · F{item.fat}</span></button>)}</div></div>}
+                {quickFoods.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Recently logged - tap to add again</label><div className="nyf-quick-scroll">{quickFoods.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "g", cal: Math.round(Number(item.cal) || 0), protein: Math.round(Number(item.protein) || 0), carb: Math.round(Number(item.carb) || 0), fat: Math.round(Number(item.fat) || 0) })}><strong>{item.name}</strong><span>{item.qty ? `${item.qty}${item.unit || "g"} · ` : ""}{Math.round(Number(item.cal) || 0)} kcal · P{Math.round(Number(item.protein) || 0)}</span></button>)}</div></div>}
+                {savedMeals.length > 0 && <div style={{ marginBottom: 8 }}><label className="nyf-field-label">Saved meals - one tap to log</label><div className="nyf-quick-scroll">{savedMeals.map((item) => <button className="nyf-quick-food" key={item.id} onClick={() => onAdd({ mealType: form.mealType, name: item.name, qty: item.qty || null, unit: item.unit || "serving", cal: Math.round(Number(item.cal) || 0), protein: Math.round(Number(item.protein) || 0), carb: Math.round(Number(item.carb) || 0), fat: Math.round(Number(item.fat) || 0) })}><strong>★ {item.name}</strong><span>{Math.round(Number(item.cal) || 0)} kcal · P{Math.round(Number(item.protein) || 0)} · C{Math.round(Number(item.carb) || 0)} · F{Math.round(Number(item.fat) || 0)}</span></button>)}</div></div>}
                 <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "2px 0 10px" }}>For the exact product, search its brand and name or scan/type the barcode. If it is not listed yet, use the nutrition label to enter it manually.</p>
                 <FoodSubmissionForm initialName={foodQuery} />
               </>
@@ -2778,7 +2804,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 <option value="serving">servings</option>
               </select>
             </div>
-            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>{["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit) * 10) / 10}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{form.cal || 0} kcal · P{form.protein || 0}g · C{form.carb || 0}g · F{form.fat || 0}g</strong></div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
+            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>{["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit))}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{Math.round(Number(form.cal) || 0)} kcal · P{Math.round(Number(form.protein) || 0)}g · C{Math.round(Number(form.carb) || 0)}g · F{Math.round(Number(form.fat) || 0)}g</strong></div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
 
             <label className="nyf-field-label">Calories (kcal)</label>
             <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
@@ -3273,10 +3299,11 @@ function CentralStaffLogin({ onBack, onLogin }) {
 }
 
 function CoachGoalsEditor({ profile, onSave }) {
-  const [form, setForm] = useState({ calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50, expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
+  const [form, setForm] = useState({ goalType: profile.goalType || "fatloss", weight: profile.weight || "", calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50, expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
   const [saved, setSaved] = useState(false);
-  async function save() { await onSave(form); setSaved(true); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0.1" max="1.5" step="0.1" value={form.expectedWeeklyLoss} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% - no extra allowance</option><option value="50">50% - recommended</option><option value="100">100% - full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
+  function updateNutrition(calories, goalType = form.goalType, weight = form.weight) { const calorieGoal = Math.round(Number(calories) || 0); setForm((current) => ({ ...current, goalType, weight, calorieGoal, ...macrosFromCalories(calorieGoal, weight) })); setSaved(false); }
+  async function save() { await onSave({ ...form, weight: Math.round(Number(form.weight) || 0), calorieGoal: Math.round(Number(form.calorieGoal) || 0), proteinGoal: Math.round(Number(form.proteinGoal) || 0), carbGoal: Math.round(Number(form.carbGoal) || 0), fatGoal: Math.round(Number(form.fatGoal) || 0) }); setSaved(true); }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><label className="nyf-field-label">Main goal</label><select className="nyf-select" value={form.goalType} onChange={(e) => updateNutrition(form.calorieGoal, e.target.value)}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select><div className="nyf-product-card" style={{ marginTop: 10 }}>Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="1" value={form.weight} onChange={(e) => updateNutrition(form.calorieGoal, form.goalType, e.target.value)} /></div><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" step="1" value={form.calorieGoal} onChange={(e) => updateNutrition(e.target.value)} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.proteinGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.carbGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.fatGoal) || 0)} disabled /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0" max="2" step="1" value={Math.round(Number(form.expectedWeeklyLoss) || 0)} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% - no extra allowance</option><option value="50">50% - recommended</option><option value="100">100% - full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
 function CoachDashboard({ onLogout, onReturnToMember }) {
