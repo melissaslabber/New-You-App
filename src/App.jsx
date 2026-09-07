@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1735";
+const APP_RELEASE = "2026-09-07-1805";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1544,7 +1544,7 @@ function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
     const change = first && latest ? `${latest - first > 0 ? "+" : ""}${(latest - first).toFixed(1)} kg` : "Not enough entries";
     const diary = Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b)).map(([date, day]) => `${date}: ${Math.round(day.cal)} kcal | P${Math.round(day.protein)} C${Math.round(day.carb)} F${Math.round(day.fat)} | ${day.meals.join(", ")}`).join("\n") || "No food logged in the past 7 days.";
     const message = `NEW YOU WEEKLY CHECK-IN\nMember: ${profile.name || "Member"}\nDate: ${todayStr()}\n\nEnergy: ${form.energy}/5\nHunger: ${form.hunger}/5\nSleep: ${form.sleep}/5\nTraining: ${form.training}/5\nWin: ${form.win || "-"}\nSupport needed: ${form.struggle || "-"}\n\nWEIGHT PROGRESS\nLatest: ${latest ? `${latest} kg` : "Not logged"}\nOverall change: ${change}\n\nLAST 7 DAYS FOOD DIARY\n${diary}`;
-    window.open(`https://wa.me/27731800485?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   }
   return (
     <div className="nyf-card gold">
@@ -1553,21 +1553,11 @@ function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
         {[['energy','Energy'],['hunger','Hunger'],['sleep','Sleep'],['training','Training']].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label}: {form[key]}/5</label><div className="nyf-score-row">{[1,2,3,4,5].map((n) => <button key={n} className={`nyf-score${form[key] === n ? " active" : ""}`} onClick={() => setForm({ ...form, [key]: n })}>{n}</button>)}</div></div>)}
         <label className="nyf-field-label">Your win this week</label><input className="nyf-input" value={form.win} onChange={(e) => setForm({ ...form, win: e.target.value })} placeholder="What went well?" />
         <label className="nyf-field-label">Where you need support</label><textarea className="nyf-input" rows="3" value={form.struggle} onChange={(e) => setForm({ ...form, struggle: e.target.value })} placeholder="Anything your coach should know?" />
-        <button className="nyf-btn gold full" onClick={() => save(true)}>Save &amp; WhatsApp Coach Martin</button>
+        <button className="nyf-btn gold full" onClick={() => save(true)}>Save &amp; share on WhatsApp</button>
         <button className="nyf-btn ghost full" style={{ marginTop: 8 }} onClick={() => save(false)}>Save in app only</button>
       </>}
     </div>
   );
-}
-
-function CoachMessagesCard({ memberName }) {
-  const [text, setText] = useState("");
-  function send() {
-    const clean = text.trim();
-    const message = clean ? `NEW YOU MEMBER MESSAGE\nFrom: ${memberName || "Member"}\nDate: ${todayStr()}\n\n${clean}` : `Hi Coach Martin, this is ${memberName || "a New You member"}.`;
-    window.location.href = `https://wa.me/27731800485?text=${encodeURIComponent(message)}`;
-  }
-  return <div className="nyf-card"><div className="nyf-section-title"><User size={17} /> Contact your coach</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Open WhatsApp to contact Coach Martin. Adding a message below is optional.</p><textarea className="nyf-input" rows="2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Optional message…" /><button className="nyf-btn gold full" onClick={send}>Open WhatsApp with Coach Martin</button></div>;
 }
 
 const COMMUNITY_REVIEWS = [
@@ -1682,7 +1672,6 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
-      <CoachMessagesCard memberName={profile.name} />
       <CommunityReviews />
     </>
   );
