@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0730";
+const APP_RELEASE = "2026-09-07-0745";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1468,8 +1468,6 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
-      <StepsCard entry={todaySteps} onSave={saveSteps} />
-      <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
       <div className="nyf-card">
         <div className="nyf-section-title">Today's totals</div>
         <Bar label="Calories" value={totals.cal} goal={profile.calorieGoal} unit=" kcal" />
@@ -1509,6 +1507,9 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
           })
         )}
       </div>
+
+      <StepsCard entry={todaySteps} onSave={saveSteps} />
+      <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
 
       <div className="nyf-card">
         <div className="nyf-section-title">Weight &amp; body fat</div>
