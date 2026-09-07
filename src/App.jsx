@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1535";
+const APP_RELEASE = "2026-09-07-1735";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -853,6 +853,16 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   function removeFood(id) {
     setFoodLogs((prev) => prev.filter((f) => f.id !== id));
   }
+  function updateFoodAmount(id, nextQty) {
+    const quantity = Number(nextQty);
+    if (!Number.isFinite(quantity) || quantity <= 0) return;
+    setFoodLogs((prev) => prev.map((food) => {
+      if (food.id !== id) return food;
+      const oldQty = Number(food.qty) || 1;
+      const ratio = quantity / oldQty;
+      return { ...food, qty: String(quantity), cal: Math.round((Number(food.cal) || 0) * ratio), protein: Math.round((Number(food.protein) || 0) * ratio * 10) / 10, carb: Math.round((Number(food.carb) || 0) * ratio * 10) / 10, fat: Math.round((Number(food.fat) || 0) * ratio * 10) / 10 };
+    }));
+  }
   function copyPreviousDay() {
     if (!previousDayLogs.length) return;
     setFoodLogs((prev) => [...prev, ...previousDayLogs.map(({ id, date, ...item }) => ({ ...item, id: uid(), date: todayStr() }))]);
@@ -1135,6 +1145,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             totals={totals}
             todayLogs={todayLogs}
             removeFood={removeFood}
+            updateFoodAmount={updateFoodAmount}
             chartData={chartData}
             latestWeight={latestWeight}
             setShowFoodModal={setShowFoodModal}
@@ -1276,21 +1287,48 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
   const [seconds, setSeconds] = useState(steps[0]?.duration || 1);
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const audioContextRef = useRef(null);
   const step = steps[index];
+  const playBeep = (frequency = 880, duration = 0.1, volume = 0.12) => {
+    if (!soundOn || typeof window === "undefined") return;
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const context = audioContextRef.current || new AudioContext();
+      audioContextRef.current = context;
+      if (context.state === "suspended") context.resume();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(volume, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
+      oscillator.connect(gain); gain.connect(context.destination);
+      oscillator.start(); oscillator.stop(context.currentTime + duration);
+    } catch { /* Sound is optional on browsers that block web audio. */ }
+  };
   const advance = () => {
-    if (phase === "work" && step?.rest) { setPhase("rest"); setSeconds(step.rest); return; }
-    if (index >= steps.length - 1) { setRunning(false); setFinished(true); return; }
-    const next = index + 1; setIndex(next); setPhase("work"); setSeconds(steps[next].duration);
+    if (phase === "work" && step?.rest) { playBeep(520, 0.22, 0.15); setPhase("rest"); setSeconds(step.rest); return; }
+    if (index >= steps.length - 1) { playBeep(1040, 0.35, 0.16); setRunning(false); setFinished(true); return; }
+    const next = index + 1; playBeep(1120, 0.28, 0.16); setIndex(next); setPhase("work"); setSeconds(steps[next].duration);
   };
   useEffect(() => {
     if (!running || finished) return undefined;
-    const timer = window.setTimeout(() => { if (seconds <= 1) advance(); else setSeconds((value) => value - 1); }, 1000);
+    const timer = window.setTimeout(() => {
+      if (seconds <= 1) advance();
+      else {
+        const nextSecond = seconds - 1;
+        setSeconds(nextSecond);
+        if (phase === "work" && nextSecond <= 5) playBeep(nextSecond === 1 ? 980 : 820, nextSecond === 1 ? 0.16 : 0.08, 0.13);
+      }
+    }, 1000);
     return () => window.clearTimeout(timer);
-  }, [running, seconds, phase, index, finished]);
+  }, [running, seconds, phase, index, finished, soundOn]);
   const goTo = (next) => { const safe = Math.max(0, Math.min(steps.length - 1, next)); setIndex(safe); setPhase("work"); setSeconds(steps[safe].duration); setFinished(false); };
   const formatTime = (value) => `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
   if (finished) return <div className="nyf-player"><button className="nyf-btn ghost" onClick={onExit}>Back</button><div className="nyf-card gold" style={{ textAlign: "center", padding: "44px 20px" }}><Check size={64} color="var(--success)" /><h2 style={{ fontSize: 28, marginTop: 14 }}>Workout completed!</h2><p style={{ color: "var(--ink-soft)", lineHeight: 1.5 }}>Well done for showing up and finishing {title}.</p><button className="nyf-btn gold full" onClick={onComplete}>Save workout and finish</button><button className="nyf-link-btn" onClick={() => goTo(0)}>Repeat workout</button></div></div>;
-  return <div className="nyf-player"><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? "REST AND CHANGE" : running ? "TIME REMAINING" : "READY"}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => setRunning((value) => !value)}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
+  return <div className="nyf-player"><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><button className="nyf-btn ghost" onClick={() => setSoundOn((value) => !value)}>{soundOn ? "Sound on" : "Sound off"}</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? `${step.rest || 0} SEC REST` : `${step.duration} SEC WORK`}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => { if (!running) playBeep(1120, 0.28, 0.16); setRunning((value) => !value); }}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
 }
 
 function WorkoutTab({ setTab, addExercise }) {
@@ -1339,9 +1377,12 @@ function WorkoutTab({ setTab, addExercise }) {
   ];
   const quick = quickWorkouts[selectedDay];
   const stretch = stretchPlans[selectedDay];
+  const dailyWarmupMoves = venue === "gym"
+    ? ["Easy cardio machine", "Reverse lunge", "Bodyweight squat", "Hip hinge", "Arm circles and torso rotations"]
+    : ["Easy march or light jog", "Step jacks", "Reverse lunge", "Bodyweight squat", "Hip hinge and reach"];
   const dailyPlayerSteps = [
-    ...warmup.map((item, index) => ({ label: `WARM-UP ${index + 1}`, name: item[0], duration: Number.parseInt(item[1], 10) * 60, instructions: item[2] })),
-    ...workoutPlan.map((item, index) => ({ label: `WORKOUT BLOCK ${index + 1}`, name: item[0], duration: Number.parseInt(item[1], 10) * 60, instructions: item[2] })),
+    ...Array.from({ length: 2 }, (_, round) => dailyWarmupMoves.map((name, index) => ({ label: `WARM-UP ROUND ${round + 1} · MOVE ${index + 1}`, name, duration: 45, rest: 15, instructions: movementCue(name) }))).flat(),
+    ...Array.from({ length: Math.ceil(35 / workout.exercises.length) }, (_, round) => workout.exercises.map((exercise, index) => ({ label: `WORKOUT ROUND ${round + 1} · EXERCISE ${index + 1}`, name: exercise[0], duration: 45, rest: 15, instructions: `${movementCue(exercise[0])} Level ${level}: ${exercise[level + 1]}` }))).flat().slice(0, 35),
   ];
   const quickPlayerSteps = [
     { label: "WARM-UP 1", name: "Easy march or jog", duration: 60 },
@@ -1350,8 +1391,15 @@ function WorkoutTab({ setTab, addExercise }) {
     ...Array.from({ length: 3 }, (_, round) => quick.exercises.map((name, index) => ({ label: `ROUND ${round + 1} · EXERCISE ${index + 1}`, name, duration: 40, rest: 20 }))).flat(),
   ];
   const stretchPlayerSteps = Array.from({ length: 2 }, (_, round) => stretch.moves.map((name, index) => ({ label: `ROUND ${round + 1} · STRETCH ${index + 1}`, name, duration: 45, rest: 15 }))).flat();
+  const hyroxGymExercises = ["SkiErg", "Sled push", "Sled pull", "Burpee broad jump", "RowErg", "Farmer carry", "Sandbag walking lunge", "Wall balls"];
+  const hyroxHomeExercises = ["High knees or fast march", "Heavy backpack push march", "Towel row or band row", "Burpee broad jump or step-back", "Fast mountain climber", "Farmer carry", "Backpack walking lunge", "Squat to press"];
+  const hyroxExercises = venue === "gym" ? hyroxGymExercises : hyroxHomeExercises;
+  const hyroxPlayerSteps = [
+    ...Array.from({ length: 2 }, (_, round) => ["Easy jog or brisk march", "Bodyweight squat", "Reverse lunge", "Hip hinge and reach", "Arm circles and step jacks"].map((name, index) => ({ label: `HYROX WARM-UP ${round + 1} · ${index + 1}`, name, duration: 45, rest: 15, instructions: movementCue(name) }))).flat(),
+    ...Array.from({ length: 5 }, (_, round) => hyroxExercises.map((name, index) => ({ label: `HYROX ROUND ${round + 1} · STATION ${index + 1}`, name, duration: 45, rest: 15, instructions: `${movementCue(name)} Level ${level}: ${level === 1 ? "Move steadily with a light load or low-impact option." : level === 2 ? "Use a moderate load and a controlled race-style pace." : "Use a challenging safe load and strong sustainable pace."}` }))).flat().slice(0, 35),
+  ];
   if (playerMode) {
-    const details = playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
+    const details = playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : playerMode === "hyrox" ? { title: `HYROX preparation - ${venue === "gym" ? "Gym" : "Home"}`, steps: hyroxPlayerSteps, calories: 350 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
     return <WorkoutPlayer title={details.title} steps={details.steps} onExit={() => setPlayerMode(null)} onComplete={() => { addExercise({ activity: details.title, calories: details.calories }); setPlayerMode(null); setTab("track"); }} />;
   }
 
@@ -1361,7 +1409,16 @@ function WorkoutTab({ setTab, addExercise }) {
       <button className="nyf-workout-choice daily" onClick={() => setSection("daily")}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Daily workout</strong><span>45 min · Home or gym</span></div></button>
       <button className="nyf-workout-choice quick" onClick={() => setSection("quick")}><div className="nyf-workout-visual"><div className="nyf-workout-minutes">15<small>MINUTES</small></div></div><div className="nyf-workout-choice-copy"><strong>Quick workout</strong><span>Short, focused and effective</span></div></button>
       <button className="nyf-workout-choice stretch" onClick={() => setSection("stretch")}><div className="nyf-workout-visual"><PersonStanding size={52} strokeWidth={1.7} /></div><div className="nyf-workout-choice-copy"><strong>Stretch</strong><span>10 min · Matched to today</span></div></button>
+      <button className="nyf-workout-choice daily" onClick={() => setSection("hyrox")}><div className="nyf-workout-visual"><Flame size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>HYROX preparation</strong><span>45 min · Strength and engine</span></div></button>
     </div>
+  </>;
+
+  if (section === "hyrox") return <>
+    <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">HYROX PREPARATION</div><h2 style={{ fontSize: 27 }}>Build your strength and engine</h2><p style={{ color: "#D5E5F2", fontSize: 12.5 }}>Running-style conditioning alternated with functional stations.</p><span className="nyf-workout-time">45 minutes · 45 sec work + 15 sec rest</span></div>
+    <div className="nyf-card"><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch"><button className={venue === "home" ? "active" : ""} onClick={() => setVenue("home")}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => setVenue("gym")}>At the gym</button></div><div className="nyf-section-title" style={{ marginTop: 16 }}>Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><button className="nyf-btn gold full" style={{ marginTop: 14 }} onClick={() => setPlayerMode("hyrox")}><Flame size={17} /> Start HYROX workout</button></div>
+    <div className="nyf-card gold"><div className="nyf-section-title">Today's stations</div>{hyroxExercises.map((name, index) => <div className="nyf-log-item" key={name}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div className="nyf-log-name">{name}</div><div className="nyf-log-macro">45 sec work + 15 sec rest</div></div></div>)}</div>
+    <div className="nyf-card clay"><strong>Train safely</strong><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>This is HYROX preparation, not an exact race simulation. Choose loads that keep your technique controlled. Stop for chest pain, faintness, sharp pain or unusual shortness of breath.</p></div>
   </>;
 
   if (section === "quick") return <>
@@ -1698,7 +1755,9 @@ function InBodyCard({ assessments, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Calculator size={17} /> InBody assessments</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Upload a clear JPG image of your full InBody assessment. New You will save the report and its results, then compare it with your previous assessment.</p><label className="nyf-btn full" style={{ display: "flex", cursor: status.startsWith("Reading") ? "wait" : "pointer" }}><Camera size={15} /> {status.startsWith("Reading") ? status : "Upload InBody image"}<input type="file" accept="image/jpeg,.jpg,.jpeg" style={{ display: "none" }} disabled={status.startsWith("Reading")} onChange={(event) => { const file = event.target.files?.[0]; upload(file); event.target.value = ""; }} /></label>{error && <div className="nyf-error" style={{ marginTop: 10 }}>{error}</div>}{status && !status.startsWith("Reading") && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}{latest && <><div className="nyf-chip-heading" style={{ marginTop: 16 }}>Latest assessment - {latest.testDate || "date not found"}</div><div className="nyf-progress-summary">{INBODY_FIELDS.slice(0, 3).map(([key,label,unit]) => <div className="nyf-progress-tile" key={key}><strong>{latest[key] ?? "-"}{latest[key] != null ? unit : ""}</strong><span>{label}</span>{previous && formatChange(key, unit) && <small>{formatChange(key, unit)}</small>}</div>)}</div><div className="nyf-ai-box"><strong>Your report in short</strong><p style={{ margin: "7px 0 0" }}>{reportSummary}</p>{latest.notes && <p style={{ margin: "7px 0 0" }}>{latest.notes}</p>}</div>{latest.recommendedComparison && <div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Compared with the recommended ranges</strong><p style={{ margin: "7px 0 0" }}>{latest.recommendedComparison}</p></div>}{latest.advice?.length > 0 && <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>How to improve your results</strong>{latest.advice.map((tip, index) => <p key={`${index}-${tip}`} style={{ margin: "7px 0 0" }}>{index + 1}. {tip}</p>)}</div>}{feedback.length ? <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>Compared with your previous report</strong>{feedback.map((line) => <p key={line} style={{ margin: "7px 0 0" }}>{line}</p>)}<p style={{ margin: "9px 0 0", fontSize: 11 }}>InBody readings can shift with hydration, food, exercise and test timing. Compare reports taken under similar conditions.</p></div> : <div className="nyf-product-card">This is your first uploaded assessment. Your next report will be compared with this baseline.</div>}</>}{ordered.length > 0 && <div style={{ marginTop: 14 }}><div className="nyf-chip-heading">All saved reports</div>{ordered.map((item) => <div className="nyf-log-item" key={item.id} style={{ alignItems: "flex-start" }}>{item.image && <a href={item.image} target="_blank" rel="noreferrer"><img src={item.image} alt={`InBody report ${item.testDate || ""}`} style={{ width: 50, height: 68, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)", marginRight: 9 }} /></a>}<div style={{ flex: 1 }}><div className="nyf-log-name">{item.testDate || "InBody assessment"}</div><div className="nyf-log-macro">{item.fileName} · Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.percentBodyFat ?? "-"}%</div>{item.image && <a href={item.image} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: "var(--forest)", fontWeight: 700 }}>View report image</a>}</div><button className="nyf-close-btn" onClick={() => onRemove(item.id)} aria-label="Remove assessment"><Trash2 size={13} /></button></div>)}</div>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
+  const [editingFood, setEditingFood] = useState(null);
+  const [editingQty, setEditingQty] = useState("");
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
@@ -1730,6 +1789,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span>{f.cal} kcal</span>
+                <button className="nyf-close-btn" onClick={() => { setEditingFood(f.id); setEditingQty(String(f.qty || "")); }} aria-label="Edit amount" title="Edit amount"><Pencil size={12} /></button>
                 <button className="nyf-close-btn" onClick={() => repeatFood({ mealType: f.mealType || mealType, name: f.name, qty: f.qty, unit: f.unit, cal: f.cal, protein: f.protein, carb: f.carb, fat: f.fat })} aria-label="Log again" title="Log again">
                   <Plus size={13} />
                 </button>
@@ -1741,6 +1801,8 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
           })
         )}
       </div>
+
+      {editingFood && (() => { const food = todayLogs.find((item) => item.id === editingFood); return food ? <div className="nyf-modal-backdrop" onClick={() => setEditingFood(null)}><div className="nyf-modal" onClick={(event) => event.stopPropagation()} style={{ paddingBottom: 24 }}><div className="nyf-modal-head"><h3>Edit food amount</h3><button className="nyf-close-btn" onClick={() => setEditingFood(null)}><X size={14} /></button></div><div className="nyf-product-card"><strong>{food.name}</strong><br /><span style={{ fontSize: 12, color: "var(--ink-soft)" }}>Current: {food.qty || 0}{food.unit || "g"} · {food.cal} kcal</span></div><label className="nyf-field-label">New amount ({food.unit || "g"})</label><input className="nyf-input" type="number" min="0.1" step="0.1" inputMode="decimal" autoFocus value={editingQty} onChange={(event) => setEditingQty(event.target.value)} /><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Calories, protein, carbs and fat will update automatically in the same proportion.</p><button className="nyf-btn gold full" disabled={!Number(editingQty) || Number(editingQty) <= 0} onClick={() => { updateFoodAmount(food.id, editingQty); setEditingFood(null); setEditingQty(""); }}>Save new amount</button></div></div> : null; })()}
 
       <StepsCard entry={todaySteps} onSave={saveSteps} />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
