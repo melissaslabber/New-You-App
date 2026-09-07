@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0545";
+const APP_RELEASE = "2026-09-07-0630";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -2144,6 +2144,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
   const [cameraError, setCameraError] = useState("");
   const videoRef = useRef(null);
   const scannerControlsRef = useRef(null);
+  const scannerReaderRef = useRef(null);
   const cameraSupported = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   const valid = form.name && form.cal;
   const quickFoods = useMemo(() => {
@@ -2163,22 +2164,20 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
 
   async function startScan() {
     setCameraError("");
+    if (!window.isSecureContext) { setCameraError("Camera scanning needs a secure HTTPS connection. You can still type the barcode or photograph it below."); return; }
     setScanning(true);
     try {
       await new Promise((resolve) => requestAnimationFrame(resolve));
       if (!videoRef.current) throw new Error("Camera preview did not start");
       const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 150 });
-      const controls = await reader.decodeFromConstraints(
-        { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
-        videoRef.current,
-        (result) => {
-          if (!result) return;
-          const value = result.getText();
-          stopScan();
-          setBarcode(value);
-          lookupBarcode(value);
-        }
-      );
+      scannerReaderRef.current = reader;
+      const onResult = (result) => { if (!result) return; const value = result.getText(); stopScan(); setBarcode(value); lookupBarcode(value); };
+      let controls;
+      try {
+        controls = await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false }, videoRef.current, onResult);
+      } catch {
+        controls = await reader.decodeFromConstraints({ video: true, audio: false }, videoRef.current, onResult);
+      }
       scannerControlsRef.current = controls;
     } catch (e) {
       setCameraError("The camera opened but couldn't start the scanner. Close other camera apps, reload this page and try again, or type the barcode below.");
@@ -2189,9 +2188,26 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
   function stopScan() {
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
+    scannerReaderRef.current = null;
     const stream = videoRef.current?.srcObject;
     if (stream?.getTracks) stream.getTracks().forEach((track) => track.stop());
     setScanning(false);
+  }
+
+  async function scanBarcodePhoto(file) {
+    if (!file) return;
+    setCameraError("");
+    const imageUrl = URL.createObjectURL(file);
+    try {
+      const result = await new BrowserMultiFormatReader().decodeFromImageUrl(imageUrl);
+      const value = result.getText();
+      setBarcode(value);
+      await lookupBarcode(value);
+    } catch {
+      setCameraError("We could not read that barcode photo. Retake it close-up in bright light, keep the full barcode sharp and straight, or type the digits below it.");
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
   }
 
   async function searchFoods(queryOverride, includeBrands = false) {
@@ -2349,12 +2365,12 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
               <>
                 {!scanning ? (
                   <button className="nyf-btn ghost full" onClick={startScan} style={{ marginBottom: 8 }}>
-                    <Camera size={15} /> Try camera scan (experimental)
+                    <Camera size={15} /> Scan barcode with camera
                   </button>
                 ) : (
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ position: "relative", borderRadius: 6, overflow: "hidden", background: "#000" }}>
-                      <video ref={videoRef} muted playsInline style={{ width: "100%", display: "block" }} />
+                      <video ref={videoRef} muted playsInline autoPlay style={{ width: "100%", display: "block" }} />
                       <div style={{ position: "absolute", inset: "35% 12%", border: "2px solid var(--gold)", borderRadius: 4, pointerEvents: "none" }} />
                     </div>
                     <button className="nyf-btn ghost full" onClick={stopScan} style={{ marginTop: 8 }}>
@@ -2363,9 +2379,8 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                   </div>
                 )}
                 {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
-                <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>
-                  Camera scanning depends on your specific phone and browser and doesn't work everywhere yet - if nothing happens after a few seconds, just type the number above instead.
-                </p>
+                <label className="nyf-btn ghost full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Photograph or upload the barcode<input type="file" accept="image/*" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
+                <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>Live scanning works in current Safari, Chrome, Samsung Internet and other modern browsers. On an older phone, use the barcode photo option or type the digits printed below the barcode.</p>
               </>
             )}
             {product && (
@@ -2662,12 +2677,13 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
 }
 
 function InstallGuide({ onClose, onInstall }) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isIOSSafari = isIOS && /Safari/i.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent);
   const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
-  return <div className="nyf-install-guide" onClick={onClose}><div className="nyf-install-sheet" onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 14 }}><img className="nyf-install-icon" src="/new-you-logo.png" alt="New You" /><div><div className="nyf-step">Quick setup</div><h2 style={{ fontSize: 23 }}>Add New You to your phone</h2></div></div>{isSamsung ? <><div className="nyf-lookup-error" style={{ marginBottom: 12 }}>Samsung Internet may show an incorrect “older Android version” warning. Please install through Google Chrome instead.</div><div className="nyf-install-step"><strong>1</strong><span>Copy this app link, then open <b>Google Chrome</b>.</span></div><div className="nyf-install-step"><strong>2</strong><span>Paste and open the link in Chrome.</span></div><div className="nyf-install-step"><strong>3</strong><span>Tap Chrome’s three-dot menu and choose <b>Install app</b>.</span></div></> : isIOS ? <><div className="nyf-install-step"><strong>1</strong><span>Make sure this page is open in <b>Safari</b>.</span></div><div className="nyf-install-step"><strong>2</strong><span>Tap the <b>Share</b> button at the bottom of Safari.</span></div><div className="nyf-install-step"><strong>3</strong><span>Select <b>Add to Home Screen</b>, turn on <b>Open as Web App</b>, then tap Add.</span></div></> : onInstall ? <><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Install New You for faster access and an app icon on your home screen.</p><button className="nyf-btn gold full" onClick={() => { onInstall(); onClose(); }} style={{ marginTop: 10 }}>Install New You</button></> : <><div className="nyf-install-step"><strong>1</strong><span>Open your browser menu using the three dots.</span></div><div className="nyf-install-step"><strong>2</strong><span>Choose <b>Install app</b> or <b>Add to Home screen</b>.</span></div><div className="nyf-install-step"><strong>3</strong><span>Confirm to place the New You icon on your phone.</span></div></>}<button className="nyf-btn ghost full" onClick={onClose} style={{ marginTop: 10 }}>Maybe later</button></div></div>;
+  return <div className="nyf-install-guide" onClick={onClose}><div className="nyf-install-sheet" onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 14 }}><img className="nyf-install-icon" src="/new-you-logo.png" alt="New You" /><div><div className="nyf-step">Quick setup</div><h2 style={{ fontSize: 23 }}>Add New You to your phone</h2></div></div>{isSamsung ? <><div className="nyf-lookup-error" style={{ marginBottom: 12 }}>For the most reliable Android installation, open this page in Google Chrome.</div><div className="nyf-install-step"><strong>1</strong><span>Copy this app link, then open <b>Google Chrome</b>.</span></div><div className="nyf-install-step"><strong>2</strong><span>Paste and open the link in Chrome.</span></div><div className="nyf-install-step"><strong>3</strong><span>Tap Chrome's three-dot menu and choose <b>Install app</b> or <b>Add to Home screen</b>.</span></div></> : isIOS ? <>{!isIOSSafari && <div className="nyf-lookup-error" style={{ marginBottom: 12 }}>On iPhone or iPad, copy this link and open it in Safari first.</div>}<div className="nyf-install-step"><strong>1</strong><span>Open this page in <b>Safari</b>.</span></div><div className="nyf-install-step"><strong>2</strong><span>Tap Safari's <b>Share</b> icon - the square with an upward arrow.</span></div><div className="nyf-install-step"><strong>3</strong><span>Scroll down, select <b>Add to Home Screen</b>, then tap <b>Add</b>.</span></div></> : onInstall ? <><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Install New You for faster access and an app icon on your home screen.</p><button className="nyf-btn gold full" onClick={() => { onInstall(); onClose(); }} style={{ marginTop: 10 }}>Install New You</button></> : <><div className="nyf-install-step"><strong>1</strong><span>Open your browser menu using the three dots.</span></div><div className="nyf-install-step"><strong>2</strong><span>Choose <b>Install app</b> or <b>Add to Home screen</b>.</span></div><div className="nyf-install-step"><strong>3</strong><span>Confirm to place the New You icon on your phone.</span></div></>}<button className="nyf-btn ghost full" onClick={onClose} style={{ marginTop: 10 }}>Maybe later</button></div></div>;
 }
 
-function LandingScreen({ onMember, onStaff, onInstall, showInstallGuide, onCloseInstallGuide }) {
+function LandingScreen({ onMember, onStaff, onInstall, onShowInstallGuide, showInstallGuide, onCloseInstallGuide }) {
   return (
     <div className="nyf nyf-landing">
       <style>{STYLE}</style>
@@ -2680,7 +2696,7 @@ function LandingScreen({ onMember, onStaff, onInstall, showInstallGuide, onClose
       <div className="nyf-landing-actions">
         <button className="nyf-btn gold full" onClick={onMember} style={{ minHeight: 50 }}>Member login</button>
         <button className="nyf-btn ghost full" onClick={onStaff} style={{ marginTop: 10 }}>Coach &amp; staff access</button>
-        {onInstall && <button className="nyf-link-btn" onClick={onInstall} style={{ display: "block", margin: "10px auto 0", color: "#fff" }}>Install New You on this phone</button>}
+        <button className="nyf-link-btn" onClick={onInstall || onShowInstallGuide} style={{ display: "block", margin: "10px auto 0", color: "#fff" }}>Add New You to this phone</button>
         <div style={{ textAlign: "center", color: "#C9D9E8", fontSize: 10.5, marginTop: 13, fontWeight: 600 }}>NEW YOU TRANSFORMATION STUDIO · WELLINGTON</div>
       </div>
       {showInstallGuide && <InstallGuide onClose={onCloseInstallGuide} onInstall={onInstall} />}
@@ -2901,7 +2917,7 @@ export default function App() {
   if (view === "app") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <MainApp onLogout={logout} onSwitchToStaff={() => setView("staff-login")} memberName={memberName} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} onShowInstallGuide={() => setShowInstallGuide(true)} />; }
   if (view === "admin") return <CoachDashboard onLogout={logout} onReturnToMember={canReturnToMember ? returnToMember : null} />;
   if (view === "staff-login") return <CentralStaffLogin onBack={() => setView(memberName ? "app" : "login")} onLogin={staffLogin} />;
-  if (view === "landing") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt && !isSamsung ? installApp : null} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} />; }
+  if (view === "landing") { const isSamsung = /SamsungBrowser/i.test(navigator.userAgent); return <LandingScreen onMember={() => setView("login")} onStaff={() => setView("staff-login")} onInstall={installPrompt && !isSamsung ? installApp : null} onShowInstallGuide={() => setShowInstallGuide(true)} showInstallGuide={showInstallGuide} onCloseInstallGuide={closeInstallGuide} />; }
   return <LoginScreen onLogin={memberLogin} pausedNotice={pausedNotice} onStaffAccess={() => setView("staff-login")} onBack={() => setView("landing")} />;
 }
 
