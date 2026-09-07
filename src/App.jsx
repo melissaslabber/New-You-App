@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1215";
+const APP_RELEASE = "2026-09-07-1300";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1210,6 +1210,7 @@ function NavBtn({ icon, label, active, onClick }) {
 }
 
 function WorkoutTab({ setTab }) {
+  const [section, setSection] = useState("menu");
   const [level, setLevel] = useState(1);
   const [venue, setVenue] = useState("home");
   const [open, setOpen] = useState(null);
@@ -1233,7 +1234,50 @@ function WorkoutTab({ setTab }) {
     ["Set 3 · Equipment rehearsal", "2 min", "Practise today's first two lifts for 60 sec each with an empty bar, the lightest cable setting or very light dumbbells."],
   ];
   const warmup = venue === "gym" ? gymWarmup : homeWarmup;
+  const quickWorkouts = [
+    { title: "Mobility and core reset", focus: "Gentle full-body movement", exercises: ["Dead bug", "Glute bridge", "Bird dog", "Slow mountain climber"] },
+    { title: "Core and abs", focus: "Build a stronger, more stable middle", exercises: ["Dead bug", "Forearm plank", "Glute bridge march", "Slow bicycle crunch"] },
+    { title: "Lower body", focus: "Legs and glutes", exercises: ["Bodyweight squat", "Reverse lunge", "Glute bridge", "Fast feet or march"] },
+    { title: "Upper body", focus: "Chest, back, shoulders and arms", exercises: ["Push-up", "Bent-over row", "Shoulder press", "Plank shoulder tap"] },
+    { title: "Full-body mix", focus: "Strength and functional fitness", exercises: ["Squat to reach", "Push-up", "Hip hinge", "Mountain climber"] },
+    { title: "Quick HIIT", focus: "Short conditioning intervals", exercises: ["Step jack", "High knees or march", "Skater step", "Squat thrust"] },
+    { title: "Full-body challenge", focus: "A fast weekend workout", exercises: ["Squat", "Push-up", "Alternating lunge", "Burpee or step-back"] },
+  ];
+  const stretchPlans = [
+    { title: "Recovery stretch", moves: ["Child's pose", "Hip-flexor stretch", "Figure-four glute stretch", "Chest opener", "Slow spinal rotation"] },
+    { title: "Full-body strength stretch", moves: ["Quad stretch", "Hamstring stretch", "Hip-flexor stretch", "Chest stretch", "Lat stretch"] },
+    { title: "Lower-body stretch", moves: ["Calf stretch", "Standing quad stretch", "Hamstring stretch", "Hip-flexor stretch", "Figure-four glute stretch"] },
+    { title: "Upper-body stretch", moves: ["Chest doorway stretch", "Cross-body shoulder stretch", "Triceps stretch", "Lat stretch", "Neck and upper-trap release"] },
+    { title: "Full-body mobility", moves: ["World's greatest stretch", "Deep squat hold", "Hamstring fold", "Chest opener", "Thread the needle"] },
+    { title: "Post-HIIT stretch", moves: ["Calf stretch", "Quad stretch", "Hip-flexor stretch", "Glute stretch", "Slow breathing fold"] },
+    { title: "Challenge recovery", moves: ["Child's pose", "Cobra stretch", "Hip-flexor stretch", "Hamstring stretch", "Full-body reach and breathe"] },
+  ];
+  const quick = quickWorkouts[selectedDay];
+  const stretch = stretchPlans[selectedDay];
+
+  if (section === "menu") return <>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2 style={{ fontSize: 28 }}>Choose your workout</h2><p style={{ color: "#D5E5F2", fontSize: 13, lineHeight: 1.5, marginBottom: 0 }}>Pick the option that fits your time and energy today.</p></div>
+    <button className="nyf-card" onClick={() => setSection("daily")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Dumbbell size={21} /> 1. Daily Workouts</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>Your complete 45-minute workout. Choose an at-home or gym version and Level 1, 2 or 3.</p><div className="nyf-product-card">Open today's full workout</div></button>
+    <button className="nyf-card gold" onClick={() => setSection("quick")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Flame size={21} /> 2. Quick Workouts</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>A focused 15-minute session for busy days, including core, lower body, upper body, mixed and HIIT options.</p><div className="nyf-product-card">Start a 15-minute workout</div></button>
+    <button className="nyf-card" onClick={() => setSection("stretch")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Heart size={21} /> 3. Stretch</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>A guided 10-minute stretch chosen to complement today's workout.</p><div className="nyf-product-card">Open today's stretch</div></button>
+  </>;
+
+  if (section === "quick") return <>
+    <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">15-MINUTE QUICK WORKOUT</div><h2 style={{ fontSize: 27 }}>{quick.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5 }}>{quick.focus}</p><span className="nyf-workout-time">3-minute warm-up + 12-minute circuit</span></div>
+    <div className="nyf-card"><label className="nyf-field-label">Choose a day or focus</label><select className="nyf-select" value={selectedDay} onChange={(event) => setSelectedDay(Number(event.target.value))}>{quickWorkouts.map((item, index) => <option value={index} key={item.title}>{WORKOUTS[index].day} - {item.title}</option>)}</select><div className="nyf-section-title">3-minute warm-up</div><div className="nyf-product-card">60 sec easy march or jog<br />60 sec arm circles and step jacks<br />60 sec squats and hip hinges</div><div className="nyf-section-title" style={{ marginTop: 16 }}>12-minute circuit</div><p style={{ color: "var(--ink-soft)", fontSize: 12.5 }}>Complete 3 rounds. Do each exercise for 40 seconds, then use 20 seconds to rest and change.</p>{quick.exercises.map((exercise, index) => <div className="nyf-log-item" key={exercise}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div><div className="nyf-log-name">{exercise}</div><div className="nyf-log-macro">40 sec work + 20 sec rest</div></div></div>)}</div>
+    <div className="nyf-card clay"><div className="nyf-section-title">Choose a safe pace</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Level 1: slow and low impact. Level 2: steady and challenging. Level 3: faster or add a suitable weight. Stop if you feel sharp pain, faintness, chest pain or unusual shortness of breath.</p></div>
+  </>;
+
+  if (section === "stretch") return <>
+    <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">10-MINUTE GUIDED STRETCH</div><h2 style={{ fontSize: 27 }}>{stretch.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5 }}>Matched to {WORKOUTS[selectedDay].day.toLowerCase()}'s workout.</p><span className="nyf-workout-time">2 rounds - 5 minutes each</span></div>
+    <div className="nyf-card"><label className="nyf-field-label">Choose a training day</label><select className="nyf-select" value={selectedDay} onChange={(event) => setSelectedDay(Number(event.target.value))}>{stretchPlans.map((item, index) => <option value={index} key={item.title}>{WORKOUTS[index].day} - {item.title}</option>)}</select><div className="nyf-product-card"><strong>How it works:</strong> Complete 2 rounds. Hold each stretch gently for 45 seconds and use 15 seconds to change position. Never bounce or force the stretch.</div>{stretch.moves.map((move, index) => <div className="nyf-log-item" key={move}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div><div className="nyf-log-name">{move}</div><div className="nyf-log-macro">45 sec stretch + 15 sec change</div></div></div>)}</div>
+    <div className="nyf-card clay"><div className="nyf-section-title">Stretch safely</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>You should feel gentle tension, not pain. Breathe slowly and ease out of any position that causes pinching, numbness or sharp discomfort.</p></div>
+  </>;
+
   return <>
+    <button className="nyf-btn ghost" onClick={() => setSection("menu")} style={{ marginBottom: 14 }}>Back to workout options</button>
     <div className="nyf-card nyf-workout-hero"><div className="nyf-step">{workout.day} · {venue === "gym" ? "Gym workout" : "New You at home"}</div><h2 style={{ fontSize: 27 }}>{workout.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5, lineHeight: 1.5, marginBottom: 0 }}>{workout.focus}</p><span className="nyf-workout-time">45 minutes · Warm-up 10 + Workout 35</span></div>
     <div className="nyf-card"><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch" style={{ marginBottom: 14 }}><button className={venue === "home" ? "active" : ""} onClick={() => { setVenue("home"); setOpen(null); }}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => { setVenue("gym"); setOpen(null); }}>At the gym</button></div>{venue === "gym" && <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Gym equipment:</strong> This version uses barbells, dumbbells, benches, cables and cardio machines. Where equipment is busy or unavailable, use the Level 1 alternative.</div>}<label className="nyf-field-label">Choose another training day</label><select className="nyf-select" value={selectedDay} onChange={(e) => { setSelectedDay(Number(e.target.value)); setOpen(null); }}>{(venue === "gym" ? GYM_WORKOUTS : WORKOUTS).map((item,index) => <option key={item.day} value={index}>{item.day} · {item.title}</option>)}</select><div className="nyf-section-title">Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 0 }}>Choose the level that lets you move safely with good form. You may use different levels for different exercises.</p></div>
     <div className="nyf-card gold"><div className="nyf-section-title">10-minute warm-up · follow these sets</div>{warmup.map((item,index) => <div className="nyf-log-item" key={item[0]}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{item[0]}</strong><strong>{item[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{item[2]}</div></div></div>)}</div>
