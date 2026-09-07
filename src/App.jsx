@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0405";
+const APP_RELEASE = "2026-09-07-0440";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -890,11 +890,26 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     setAiText("");
     const overCal = totals.cal - creditedExerciseCalories - profile.calorieGoal;
     const overCarb = totals.carb - profile.carbGoal;
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" });
+    const hour = now.getHours();
+    const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+    const loggedMealTypes = [...new Set(todayLogs.map((item) => item.mealType || "Snack"))];
+    const expectedSoFar = hour < 10 ? ["Breakfast"] : hour < 14 ? ["Breakfast", "Lunch"] : hour < 18 ? ["Breakfast", "Lunch", "Snack"] : ["Breakfast", "Lunch", "Snack", "Dinner"];
+    const missingMeals = expectedSoFar.filter((meal) => !loggedMealTypes.includes(meal));
+    const todayWellness = dailyHabits[todayStr()] || {};
     const trend =
       sortedWeights.length >= 2
         ? `Weight trend: started at ${sortedWeights[0].weight}kg, now ${latestWeight.weight}kg over ${sortedWeights.length} entries.`
         : "Not enough weight entries yet for a trend.";
-    const prompt = `You are a supportive, knowledgeable fitness coach at New You Fitness, a gym whose tone is warm and non-intimidating (brand line: "YOU vs YOU"). Give the member a complete, short, specific and encouraging insight in exactly 3 concise sentences, with no headers or bullet points, based on today's nutrition data below. Finish every sentence fully. If they are over their calorie or carb goal, gently flag it and give one practical, non-judgmental suggestion for tomorrow. If they are on track, affirm it briefly and offer one useful tip. Never mention that you are an AI model.
+    const prompt = `You are the warm, supportive New You Fitness coach. Write a personalised daily progress check in 4 short paragraphs, each 1–2 concise sentences. Use these exact headings: "How you're doing", "What stands out", "Your next best step", and "Coach tip". Be encouraging, practical, beginner-friendly and non-judgmental. Consider the time of day before deciding whether low food, steps or missing meals are actually a concern. Never assume an unlogged meal was skipped: say it may not have been logged. Mention sleep or feelings sensitively, without diagnosing or giving mental-health treatment. If "Depressed" is selected, respond with warmth and encourage reaching out to someone they trust, but do not make the entire insight about it. Never mention being an AI.
+
+Current local time: ${currentTime} (${timeOfDay}).
+Meals logged: ${loggedMealTypes.join(", ") || "none yet"}. Meal entries: ${todayLogs.length}. Meals that might not yet be logged for this time: ${missingMeals.join(", ") || "none"}.
+Sleep: ${todayWellness.sleepHours ? `${todayWellness.sleepHours} hours, ${todayWellness.sleepQuality}` : "not recorded"}.
+Feelings today: ${todayWellness.feelings?.join(", ") || "not recorded"}.
+Steps: ${todaySteps ? `${todaySteps.steps} of ${todaySteps.goal}` : "not logged yet"}.
+Exercise: ${todayExercise.length ? todayExercise.map((item) => `${item.activity} (${item.calories} kcal estimate)`).join(", ") : "none logged yet"}.
 
 Calorie goal: ${profile.calorieGoal} kcal. Consumed today: ${totals.cal} kcal (${overCal > 0 ? `${overCal} over` : `${Math.abs(overCal)} under`}).
 Exercise logged today: ${exerciseCalories} kcal. Coach-approved calorie credit: ${creditedExerciseCalories} kcal (${profile.exerciseCredit ?? 50}%). Net calories after the approved credit: ${Math.max(0, totals.cal - creditedExerciseCalories)} kcal. Treat exercise-calorie estimates as approximate.
@@ -1404,6 +1419,12 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <div className="nyf-motivation-quote">“{motivation}”</div>
       </div>
       <BeginnerDailyGuide profile={profile} totals={totals} foodLogs={foodLogs} todayExercise={todayExercise} dailyHabits={dailyHabits} setTab={setTab} />
+      <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}>
+        <div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>
+        {!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise—with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}
+        {aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}
+        <button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button>
+      </div>
       <div className="nyf-card">
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
@@ -1420,24 +1441,6 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <StepsCard entry={todaySteps} onSave={saveSteps} compact />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
-
-      <div className="nyf-card gold">
-        <div className="nyf-section-title">
-          <Sparkles size={16} color="var(--gold)" /> Coach insight
-        </div>
-        {aiText ? (
-          <div className="nyf-ai-box">
-            <p>{aiText}</p>
-          </div>
-        ) : (
-          <p style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 10 }}>
-            Get a personalised read on today's nutrition, based on your goals.
-          </p>
-        )}
-        <button className="nyf-btn gold" style={{ marginTop: 10 }} onClick={getAiInsight} disabled={aiLoading}>
-          {aiLoading ? "Thinking…" : aiText ? "Refresh insight" : "Get my insight"}
-        </button>
-      </div>
 
       {latestWeight && (
         <div className="nyf-card">
