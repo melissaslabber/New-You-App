@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1410";
+const APP_RELEASE = "2026-09-07-1425";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -56,12 +56,12 @@ const STYLE = `
 
 .nyf-review-card { overflow: hidden; background: linear-gradient(145deg, #031D3A, #07539E); color: #fff; border-left-color: var(--gold); }
 .nyf-review-stars { color: #F5C451; font-size: 19px; letter-spacing: 2px; margin: 8px 0 12px; }
-.nyf-review-quote { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 650; line-height: 1.45; min-height: 104px; margin: 0; }
-.nyf-review-meta { color: #D7E7F7; font-size: 11.5px; margin-top: 12px; }
+.nyf-review-quote { color: #0B1F33; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 650; line-height: 1.45; min-height: 104px; margin: 0; }
+.nyf-review-meta { color: #475569; font-size: 11.5px; margin-top: 12px; }
 .nyf-review-dots { display: flex; justify-content: center; gap: 7px; margin: 15px 0 12px; }
-.nyf-review-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.35); }
+.nyf-review-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: #CBD5E1; }
 .nyf-review-dot.active { width: 22px; border-radius: 8px; background: var(--gold); }
-.nyf-review-link { display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 12px; padding: 12px; background: #fff; color: var(--forest); font-weight: 750; font-size: 12.5px; text-decoration: none; }
+.nyf-review-link { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid #C9D8E8; border-radius: 12px; padding: 12px; background: #F7FAFD; color: var(--forest); font-weight: 750; font-size: 12.5px; text-decoration: none; }
 
 .nyf-nav {
   position: sticky; bottom: 0;
@@ -1438,7 +1438,7 @@ function CommunityReviews() {
     return () => window.clearInterval(timer);
   }, []);
   const review = COMMUNITY_REVIEWS[active];
-  return <div className="nyf-card nyf-review-card"><div className="nyf-step" style={{ color: "#F5C451" }}>NEW YOU COMMUNITY WINS</div><div className="nyf-review-stars" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div><p className="nyf-review-quote">“{review.text}”</p><div className="nyf-review-meta"><strong>{review.name}</strong><br />Google review · <a href={review.url} target="_blank" rel="noopener noreferrer" style={{ color: "#fff" }}>View review</a></div><div className="nyf-review-dots">{COMMUNITY_REVIEWS.map((item, index) => <button key={item.url} className={`nyf-review-dot${active === index ? " active" : ""}`} aria-label={`Show review ${index + 1}`} onClick={() => setActive(index)} />)}</div><a className="nyf-review-link" href="https://g.page/r/CT1RPs6YPPb-EAE/review" target="_blank" rel="noopener noreferrer">Leave New You a Google review</a></div>;
+  return <div className="nyf-card nyf-review-card"><div className="nyf-step" style={{ color: "#C58B13" }}>NEW YOU COMMUNITY WINS</div><div className="nyf-review-stars" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div><p className="nyf-review-quote">“{review.text}”</p><div className="nyf-review-meta"><strong>{review.name}</strong><br />Google review · <a href={review.url} target="_blank" rel="noopener noreferrer" style={{ color: "#07356B", fontWeight: 700 }}>View review</a></div><div className="nyf-review-dots">{COMMUNITY_REVIEWS.map((item, index) => <button key={item.url} className={`nyf-review-dot${active === index ? " active" : ""}`} aria-label={`Show review ${index + 1}`} onClick={() => setActive(index)} />)}</div><a className="nyf-review-link" href="https://g.page/r/CT1RPs6YPPb-EAE/review" target="_blank" rel="noopener noreferrer">Leave New You a Google review</a></div>;
 }
 
 function ProgressPhotosCard({ photos, onAdd, onRemove }) {
