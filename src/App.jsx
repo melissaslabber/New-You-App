@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1425";
+const APP_RELEASE = "2026-09-07-1450";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -62,6 +62,19 @@ const STYLE = `
 .nyf-review-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: #CBD5E1; }
 .nyf-review-dot.active { width: 22px; border-radius: 8px; background: var(--gold); }
 .nyf-review-link { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid #C9D8E8; border-radius: 12px; padding: 12px; background: #F7FAFD; color: var(--forest); font-weight: 750; font-size: 12.5px; text-decoration: none; }
+.nyf-workout-menu { display: grid; gap: 14px; }
+.nyf-workout-choice { position: relative; min-height: 150px; width: 100%; overflow: hidden; border: 0; border-radius: 18px; padding: 0; color: #fff; text-align: left; cursor: pointer; box-shadow: 0 12px 28px rgba(3,29,58,.16); }
+.nyf-workout-choice::after { content: ""; position: absolute; width: 170px; height: 170px; right: -50px; top: -60px; border-radius: 50%; background: rgba(255,255,255,.10); }
+.nyf-workout-choice.daily { background: linear-gradient(135deg, #031D3A, #07539E); }
+.nyf-workout-choice.quick { background: linear-gradient(135deg, #BA7A08, #E2AE3D); color: #0B1F33; }
+.nyf-workout-choice.stretch { background: linear-gradient(135deg, #164E63, #0E7490); }
+.nyf-workout-visual { position: absolute; right: 22px; top: 24px; width: 78px; height: 78px; display: flex; align-items: center; justify-content: center; border-radius: 24px; background: rgba(255,255,255,.16); transform: rotate(-4deg); z-index: 1; }
+.nyf-workout-choice.quick .nyf-workout-visual { background: rgba(255,255,255,.44); transform: rotate(4deg); }
+.nyf-workout-minutes { font-family: 'Outfit', sans-serif; font-size: 23px; font-weight: 800; line-height: .9; text-align: center; }
+.nyf-workout-minutes small { display: block; font-size: 10px; letter-spacing: .12em; margin-top: 7px; }
+.nyf-workout-choice-copy { position: absolute; left: 20px; right: 112px; bottom: 20px; z-index: 2; }
+.nyf-workout-choice-copy strong { display: block; font-family: 'Outfit', sans-serif; font-size: 22px; line-height: 1.05; }
+.nyf-workout-choice-copy span { display: block; margin-top: 7px; font-size: 11.5px; line-height: 1.35; opacity: .88; }
 
 .nyf-nav {
   position: sticky; bottom: 0;
@@ -1265,10 +1278,12 @@ function WorkoutTab({ setTab }) {
   const stretch = stretchPlans[selectedDay];
 
   if (section === "menu") return <>
-    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2 style={{ fontSize: 28 }}>Choose your workout</h2><p style={{ color: "#D5E5F2", fontSize: 13, lineHeight: 1.5, marginBottom: 0 }}>Pick the option that fits your time and energy today.</p></div>
-    <button className="nyf-card" onClick={() => setSection("daily")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Dumbbell size={21} /> 1. Daily Workouts</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>Your complete 45-minute workout. Choose an at-home or gym version and Level 1, 2 or 3.</p><div className="nyf-product-card">Open today's full workout</div></button>
-    <button className="nyf-card gold" onClick={() => setSection("quick")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Flame size={21} /> 2. Quick Workouts</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>A focused 15-minute session for busy days, including core, lower body, upper body, mixed and HIIT options.</p><div className="nyf-product-card">Start a 15-minute workout</div></button>
-    <button className="nyf-card" onClick={() => setSection("stretch")} style={{ width: "100%", textAlign: "left", cursor: "pointer", color: "inherit" }}><div className="nyf-section-title"><Heart size={21} /> 3. Stretch</div><p style={{ color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>A guided 10-minute stretch chosen to complement today's workout.</p><div className="nyf-product-card">Open today's stretch</div></button>
+    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2 style={{ fontSize: 28 }}>What would you like to do?</h2></div>
+    <div className="nyf-workout-menu">
+      <button className="nyf-workout-choice daily" onClick={() => setSection("daily")}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Daily workout</strong><span>45 min · Home or gym</span></div></button>
+      <button className="nyf-workout-choice quick" onClick={() => setSection("quick")}><div className="nyf-workout-visual"><div className="nyf-workout-minutes">15<small>MINUTES</small></div></div><div className="nyf-workout-choice-copy"><strong>Quick workout</strong><span>Short, focused and effective</span></div></button>
+      <button className="nyf-workout-choice stretch" onClick={() => setSection("stretch")}><div className="nyf-workout-visual"><PersonStanding size={52} strokeWidth={1.7} /></div><div className="nyf-workout-choice-copy"><strong>Stretch</strong><span>10 min · Matched to today</span></div></button>
+    </div>
   </>;
 
   if (section === "quick") return <>
