@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0945";
+const APP_RELEASE = "2026-09-07-1015";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1089,6 +1089,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             exerciseLogs={exerciseLogs}
             dailyHabits={dailyHabits}
             todaySteps={todaySteps}
+            setShowFoodModal={setShowFoodModal}
           />
         )}
         {tab === "track" && (
@@ -1418,7 +1419,7 @@ function StepsCard({ entry, onSave, compact = false }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{current.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{target.toLocaleString()}</strong><span>Daily goal</span></div><div className="nyf-progress-tile"><strong>{percentage}%</strong><span>Complete</span></div></div><div className="nyf-grid2"><div><label className="nyf-field-label">Your steps</label><input className="nyf-input" type="number" inputMode="numeric" min="0" step="100" value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 6500" /></div><div><label className="nyf-field-label">Step goal</label><input className="nyf-input" type="number" inputMode="numeric" min="1000" step="500" value={goal} onChange={(e) => setGoal(e.target.value)} /></div></div><button className={`nyf-btn${compact ? " ghost" : ""} full`} onClick={() => onSave(current, target)} disabled={!current}>Save today's steps</button>{entry && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>{entry.steps >= entry.goal ? "Step goal reached - well done!" : `${Math.max(0, entry.goal - entry.steps).toLocaleString()} steps remaining.`}</p>}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, exerciseLogs, dailyHabits, todaySteps }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, exerciseLogs, dailyHabits, todaySteps, setShowFoodModal }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
   function weightChange(days) {
@@ -1441,6 +1442,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
+        <button className="nyf-btn full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
         <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 7 }}>Exercise credit included: {creditedExerciseCalories} kcal ({profile.exerciseCredit ?? 50}% of the recorded estimate).</div>
       </div>
       <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div>{todaySteps ? <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{todaySteps.steps.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{todaySteps.goal.toLocaleString()}</strong><span>Goal</span></div><div className="nyf-progress-tile"><strong>{Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}%</strong><span>Complete</span></div></div> : <div className="nyf-empty">No steps logged today.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{todaySteps ? "Update steps in Track" : "Log steps in Track"}</button></div>
