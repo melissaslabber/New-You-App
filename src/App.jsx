@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-1805";
+const APP_RELEASE = "2026-09-07-1815";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1290,7 +1290,7 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
   const [soundOn, setSoundOn] = useState(true);
   const audioContextRef = useRef(null);
   const step = steps[index];
-  const playBeep = (frequency = 880, duration = 0.1, volume = 0.12) => {
+  const playBeep = (frequency = 880, duration = 0.14, volume = 0.55) => {
     if (!soundOn || typeof window === "undefined") return;
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1309,9 +1309,9 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
     } catch { /* Sound is optional on browsers that block web audio. */ }
   };
   const advance = () => {
-    if (phase === "work" && step?.rest) { playBeep(520, 0.22, 0.15); setPhase("rest"); setSeconds(step.rest); return; }
-    if (index >= steps.length - 1) { playBeep(1040, 0.35, 0.16); setRunning(false); setFinished(true); return; }
-    const next = index + 1; playBeep(1120, 0.28, 0.16); setIndex(next); setPhase("work"); setSeconds(steps[next].duration);
+    if (phase === "work" && step?.rest) { playBeep(520, 0.32, 0.6); setPhase("rest"); setSeconds(step.rest); return; }
+    if (index >= steps.length - 1) { playBeep(1040, 0.5, 0.75); setRunning(false); setFinished(true); return; }
+    const next = index + 1; playBeep(1120, 0.42, 0.8); setIndex(next); setPhase("work"); setSeconds(steps[next].duration);
   };
   useEffect(() => {
     if (!running || finished) return undefined;
@@ -1320,7 +1320,7 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
       else {
         const nextSecond = seconds - 1;
         setSeconds(nextSecond);
-        if (phase === "work" && nextSecond <= 5) playBeep(nextSecond === 1 ? 980 : 820, nextSecond === 1 ? 0.16 : 0.08, 0.13);
+        if (phase === "work" && nextSecond <= 5) playBeep(nextSecond === 1 ? 980 : 820, nextSecond === 1 ? 0.28 : 0.14, nextSecond === 1 ? 0.75 : 0.58);
       }
     }, 1000);
     return () => window.clearTimeout(timer);
@@ -1328,7 +1328,7 @@ function WorkoutPlayer({ title, steps, onExit, onComplete }) {
   const goTo = (next) => { const safe = Math.max(0, Math.min(steps.length - 1, next)); setIndex(safe); setPhase("work"); setSeconds(steps[safe].duration); setFinished(false); };
   const formatTime = (value) => `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
   if (finished) return <div className="nyf-player"><button className="nyf-btn ghost" onClick={onExit}>Back</button><div className="nyf-card gold" style={{ textAlign: "center", padding: "44px 20px" }}><Check size={64} color="var(--success)" /><h2 style={{ fontSize: 28, marginTop: 14 }}>Workout completed!</h2><p style={{ color: "var(--ink-soft)", lineHeight: 1.5 }}>Well done for showing up and finishing {title}.</p><button className="nyf-btn gold full" onClick={onComplete}>Save workout and finish</button><button className="nyf-link-btn" onClick={() => goTo(0)}>Repeat workout</button></div></div>;
-  return <div className="nyf-player"><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><button className="nyf-btn ghost" onClick={() => setSoundOn((value) => !value)}>{soundOn ? "Sound on" : "Sound off"}</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? `${step.rest || 0} SEC REST` : `${step.duration} SEC WORK`}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => { if (!running) playBeep(1120, 0.28, 0.16); setRunning((value) => !value); }}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
+  return <div className="nyf-player"><div className="nyf-player-top"><button className="nyf-btn ghost" onClick={onExit}>Exit</button><button className="nyf-btn ghost" onClick={() => setSoundOn((value) => !value)}>{soundOn ? "Sound on" : "Sound off"}</button><strong>{index + 1} of {steps.length}</strong></div><div className="nyf-player-progress"><span style={{ width: `${((index + (phase === "rest" ? .5 : 0)) / steps.length) * 100}%` }} /></div><div className="nyf-card" style={{ marginBottom: 0 }}><div className="nyf-step">{phase === "rest" ? "GET READY" : step.label || `EXERCISE ${index + 1}`}</div><h2 style={{ fontSize: 27, margin: "6px 0 14px" }}>{phase === "rest" ? `Next: ${steps[index + 1]?.name || "Finish"}` : step.name}</h2><div className="nyf-demo-picture"><ExerciseIllustration name={phase === "rest" ? steps[index + 1]?.name || step.name : step.name} /></div><div className="nyf-player-counter"><strong>{formatTime(seconds)}</strong><span>{phase === "rest" ? `${step.rest || 0} SEC REST` : `${step.duration} SEC WORK`}</span></div><p style={{ minHeight: 55, color: "var(--ink-soft)", fontSize: 13, lineHeight: 1.5, textAlign: "center" }}>{phase === "rest" ? "Breathe, reset your position and prepare for the next movement." : step.instructions || movementCue(step.name)}</p><div className="nyf-player-controls"><button className="nyf-btn ghost" onClick={() => goTo(index - 1)} disabled={index === 0}>Previous</button><button className="nyf-btn gold" onClick={() => { if (!running) playBeep(1120, 0.42, 0.8); setRunning((value) => !value); }}>{running ? "Pause" : seconds === step.duration && phase === "work" ? "Start" : "Continue"}</button><button className="nyf-btn ghost" onClick={advance}>Next</button></div></div></div>;
 }
 
 function WorkoutTab({ setTab, addExercise }) {
