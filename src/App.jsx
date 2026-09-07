@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0440";
+const APP_RELEASE = "2026-09-07-0500";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -264,65 +264,65 @@ const ARTICLES = [
   {
     title: "1. What fat loss really means",
     body: [
-      "Body weight and body fat are not the same thing. Your weight on the scale includes muscle, bone, organs, water, glycogen, food moving through your gut, and fat — all added together into one number. Weight loss means that total number went down. Fat loss means body fat specifically went down. They often move together, but not always.",
+      "Body weight and body fat are not the same thing. Your weight on the scale includes muscle, bone, organs, water, glycogen, food moving through your gut, and fat - all added together into one number. Weight loss means that total number went down. Fat loss means body fat specifically went down. They often move together, but not always.",
       "Early scale drops are frequently water and glycogen, not fat. A single weigh-in is weak evidence of anything; a consistent trend over weeks is what actually tells you something. Waist measurements, photos, how clothes fit, strength and fitness all add context the scale alone can't give you.",
-      "The aim isn't to make the number as small as possible — it's to lose excess fat while protecting muscle, health, and habits you can actually sustain.",
+      "The aim isn't to make the number as small as possible - it's to lose excess fat while protecting muscle, health, and habits you can actually sustain.",
       "Daily changes of one or two kilograms are usually water, glycogen and food volume rather than fat. Salt, carbohydrates, hormones, constipation and hard training can all temporarily move the scale.",
-      "Use several measures: weekly average weight, waist measurements every 2–4 weeks, consistent photos, clothing fit, strength and energy. Practical step: compare trends under similar conditions, not isolated weigh-ins.",
+      "Use several measures: weekly average weight, waist measurements every 2-4 weeks, consistent photos, clothing fit, strength and energy. Practical step: compare trends under similar conditions, not isolated weigh-ins.",
     ],
   },
   {
     title: "2. Calories in, calories out",
     body: [
-      "Calories measure energy, not virtue. Over time, fat loss requires your body to use more energy than it takes in — that's energy balance, and it's real. But it isn't a moral scorecard, and it isn't effortless just because the principle is simple.",
-      "Most of your daily energy use isn't from exercise — it's from just being alive (breathing, circulation, temperature regulation, digestion). Wearable exercise-calorie estimates are often inflated or double-counted against a target that already includes an activity factor.",
-      "Look at weekly patterns, not single meals. A higher Saturday doesn't undo a week of consistency — your body responds to the overall pattern, not a disciplinary hearing after one biscuit.",
+      "Calories measure energy, not virtue. Over time, fat loss requires your body to use more energy than it takes in - that's energy balance, and it's real. But it isn't a moral scorecard, and it isn't effortless just because the principle is simple.",
+      "Most of your daily energy use isn't from exercise - it's from just being alive (breathing, circulation, temperature regulation, digestion). Wearable exercise-calorie estimates are often inflated or double-counted against a target that already includes an activity factor.",
+      "Look at weekly patterns, not single meals. A higher Saturday doesn't undo a week of consistency - your body responds to the overall pattern, not a disciplinary hearing after one biscuit.",
       "Calories out includes resting metabolism, digestion, exercise and everyday movement. Dieting can increase hunger and reduce unconscious movement, so the same intake may produce slower progress later without breaking the rules of energy balance.",
-      "Wearables can help with steps and activity patterns, but exercise-calorie estimates are often inaccurate. Practical step: track everything honestly for two weeks—including oils, drinks, sauces and weekends—before deciding the target is not working.",
+      "Wearables can help with steps and activity patterns, but exercise-calorie estimates are often inaccurate. Practical step: track everything honestly for two weeks-including oils, drinks, sauces and weekends-before deciding the target is not working.",
     ],
   },
   {
     title: "3. Set expectations that protect your progress",
     body: [
-      "A realistic plan protects consistency, muscle, health, and your relationship with food. Pick one outcome goal, then three behaviours that support it — process goals you can actually perform daily, like a calorie-consistency target, a protein target, and training or step goals that fit your real week.",
-      "Progress is uneven by nature. Water can hide fat loss for a while and then reveal it all at once. Expect that, and don't panic at a flat week — judge the trend, not any single day.",
-      "A commonly sustainable rate for many adults is about 0.25–0.75% of body weight per week. Faster loss can increase hunger, fatigue and muscle loss, while already-lean people often need a slower approach.",
+      "A realistic plan protects consistency, muscle, health, and your relationship with food. Pick one outcome goal, then three behaviours that support it - process goals you can actually perform daily, like a calorie-consistency target, a protein target, and training or step goals that fit your real week.",
+      "Progress is uneven by nature. Water can hide fat loss for a while and then reveal it all at once. Expect that, and don't panic at a flat week - judge the trend, not any single day.",
+      "A commonly sustainable rate for many adults is about 0.25-0.75% of body weight per week. Faster loss can increase hunger, fatigue and muscle loss, while already-lean people often need a slower approach.",
       "Separate outcomes from behaviours. 'Lose 8 kg' is an outcome; hitting your calorie range, protein, training and step goals are actions you control. Practical step: choose three weekly behaviours that fit your real schedule.",
     ],
   },
   {
     title: "4. Calories: your starting budget",
     body: [
-      "A calorie is a unit of energy. South African labels usually show kilojoules — divide kJ by about 4.184 to get kcal. Your body spends energy on resting functions (most of it), digestion, planned exercise, and everyday movement like walking and chores.",
+      "A calorie is a unit of energy. South African labels usually show kilojoules - divide kJ by about 4.184 to get kcal. Your body spends energy on resting functions (most of it), digestion, planned exercise, and everyday movement like walking and chores.",
       "One reliable way to estimate your resting energy needs is the Mifflin-St Jeor equation: for women, (10 × weight in kg) + (6.25 × height in cm) − (5 × age) − 161. For men, the same but +5 instead of −161. Multiply that by an activity factor (roughly 1.20 for low activity, 1.35 light, 1.50 moderate, 1.70 high) to estimate maintenance calories.",
-      "From there, a starting deficit of around 10–20% below maintenance is a practical coaching range for many adults — not a medical prescription. We're not racing to the lowest number; we're finding the highest intake that still produces steady progress. Test your estimate against 2–4 weeks of real trend data before changing anything.",
-      "Choose activity levels conservatively—a few gym sessions do not make an otherwise seated week highly active. For example, maintenance of 2,000 kcal gives a 10–20% deficit range of roughly 1,600–1,800 kcal.",
-      "Calculators are only starting estimates. Keep the target consistent, review weight averages, hunger and training after 2–4 weeks, then make a small change if needed. Pregnancy, breastfeeding, eating-disorder history, diabetes medication or significant medical conditions require individual healthcare guidance.",
+      "From there, a starting deficit of around 10-20% below maintenance is a practical coaching range for many adults - not a medical prescription. We're not racing to the lowest number; we're finding the highest intake that still produces steady progress. Test your estimate against 2-4 weeks of real trend data before changing anything.",
+      "Choose activity levels conservatively-a few gym sessions do not make an otherwise seated week highly active. For example, maintenance of 2,000 kcal gives a 10-20% deficit range of roughly 1,600-1,800 kcal.",
+      "Calculators are only starting estimates. Keep the target consistent, review weight averages, hunger and training after 2-4 weeks, then make a small change if needed. Pregnancy, breastfeeding, eating-disorder history, diabetes medication or significant medical conditions require individual healthcare guidance.",
     ],
   },
   {
     title: "5. Protein, carbohydrate and fat",
     body: [
-      "The three macronutrients have different jobs, and your overall intake and food quality matter more than picking a villain to fear. Protein maintains and repairs tissue. Carbohydrate is a useful fuel, especially for training and higher-intensity activity — fibre-rich sources are worth prioritising. Fat supports cell function, nutrient absorption, and making food enjoyable.",
-      "A simple way to build a plate: a meaningful protein source, vegetables or fruit, a carbohydrate portion sized to your activity and hunger, and a measured fat or sauce. Two meals with identical calories can feel completely different depending on their protein, fibre and volume — energy balance drives fat loss, but food quality drives health, hunger and how easy the whole thing is to sustain.",
+      "The three macronutrients have different jobs, and your overall intake and food quality matter more than picking a villain to fear. Protein maintains and repairs tissue. Carbohydrate is a useful fuel, especially for training and higher-intensity activity - fibre-rich sources are worth prioritising. Fat supports cell function, nutrient absorption, and making food enjoyable.",
+      "A simple way to build a plate: a meaningful protein source, vegetables or fruit, a carbohydrate portion sized to your activity and hunger, and a measured fat or sauce. Two meals with identical calories can feel completely different depending on their protein, fibre and volume - energy balance drives fat loss, but food quality drives health, hunger and how easy the whole thing is to sustain.",
       "Protein and carbohydrate provide about 4 kcal per gram; fat provides about 9 kcal per gram. Carbohydrate supports harder training, while dietary fat supports cells, hormones and absorption of vitamins A, D, E and K. None needs to be treated as the enemy.",
-      "Practical step: build most meals from four parts—protein, vegetables or fruit, an activity-sized carbohydrate portion and a measured fat or sauce. Treat foods can fit, but they usually use the calorie budget faster.",
+      "Practical step: build most meals from four parts-protein, vegetables or fruit, an activity-sized carbohydrate portion and a measured fat or sauce. Treat foods can fit, but they usually use the calorie budget faster.",
     ],
   },
   {
     title: "6. Protein: the fat-loss anchor",
     body: [
-      "Adequate protein supports fullness and helps protect lean muscle during fat loss, especially alongside resistance training. A practical range for many active adults dieting is around 1.6–2.2g of protein per kilogram of body weight — a range to work within, not a pass-fail exam.",
+      "Adequate protein supports fullness and helps protect lean muscle during fat loss, especially alongside resistance training. A practical range for many active adults dieting is around 1.6-2.2g of protein per kilogram of body weight - a range to work within, not a pass-fail exam.",
       "Calculate a provisional target, then spread it across your normal meals rather than saving it all for one sitting.",
       "If current body weight is much higher than goal weight, calculating from goal weight can prevent an unnecessarily large protein target. People with kidney disease or related medical conditions should obtain individual clinical advice.",
-      "Aim for a useful protein serving at each meal—often around 25–40 g—using foods such as chicken, fish, lean meat, eggs, yoghurt, cottage cheese, tofu, legumes or whey. Supplements are convenient, not compulsory.",
+      "Aim for a useful protein serving at each meal-often around 25-40 g-using foods such as chicken, fish, lean meat, eggs, yoghurt, cottage cheese, tofu, legumes or whey. Supplements are convenient, not compulsory.",
       "Practical step: choose the protein source first for every main meal, then build the rest of the plate around it.",
     ],
   },
   {
     title: "7. Build meals that keep you full",
     body: [
-      "The best fat-loss meal controls calories while still feeling like actual food — a tiny decorative salad might be low-calorie, but it won't keep you satisfied. Start with your protein choice so it's never an afterthought; a palm-sized portion is a reasonable visual starting point when you're not tracking precisely.",
+      "The best fat-loss meal controls calories while still feeling like actual food - a tiny decorative salad might be low-calorie, but it won't keep you satisfied. Start with your protein choice so it's never an afterthought; a palm-sized portion is a reasonable visual starting point when you're not tracking precisely.",
       "Aim to build three repeatable meals you can fall back on: a rushed weekday meal, a family meal, and a go-to choice for eating out.",
       "Fullness improves when meals contain protein, fibre, volume and texture. Fruit, vegetables, potatoes, oats, soups and yoghurt can create a larger, more satisfying meal for the same calories than pastries, sweets or liquid calories.",
       "Meal timing is personal. You do not need six meals a day; choose the pattern that controls hunger and supports your routine. Practical step: prepare one quick option, one family dinner and one restaurant choice before you need them.",
@@ -331,7 +331,7 @@ const ARTICLES = [
   {
     title: "8. Portions, labels and hidden calories",
     body: [
-      "A nutrition label is only useful when you compare its stated serving size to the amount you actually eat — the packet says one serving; your bowl often says otherwise. Read a label in order: serving size first, then calories/kilojoules, protein, carbohydrate, fat, fibre and sodium.",
+      "A nutrition label is only useful when you compare its stated serving size to the amount you actually eat - the packet says one serving; your bowl often says otherwise. Read a label in order: serving size first, then calories/kilojoules, protein, carbohydrate, fat, fibre and sodium.",
       "Multiply every value when you eat more than one serving, and compare products per 100g as well as per serving so you're comparing like with like.",
       "Weigh calorie-dense items while learning portions. Oil, peanut butter, nuts, cheese, mayonnaise and dressings are easy to underestimate. A small unmeasured pour can change a meal substantially.",
       "Raw and cooked weights are different: meat loses water; rice and pasta gain it. Choose a database entry that matches how you weighed the food. Practical step: weigh your most common foods for two weeks to train your eye.",
@@ -340,25 +340,25 @@ const ARTICLES = [
   {
     title: "9. Calculate your personal targets",
     body: [
-      "Targets are starting estimates that must be tested against real-life trends — no calculator, watch or app knows exactly how many calories your body uses. Start with calories using the Chapter 4 method and a moderate deficit, then set a protein range and build fibre gradually through plants and whole foods.",
-      "Calories set the energy budget; protein protects lean tissue and manages hunger; fibre supports fullness. None of these should be so aggressive that the others collapse. After a few consistent weeks, let the trend — not the calculator — guide your next decision.",
+      "Targets are starting estimates that must be tested against real-life trends - no calculator, watch or app knows exactly how many calories your body uses. Start with calories using the Chapter 4 method and a moderate deficit, then set a protein range and build fibre gradually through plants and whole foods.",
+      "Calories set the energy budget; protein protects lean tissue and manages hunger; fibre supports fullness. None of these should be so aggressive that the others collapse. After a few consistent weeks, let the trend - not the calculator - guide your next decision.",
       "Set targets in order: calories first, protein second, a sensible minimum fat intake third, then use the remaining calories for carbohydrate and additional fat according to preference and training needs.",
-      "Protein and carbohydrate provide roughly 4 kcal per gram and fat roughly 9. Treat macro targets as ranges—being a few grams away is not failure. Practical step: prioritise calories and protein, then review the 2–4 week trend before adjusting.",
+      "Protein and carbohydrate provide roughly 4 kcal per gram and fat roughly 9. Treat macro targets as ranges-being a few grams away is not failure. Practical step: prioritise calories and protein, then review the 2-4 week trend before adjusting.",
     ],
   },
   {
     title: "10. Create your own meal plan",
     body: [
       "A meal plan is a flexible structure, not a prison sentence. Decide how many meals and snacks actually suit your hunger and schedule, allocate protein first, and reserve more calories for whichever time of day you're hungriest.",
-      "Plan around the week you actually have — work, family meals, and realistic effort — rather than an idealised version of your schedule.",
+      "Plan around the week you actually have - work, family meals, and realistic effort - rather than an idealised version of your schedule.",
       "Allocate protein across your chosen meals, then reserve more calories for the time of day you are usually hungriest. Use flexible swaps: chicken for fish or lean mince, rice for potato, and yoghurt for cottage cheese, checking actual nutrition values.",
       "Keep emergency options available for busy days and plan predictable restaurant meals or treats in advance. Practical step: log tomorrow's food tonight and adjust portions before the day becomes hectic.",
     ],
   },
   {
-    title: "11. Example meal plans — used as teaching tools",
+    title: "11. Example meal plans - used as teaching tools",
     body: [
-      "An example plan shows structure; it doesn't know your medical history, appetite or energy needs. Use examples to understand the decision-making process, then rewrite them with foods you actually buy, cook and enjoy — real life includes leftovers, birthdays, and children who change their minds about dinner.",
+      "An example plan shows structure; it doesn't know your medical history, appetite or energy needs. Use examples to understand the decision-making process, then rewrite them with foods you actually buy, cook and enjoy - real life includes leftovers, birthdays, and children who change their minds about dinner.",
       "Two people can reach similar targets with completely different menus. Eggs, yoghurt, chicken and rice can be swapped for oats, biltong, mince and potatoes when portions and totals are adjusted.",
       "Always check whether weights are raw or cooked and enter your exact brands, because breads, yoghurts, sauces and protein powders vary. Practical step: replace every food you would not realistically eat with a nutritionally similar option you enjoy.",
     ],
@@ -366,7 +366,7 @@ const ARTICLES = [
   {
     title: "12. Strength training: build the body you keep",
     body: [
-      "During fat loss, strength training signals to your body that muscle is worth keeping rather than losing alongside fat. You don't need to fear 'bulking up overnight' — muscle doesn't arrive nearly that easily.",
+      "During fat loss, strength training signals to your body that muscle is worth keeping rather than losing alongside fat. You don't need to fear 'bulking up overnight' - muscle doesn't arrive nearly that easily.",
       "Two realistic full-body sessions a week, covering the major movement patterns, is a solid starting point most people can actually sustain.",
       "A balanced programme includes a knee bend, hinge, push, pull, carry and core work. Exercises should match your experience, mobility and injuries, then progress gradually through repetitions, load or range of motion.",
       "Maintaining strength during a deficit is meaningful progress. Soreness is not proof of a good session and sharp or persistent pain should be assessed. Practical step: record weights and repetitions so you can see what your body is retaining.",
@@ -375,7 +375,7 @@ const ARTICLES = [
   {
     title: "13. Cardio and heart health",
     body: [
-      "Cardiorespiratory fitness supports health, work capacity and quality of life — and running isn't the only form that counts. Choose modes you can perform consistently; the heart accepts far more variety than most people assume.",
+      "Cardiorespiratory fitness supports health, work capacity and quality of life - and running isn't the only form that counts. Choose modes you can perform consistently; the heart accepts far more variety than most people assume.",
       "A useful starting structure: one easy, comfortable cardio session and one optional interval session per week.",
       "Use the talk test: easy cardio should still allow sentences. Walking, cycling, rowing, swimming and low-impact circuits all count, so choose a mode your joints tolerate and you can repeat.",
       "Intervals are effective in small doses but require recovery. Cardio supports fitness and energy expenditure; it should not be punishment for eating. Practical step: build duration gradually before adding more intensity.",
@@ -384,26 +384,26 @@ const ARTICLES = [
   {
     title: "14. Steps and everyday movement",
     body: [
-      "A formal workout can feel heroic, but the other 23 hours of the day matter too. Everyday movement — steps, chores, standing, carrying things — contributes real energy expenditure and health benefit without needing to feel like exercise.",
+      "A formal workout can feel heroic, but the other 23 hours of the day matter too. Everyday movement - steps, chores, standing, carrying things - contributes real energy expenditure and health benefit without needing to feel like exercise.",
       "Track your baseline for a week, then choose one small, sustainable increase rather than an overnight overhaul.",
-      "There is no magical universal step target. If your baseline is 4,000, moving toward 5,000–6,000 is already progress. Short walks after meals, parking farther away and walking during calls all count.",
-      "Diet fatigue can reduce unconscious movement, partly offsetting planned exercise. Practical step: add 500–1,500 daily steps for two weeks, then reassess rather than making one huge jump.",
+      "There is no magical universal step target. If your baseline is 4,000, moving toward 5,000-6,000 is already progress. Short walks after meals, parking farther away and walking during calls all count.",
+      "Diet fatigue can reduce unconscious movement, partly offsetting planned exercise. Practical step: add 500-1,500 daily steps for two weeks, then reassess rather than making one huge jump.",
     ],
   },
   {
     title: "15. Recovery and the way you age",
     body: [
-      "Training creates a signal; recovery is what allows your body to adapt to it. Rest isn't something you earn after doing enough — it's part of doing enough. Sleep and recovery deserve a place in your programme, not an afterthought once everything else is done.",
+      "Training creates a signal; recovery is what allows your body to adapt to it. Rest isn't something you earn after doing enough - it's part of doing enough. Sleep and recovery deserve a place in your programme, not an afterthought once everything else is done.",
       "Pick one sleep habit and one recovery boundary to focus on for the next couple of weeks.",
-      "Most adults benefit from roughly 7–9 hours of sleep. Regular timing, a dark room, less late caffeine and a short wind-down routine can help even when life prevents perfection.",
+      "Most adults benefit from roughly 7-9 hours of sleep. Regular timing, a dark room, less late caffeine and a short wind-down routine can help even when life prevents perfection.",
       "Persistent fatigue, falling performance, irritability, poor sleep and ongoing soreness may indicate that training load or the deficit is too aggressive. Practical step: schedule at least one easier or rest day and tell your coach when recovery worsens.",
     ],
   },
   {
     title: "16. Plateaus and troubleshooting",
     body: [
-      "A true plateau is a sustained lack of change despite genuinely consistent adherence — not three noisy weigh-ins in a row. Before changing your target, audit your actual consistency: is tracking accurate, are portions creeping up, has activity quietly dropped?",
-      "If adherence is genuinely solid and the trend has been flat for 3–4 consistent weeks, a small adjustment — often just 100–200 calories — is more appropriate than a drastic overhaul.",
+      "A true plateau is a sustained lack of change despite genuinely consistent adherence - not three noisy weigh-ins in a row. Before changing your target, audit your actual consistency: is tracking accurate, are portions creeping up, has activity quietly dropped?",
+      "If adherence is genuinely solid and the trend has been flat for 3-4 consistent weeks, a small adjustment - often just 100-200 calories - is more appropriate than a drastic overhaul.",
       "Audit oils, sauces, drinks, bites while cooking, database entries, restaurants and weekends. Also check whether steps or training have fallen. Menstrual-cycle water retention can hide progress, so compare similar cycle phases where possible.",
       "Change one variable at a time. A small calorie adjustment, modest activity increase or improved consistency is easier to evaluate than changing everything. Sometimes a controlled maintenance break is more useful than a deeper deficit.",
     ],
@@ -414,13 +414,13 @@ const ARTICLES = [
       "A plan that only works under perfect conditions isn't ready for real life. Build in flexibility for restaurants, celebrations and difficult days rather than treating any deviation as failure.",
       "A practical approach: write a Friday-to-Sunday plan that includes one flexible meal and one recovery routine, so the weekend has structure without being rigid.",
       "Cravings can come from hunger, restriction, habit, emotion or enjoyment. First check protein, fibre and meal volume; then consider a planned portion instead of resisting until you overeat.",
-      "After an unplanned high-calorie meal, return to normal at the next meal—do not starve or add punishment exercise. Most immediate scale gain is water and food volume. Practical step: decide in advance which restaurant extras matter most to you.",
+      "After an unplanned high-calorie meal, return to normal at the next meal-do not starve or add punishment exercise. Most immediate scale gain is water and food volume. Practical step: decide in advance which restaurant extras matter most to you.",
     ],
   },
   {
     title: "18. Maintenance: keep your new normal",
     body: [
-      "Maintenance isn't a finish line where biology stops applying — it's a set of repeatable skills, much like learning to drive without an instructor gripping the dashboard. The goal shifts from active fat loss to a sustainable long-term range you can live inside.",
+      "Maintenance isn't a finish line where biology stops applying - it's a set of repeatable skills, much like learning to drive without an instructor gripping the dashboard. The goal shifts from active fat loss to a sustainable long-term range you can live inside.",
       "Write out your maintenance range, your anchors (habits you'll keep no matter what), and an early-warning plan for noticing drift before it becomes a real problem.",
       "Maintenance calories are a range, not one perfect number. A small initial increase on the scale can be glycogen, water and greater food volume rather than immediate fat regain.",
       "Keep regular weighing, protein-centred meals, strength training, movement and some planning. Choose a comfortable weight range and respond calmly if the weekly trend exceeds it for several weeks.",
@@ -459,7 +459,7 @@ const ARTICLES = [
     body: [
       "Fibre is the part of plant food your body does not fully digest. It supports bowel regularity, feeds helpful gut bacteria, slows digestion and can make meals more filling.",
       "Fruit, vegetables, beans, lentils, oats, whole grains, nuts and seeds are useful sources. Increase fibre gradually and drink enough fluid; adding a large amount overnight can cause bloating or discomfort.",
-      "Many adults benefit from roughly 25–30 grams daily, although individual needs differ. You do not need to track it perfectly—include plants at most meals and vary your choices.",
+      "Many adults benefit from roughly 25-30 grams daily, although individual needs differ. You do not need to track it perfectly-include plants at most meals and vary your choices.",
       "A practical plate starts with protein and vegetables, then adds a suitable carbohydrate and measured fat. That combination usually controls hunger better than calories from drinks or highly processed snacks.",
     ],
   },
@@ -477,8 +477,8 @@ const ARTICLES = [
     body: [
       "A repetition, or rep, is one complete movement. A set is a group of repetitions. Three sets of ten squats means performing ten squats, resting, and repeating that sequence three times.",
       "Resistance is the load your muscles work against: body weight, bands, dumbbells, barbells or machines. Good form means controlling the movement in a way that suits your body and keeps the intended muscles working.",
-      "Progressive overload means gradually asking your body to do slightly more—an extra rep, a little more weight, better control or a greater comfortable range of motion. It does not mean lifting maximally every session.",
-      "RPE describes effort from 1 to 10. An RPE of 7–8 usually means you could perform about two or three more good reps. Beginners can make excellent progress without training to complete failure.",
+      "Progressive overload means gradually asking your body to do slightly more-an extra rep, a little more weight, better control or a greater comfortable range of motion. It does not mean lifting maximally every session.",
+      "RPE describes effort from 1 to 10. An RPE of 7-8 usually means you could perform about two or three more good reps. Beginners can make excellent progress without training to complete failure.",
     ],
   },
   {
@@ -486,14 +486,14 @@ const ARTICLES = [
     body: [
       "A class normally starts with a warm-up to raise body temperature, practise movements and prepare joints and muscles. The coach then explains the workout and demonstrates exercise options.",
       "Strength work challenges muscles with controlled resistance. Conditioning raises heart rate and improves work capacity. Both can be adjusted to your fitness, confidence and injury history.",
-      "Choose the level that lets you move well—not the one that looks most impressive. Reducing weight, range, speed or impact is intelligent coaching, not failure.",
+      "Choose the level that lets you move well-not the one that looks most impressive. Reducing weight, range, speed or impact is intelligent coaching, not failure.",
       "Tell the coach about pain, pregnancy, surgery or medical limitations before training. Normal effort and muscle fatigue feel different from sharp, sudden or worsening pain.",
     ],
   },
   {
     title: "26. Soreness, pain and recovery",
     body: [
-      "Delayed-onset muscle soreness can appear 12–48 hours after unfamiliar training and usually settles within several days. You can have a productive workout without becoming very sore.",
+      "Delayed-onset muscle soreness can appear 12-48 hours after unfamiliar training and usually settles within several days. You can have a productive workout without becoming very sore.",
       "Sharp pain, joint pain, numbness, swelling, chest pain, faintness or pain that worsens is not something to push through. Stop and tell your coach; seek appropriate medical help when symptoms are concerning.",
       "Recovery includes sleep, adequate protein and calories, hydration, easier movement and sensible spacing between hard sessions. More training is not always more progress.",
       "Build gradually. Your muscles, tendons, joints and confidence all need time to adapt, especially when returning after a long break.",
@@ -513,7 +513,7 @@ const ARTICLES = [
     body: [
       "Week one is for learning: log honestly, learn common portions, choose manageable classes and notice hunger. Do not react dramatically to every scale movement.",
       "Week two is for repetition: keep calories in a reasonable range, include protein at meals, improve steps and repeat the exercises with better control.",
-      "Weeks three and four provide enough information to begin seeing patterns. Review average weight, waist, food consistency, energy, hunger, sleep and training—not only the best or worst day.",
+      "Weeks three and four provide enough information to begin seeing patterns. Review average weight, waist, food consistency, energy, hunger, sleep and training-not only the best or worst day.",
       "If the plan is working and feels manageable, continue. If progress, recovery or adherence is poor, discuss one small change with your coach. The goal is to build skills you can keep using after motivation fades.",
     ],
   },
@@ -522,14 +522,14 @@ const ARTICLES = [
 const FOOD_PICKS = [
   {
     name: "Plain / Greek-style yoghurt (high-protein, low-fat)",
-    note: "Best pick: a high-protein plain/fat-free Greek-style tub (e.g. Woolworths High Protein Plain Yoghurt). A full-cream 'Protein+' style tub (e.g. Parmalat Protein+) has more protein per tub but also more fat — check the label.",
+    note: "Best pick: a high-protein plain/fat-free Greek-style tub (e.g. Woolworths High Protein Plain Yoghurt). A full-cream 'Protein+' style tub (e.g. Parmalat Protein+) has more protein per tub but also more fat - check the label.",
     cal: 60, protein: 10, carb: 4, fat: 0.2, per: "100g",
   },
-  { name: "Blueberries", note: "Great low-calorie source of fibre and antioxidants — naturally low in fat and protein, moderate in natural sugar.", cal: 57, protein: 0.7, carb: 14, fat: 0.3, per: "100g" },
-  { name: "Whey protein powder", note: "Typical plain/lightly flavoured whey — check your specific tub's label as brands vary.", cal: 120, protein: 24, carb: 3, fat: 1.5, per: "1 scoop (~30g)" },
-  { name: "Chicken fillets (skinless, grilled)", note: "One of the leanest common protein sources — very high protein, virtually no carbs.", cal: 165, protein: 31, carb: 0, fat: 3.6, per: "100g" },
-  { name: "Scrambled eggs", note: "Made with a splash of milk, no added cheese — great protein-to-effort ratio for breakfast.", cal: 148, protein: 10, carb: 1.5, fat: 11, per: "100g (~2 eggs)" },
-  { name: "Sasko Low GI Oats & Honey bread", note: "A reasonable everyday bread choice — moderate carbs, low fat, some fibre from the oats.", cal: 114, protein: 4.5, carb: 19, fat: 1.7, per: "1 slice (~45g)" },
+  { name: "Blueberries", note: "Great low-calorie source of fibre and antioxidants - naturally low in fat and protein, moderate in natural sugar.", cal: 57, protein: 0.7, carb: 14, fat: 0.3, per: "100g" },
+  { name: "Whey protein powder", note: "Typical plain/lightly flavoured whey - check your specific tub's label as brands vary.", cal: 120, protein: 24, carb: 3, fat: 1.5, per: "1 scoop (~30g)" },
+  { name: "Chicken fillets (skinless, grilled)", note: "One of the leanest common protein sources - very high protein, virtually no carbs.", cal: 165, protein: 31, carb: 0, fat: 3.6, per: "100g" },
+  { name: "Scrambled eggs", note: "Made with a splash of milk, no added cheese - great protein-to-effort ratio for breakfast.", cal: 148, protein: 10, carb: 1.5, fat: 11, per: "100g (~2 eggs)" },
+  { name: "Sasko Low GI Oats & Honey bread", note: "A reasonable everyday bread choice - moderate carbs, low fat, some fibre from the oats.", cal: 114, protein: 4.5, carb: 19, fat: 1.7, per: "1 slice (~45g)" },
 ];
 
 const FOOD_PREFERENCE_LIST = [
@@ -561,7 +561,7 @@ const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const DAILY_MOTIVATION = [
   "Consistency beats intensity when intensity cannot be sustained.",
   "One balanced meal is a vote for the person you are becoming.",
-  "You do not need a perfect day—just one good next decision.",
+  "You do not need a perfect day-just one good next decision.",
   "Small choices, repeated often, create remarkable change.",
   "Keep the promise you made to yourself today.",
   "Progress grows quietly before it becomes visible.",
@@ -571,12 +571,12 @@ const DAILY_MOTIVATION = [
   "Show up imperfectly. That still counts as showing up.",
   "Eat to support your goal, not to punish your body.",
   "The scale is one data point; your habits tell the fuller story.",
-  "Keep going—ordinary days are where transformation happens.",
+  "Keep going-ordinary days are where transformation happens.",
   "Choose progress over all-or-nothing thinking.",
   "Today is another chance to become stronger and healthier.",
   "A steady plan you follow is better than a perfect plan you abandon.",
   "Your results come from returning to the plan, again and again.",
-  "Protein, plants, water and patience—keep the basics strong.",
+  "Protein, plants, water and patience-keep the basics strong.",
   "You are not starting over; you are continuing with experience.",
   "Every healthy choice makes the next one a little easier.",
   "Discipline is remembering what you want most.",
@@ -590,7 +590,7 @@ const WORKOUTS = [
   ]},
   { day: "Monday", title: "Full-body strength", focus: "Strong movement patterns with controlled conditioning", format: "15 min strength AMRAP · 2 min transition · 15 min circuit · 3 min finisher", exercises: [
     ["Squat", "Stand about shoulder-width, brace, sit your hips between your feet and drive the floor away to stand.", "Chair squat × 10", "Goblet squat × 10", "Double-dumbbell front squat × 8"],
-    ["Push-up", "Keep head, ribs and hips in one line. Lower your chest under control, then press the floor away.", "Wall or bench × 10", "Knees or low bench × 8", "Floor × 10–15"],
+    ["Push-up", "Keep head, ribs and hips in one line. Lower your chest under control, then press the floor away.", "Wall or bench × 10", "Knees or low bench × 8", "Floor × 10-15"],
     ["Dumbbell row", "Support one hand, keep your back long and pull the dumbbell toward your hip without twisting.", "Light × 10 each", "Moderate × 12 each", "Heavy × 10 each"],
     ["Romanian deadlift", "Soften the knees, push hips back while keeping weights close, then squeeze glutes to stand tall.", "Bodyweight hinge × 12", "Dumbbells × 10", "Heavy dumbbells × 8"],
     ["Fast feet", "Take short quick steps, stay light on your feet and keep your chest tall.", "March 30 sec", "Fast feet 30 sec", "High knees 30 sec"],
@@ -611,8 +611,8 @@ const WORKOUTS = [
   ]},
   { day: "Thursday", title: "Full-body strength patterns", focus: "New movements, full-body strength and control", format: "15 min quality rounds · 2 min transition · 15 min density block · 3 min carry", exercises: [
     ["Split squat", "Use a staggered stance, lower straight down and drive through the front foot while keeping the torso tall.", "Supported × 8 each", "Bodyweight × 10 each", "Weighted × 8 each"],
-    ["Floor press", "Lie on your back, keep wrists stacked and lower elbows gently to the floor before pressing up.", "One dumbbell × 10", "Two dumbbells × 10", "Heavy × 8–10"],
-    ["Bent-over row", "Hinge at the hips, brace your trunk and pull both weights toward your lower ribs.", "Light × 10", "Moderate × 12", "Heavy × 8–10"],
+    ["Floor press", "Lie on your back, keep wrists stacked and lower elbows gently to the floor before pressing up.", "One dumbbell × 10", "Two dumbbells × 10", "Heavy × 8-10"],
+    ["Bent-over row", "Hinge at the hips, brace your trunk and pull both weights toward your lower ribs.", "Light × 10", "Moderate × 12", "Heavy × 8-10"],
     ["Dumbbell clean", "Drive through legs and hips, guide the weight close to your body and receive it softly at the shoulder.", "One light weight × 6 each", "Alternating × 8 each", "Two dumbbells × 8"],
     ["Farmer carry", "Stand tall with weights at your sides, brace and walk with controlled steps without leaning.", "Light 30 sec", "Moderate 40 sec", "Heavy 45 sec"],
   ]},
@@ -654,7 +654,7 @@ const GYM_WORKOUTS = [
     ["Assault bike or spin bike", "Push and pull smoothly while driving the pedals. Keep a pace you can repeat for every interval.", "Easy spin", "Strong steady effort", "Hard interval effort"],
   ]},
   { day: "Wednesday", title: "Gym recovery + core", focus: "Low-impact conditioning, trunk strength and mobility", exercises: [
-    ["Treadmill incline walk", "Walk tall without holding the rails and use an incline that keeps the effort controlled.", "Flat to 2% incline", "4–7% incline", "8–12% brisk incline"],
+    ["Treadmill incline walk", "Walk tall without holding the rails and use an incline that keeps the effort controlled.", "Flat to 2% incline", "4-7% incline", "8-12% brisk incline"],
     ["Cable wood chop", "Brace and rotate through the upper back and hips while guiding the cable diagonally across the body.", "Light, small range", "Moderate controlled range", "Half-kneeling with greater control"],
     ["Captain's chair knee raise", "Press the back into the pad, brace and raise the knees without swinging.", "Alternating knee lifts", "Both knees together", "Straighter-leg raise"],
     ["Hip thrust on bench", "Plant the feet, tuck the ribs and drive the hips up by squeezing the glutes, not the lower back.", "Bodyweight", "Dumbbell across hips", "Padded barbell across hips"],
@@ -854,16 +854,16 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
       try {
         data = await res.json();
       } catch (parseErr) {
-        // non-JSON response (e.g. a 404 HTML page) — endpoint likely doesn't exist at this path
+        // non-JSON response (e.g. a 404 HTML page) - endpoint likely doesn't exist at this path
       }
       if (res.ok && data && data.text) return data.text;
       // The route exists and responded, but something's misconfigured server-side
-      // (e.g. missing ANTHROPIC_API_KEY) — surface that exact reason instead of
+      // (e.g. missing ANTHROPIC_API_KEY) - surface that exact reason instead of
       // silently falling through to a call that will fail anyway on a real domain.
       throw new Error(data?.error || `/api/ai responded with status ${res.status}`);
     } catch (e) {
       if (e instanceof TypeError) {
-        // A genuine network-level failure to reach /api/ai at all — this is the
+        // A genuine network-level failure to reach /api/ai at all - this is the
         // situation inside Claude's own preview, where there's no /api backend.
         backendReachable = false;
       } else {
@@ -902,7 +902,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
       sortedWeights.length >= 2
         ? `Weight trend: started at ${sortedWeights[0].weight}kg, now ${latestWeight.weight}kg over ${sortedWeights.length} entries.`
         : "Not enough weight entries yet for a trend.";
-    const prompt = `You are the warm, supportive New You Fitness coach. Write a personalised daily progress check in 4 short paragraphs, each 1–2 concise sentences. Use these exact headings: "How you're doing", "What stands out", "Your next best step", and "Coach tip". Be encouraging, practical, beginner-friendly and non-judgmental. Consider the time of day before deciding whether low food, steps or missing meals are actually a concern. Never assume an unlogged meal was skipped: say it may not have been logged. Mention sleep or feelings sensitively, without diagnosing or giving mental-health treatment. If "Depressed" is selected, respond with warmth and encourage reaching out to someone they trust, but do not make the entire insight about it. Never mention being an AI.
+    const prompt = `You are the warm, supportive New You Fitness coach. Write a personalised daily progress check in 4 short paragraphs, each 1-2 concise sentences. Use these exact headings: "How you're doing", "What stands out", "Your next best step", and "Coach tip". Be encouraging, practical, beginner-friendly and non-judgmental. Consider the time of day before deciding whether low food, steps or missing meals are actually a concern. Never assume an unlogged meal was skipped: say it may not have been logged. Mention sleep or feelings sensitively, without diagnosing or giving mental-health treatment. If "Depressed" is selected, respond with warmth and encourage reaching out to someone they trust, but do not make the entire insight about it. Never mention being an AI.
 
 Current local time: ${currentTime} (${timeOfDay}).
 Meals logged: ${loggedMealTypes.join(", ") || "none yet"}. Meal entries: ${todayLogs.length}. Meals that might not yet be logged for this time: ${missingMeals.join(", ") || "none"}.
@@ -922,7 +922,7 @@ ${trend}`;
       // Gemini thinking models can use part of the output allowance internally,
       // so leave enough room to ensure the visible answer finishes cleanly.
       const text = await callAI(prompt, 4096);
-      setAiText(text || "Couldn't generate an insight right now — try again in a moment.");
+      setAiText(text || "Couldn't generate an insight right now - try again in a moment.");
     } catch (e) {
       setAiText(`Couldn't reach the coach right now. (Details: ${e.message})`);
     }
@@ -943,16 +943,16 @@ ${trend}`;
     // Give the member useful choices instantly while a personalised set is prepared.
     setMealSuggestions(instantMeals);
     const likedLine = likedFoods.length
-      ? `\n\nThis member specifically enjoys these foods: ${likedFoods.join(", ")}. Build the meals around these foods wherever realistically possible — the whole point is that meals they actually like are easier to stick to. Only bring in other foods where needed for balance or to hit the targets sensibly.`
+      ? `\n\nThis member specifically enjoys these foods: ${likedFoods.join(", ")}. Build the meals around these foods wherever realistically possible - the whole point is that meals they actually like are easier to stick to. Only bring in other foods where needed for balance or to hit the targets sensibly.`
       : "";
     const prompt = `You are a nutrition-savvy meal planner for New You Fitness, a gym whose tone is warm and non-intimidating (brand line: "YOU vs YOU"). A member has these daily targets: ${profile.calorieGoal} kcal, ${profile.proteinGoal}g protein, ${profile.carbGoal}g carbs, ${profile.fatGoal}g fat.
 
-Suggest 6 simple, realistic meals/snacks (mix of breakfast, lunch, dinner, snack) that fit sensibly within these daily targets when combined (a full day should roughly add up to the goals, not each meal individually). Use everyday ingredients available in South African supermarkets. Keep descriptions practical, no fancy techniques. Keep the "description" field to one short sentence (under 15 words) and each ingredient string brief — this needs to stay compact.${likedLine}
+Suggest 6 simple, realistic meals/snacks (mix of breakfast, lunch, dinner, snack) that fit sensibly within these daily targets when combined (a full day should roughly add up to the goals, not each meal individually). Use everyday ingredients available in South African supermarkets. Keep descriptions practical, no fancy techniques. Keep the "description" field to one short sentence (under 15 words) and each ingredient string brief - this needs to stay compact.${likedLine}
 
 Respond ONLY with a JSON array, no markdown fences, no preamble, in this exact shape:
 [{"mealType":"Breakfast","name":"Berry Protein Oats","description":"Warm oats with yoghurt and berries.","cal":340,"protein":26,"carb":46,"fat":6,"ingredients":["40g oats","150g plain yoghurt","100g blueberries"]}]
 
-Use ordinary whole numbers without leading zeroes for every nutrition value. The "ingredients" array should list each ingredient with a practical shopping quantity (grams, ml, cups, or count) — 3 to 6 items per meal, no method or instructions, just what to buy.`;
+Use ordinary whole numbers without leading zeroes for every nutrition value. The "ingredients" array should list each ingredient with a practical shopping quantity (grams, ml, cups, or count) - 3 to 6 items per meal, no method or instructions, just what to buy.`;
 
     try {
       const parseMeals = (value) => {
@@ -976,7 +976,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       if (Array.isArray(parsed)) {
         setMealSuggestions(parsed);
       } else {
-        setMealsError("Couldn't read the suggestions — try again.");
+        setMealsError("Couldn't read the suggestions - try again.");
       }
     } catch {
       // Keep the instant, coach-approved meal set on screen if AI is slow or unavailable.
@@ -1165,8 +1165,8 @@ function SleepCheckIn({ onSelect }) {
     <div className="nyf-modal-backdrop">
       <div className="nyf-modal" style={{ marginTop: "5vh", borderRadius: 24, maxWidth: 520 }}>
         <div className="nyf-card gold" style={{ marginBottom: 0 }}>
-          <div className="nyf-section-title">Good morning — your daily check-in</div>
-          <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Sleep and mood can affect hunger, energy and recovery. Be honest—there are no wrong answers.</p>
+          <div className="nyf-section-title">Good morning - your daily check-in</div>
+          <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55 }}>Sleep and mood can affect hunger, energy and recovery. Be honest-there are no wrong answers.</p>
           <label className="nyf-field-label">How many hours did you sleep?</label>
           <input className="nyf-input" type="number" inputMode="decimal" min="0" max="16" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} placeholder="e.g. 7.5 hours" />
           <label className="nyf-field-label">How was your sleep?</label>
@@ -1221,7 +1221,7 @@ function WorkoutTab({ setTab }) {
     <div className="nyf-card nyf-workout-hero"><div className="nyf-step">{workout.day} · {venue === "gym" ? "Gym workout" : "New You at home"}</div><h2 style={{ fontSize: 27 }}>{workout.title}</h2><p style={{ color: "#D5E5F2", fontSize: 12.5, lineHeight: 1.5, marginBottom: 0 }}>{workout.focus}</p><span className="nyf-workout-time">45 minutes · Warm-up 10 + Workout 35</span></div>
     <div className="nyf-card"><label className="nyf-field-label">Where are you training?</label><div className="nyf-tabswitch" style={{ marginBottom: 14 }}><button className={venue === "home" ? "active" : ""} onClick={() => { setVenue("home"); setOpen(null); }}>At home</button><button className={venue === "gym" ? "active" : ""} onClick={() => { setVenue("gym"); setOpen(null); }}>At the gym</button></div>{venue === "gym" && <div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Gym equipment:</strong> This version uses barbells, dumbbells, benches, cables and cardio machines. Where equipment is busy or unavailable, use the Level 1 alternative.</div>}<label className="nyf-field-label">Choose another training day</label><select className="nyf-select" value={selectedDay} onChange={(e) => { setSelectedDay(Number(e.target.value)); setOpen(null); }}>{(venue === "gym" ? GYM_WORKOUTS : WORKOUTS).map((item,index) => <option key={item.day} value={index}>{item.day} · {item.title}</option>)}</select><div className="nyf-section-title">Choose your level</div><div className="nyf-levels"><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1<br />Beginner</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2<br />Intermediate</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3<br />Experienced</button></div><p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginBottom: 0 }}>Choose the level that lets you move safely with good form. You may use different levels for different exercises.</p></div>
     <div className="nyf-card gold"><div className="nyf-section-title">10-minute warm-up · follow these sets</div>{warmup.map((item,index) => <div className="nyf-log-item" key={item[0]}><strong style={{ color: "var(--gold)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{item[0]}</strong><strong>{item[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{item[2]}</div></div></div>)}</div>
-    <div className="nyf-card"><div className="nyf-section-title">35-minute workout · timed plan</div><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Follow each set in order.</strong> The work, transition and rest periods below add up to exactly 35 minutes.</div>{workoutPlan.map((block,index) => <div className="nyf-log-item" key={block[0]}><strong style={{ color: "var(--blue)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{block[0]}</strong><strong style={{ whiteSpace: "nowrap" }}>{block[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{block[2]}</div></div></div>)}<div className="nyf-section-title" style={{ marginTop: 16 }}>Exercise demonstrations</div><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Tap an exercise to learn the technique and view all three levels.</p>{workout.exercises.map((exercise,index) => <div className="nyf-exercise-card" key={exercise[0]}><button className="nyf-exercise-head" onClick={() => setOpen(open === index ? null : index)} style={{ width: "100%", border: 0, background: "none", padding: 0, textAlign: "left", color: "inherit", cursor: "pointer" }}><div><strong>{exercise[0]}</strong><div className="nyf-exercise-level">Level {level}: {exercise[level + 1]}</div></div><ChevronDown size={16} style={{ transform: open === index ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }} /></button>{open === index && <div className="nyf-exercise-how"><strong>How to do it:</strong> {exercise[1]}<div style={{ marginTop: 7 }}><strong>All options:</strong><br />Level 1 — {exercise[2]}<br />Level 2 — {exercise[3]}<br />Level 3 — {exercise[4]}</div></div>}</div>)}</div>
+    <div className="nyf-card"><div className="nyf-section-title">35-minute workout · timed plan</div><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Follow each set in order.</strong> The work, transition and rest periods below add up to exactly 35 minutes.</div>{workoutPlan.map((block,index) => <div className="nyf-log-item" key={block[0]}><strong style={{ color: "var(--blue)", marginRight: 10 }}>{index + 1}</strong><div style={{ flex: 1 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}><strong>{block[0]}</strong><strong style={{ whiteSpace: "nowrap" }}>{block[1]}</strong></div><div style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45, marginTop: 4 }}>{block[2]}</div></div></div>)}<div className="nyf-section-title" style={{ marginTop: 16 }}>Exercise demonstrations</div><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Tap an exercise to learn the technique and view all three levels.</p>{workout.exercises.map((exercise,index) => <div className="nyf-exercise-card" key={exercise[0]}><button className="nyf-exercise-head" onClick={() => setOpen(open === index ? null : index)} style={{ width: "100%", border: 0, background: "none", padding: 0, textAlign: "left", color: "inherit", cursor: "pointer" }}><div><strong>{exercise[0]}</strong><div className="nyf-exercise-level">Level {level}: {exercise[level + 1]}</div></div><ChevronDown size={16} style={{ transform: open === index ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }} /></button>{open === index && <div className="nyf-exercise-how"><strong>How to do it:</strong> {exercise[1]}<div style={{ marginTop: 7 }}><strong>All options:</strong><br />Level 1 - {exercise[2]}<br />Level 2 - {exercise[3]}<br />Level 3 - {exercise[4]}</div></div>}</div>)}</div>
     <div className="nyf-card clay"><div className="nyf-section-title">Train safely</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>{venue === "gym" ? "Use safety clips, check machine settings and ask gym staff for a spotter when needed. Never attempt a heavy barbell movement you have not been taught." : "Clear a safe space and use stable equipment."} Stop for sharp pain, chest pain, faintness or unusual shortness of breath. If you have an injury, recent surgery, pregnancy or a medical condition, use guidance from your coach or healthcare professional.</p><button className="nyf-btn gold full" onClick={() => setTab("home")}>Finished · log my exercise</button></div>
   </>;
 }
@@ -1289,8 +1289,8 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
           <div className="nyf-card gold">
             <div className="nyf-section-title"><Calculator size={17} /> Your starting point</div>
             <div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div><div><label className="nyf-field-label">Goal weight (kg)</label><input className="nyf-input" type="number" step="0.1" value={form.goalWeight} onChange={(e) => setForm({ ...form, goalWeight: e.target.value })} /></div></div>
-            <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3–5 days</option><option value="1.725">Very active</option></select>
-            <p className="nyf-range-note">Choose what describes your normal week—not the week you hope to have.</p>
+            <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3-5 days</option><option value="1.725">Very active</option></select>
+            <p className="nyf-range-note">Choose what describes your normal week-not the week you hope to have.</p>
             <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so my coach can support me. I understand that this app provides general guidance and not medical treatment.</span></label>
             <button className="nyf-btn gold full" onClick={next} disabled={!form.weight || !form.goalWeight || !form.consent}>Calculate my targets</button>
             <button className="nyf-link-btn" onClick={back}>Back</button>
@@ -1298,7 +1298,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
         )}
         {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Fat-loss kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates, not a promise of a specific weekly loss. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
         {step === 4 && <div className="nyf-card"><div className="nyf-section-title"><Heart size={17} /> Choose foods you actually like</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Tap everything you would happily eat. Meal suggestions will use these choices first.</p>{FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${foods.includes(item) ? " selected" : ""}`} onClick={() => toggleFood(item)}>{item}</button>)}</div></div>)}<div className="nyf-product-card">{foods.length} foods selected</div><button className="nyf-btn full" onClick={next} disabled={foods.length < 3}>Continue</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
-        {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4–5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
+        {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4-5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Workout","Choose home or gym training and Level 1, 2 or 3."],["Learn & Goals","Understand fat loss, review targets and add the app to your phone."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal.<br />2. Add today's steps.<br />3. Record your starting weight.</div><button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         <button className="nyf-link-btn" onClick={onLogout}>Sign out</button>
       </div>
@@ -1322,7 +1322,7 @@ function WeeklyCheckIn({ entries, onAdd, profile, foodLogs, weightLogs }) {
     const first = sortedWeights[0]?.weight; const latest = sortedWeights[sortedWeights.length - 1]?.weight;
     const change = first && latest ? `${latest - first > 0 ? "+" : ""}${(latest - first).toFixed(1)} kg` : "Not enough entries";
     const diary = Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b)).map(([date, day]) => `${date}: ${Math.round(day.cal)} kcal | P${Math.round(day.protein)} C${Math.round(day.carb)} F${Math.round(day.fat)} | ${day.meals.join(", ")}`).join("\n") || "No food logged in the past 7 days.";
-    const message = `NEW YOU WEEKLY CHECK-IN\nMember: ${profile.name || "Member"}\nDate: ${todayStr()}\n\nEnergy: ${form.energy}/5\nHunger: ${form.hunger}/5\nSleep: ${form.sleep}/5\nTraining: ${form.training}/5\nWin: ${form.win || "—"}\nSupport needed: ${form.struggle || "—"}\n\nWEIGHT PROGRESS\nLatest: ${latest ? `${latest} kg` : "Not logged"}\nOverall change: ${change}\n\nLAST 7 DAYS FOOD DIARY\n${diary}`;
+    const message = `NEW YOU WEEKLY CHECK-IN\nMember: ${profile.name || "Member"}\nDate: ${todayStr()}\n\nEnergy: ${form.energy}/5\nHunger: ${form.hunger}/5\nSleep: ${form.sleep}/5\nTraining: ${form.training}/5\nWin: ${form.win || "-"}\nSupport needed: ${form.struggle || "-"}\n\nWEIGHT PROGRESS\nLatest: ${latest ? `${latest} kg` : "Not logged"}\nOverall change: ${change}\n\nLAST 7 DAYS FOOD DIARY\n${diary}`;
     window.open(`https://wa.me/27731800485?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   }
   return (
@@ -1379,7 +1379,7 @@ function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits
   const habitDone = Object.entries(dailyHabits).filter(([date]) => new Date(`${date}T00:00:00`) >= cutoff).reduce((sum,[,day]) => sum + HABITS.filter(([key]) => day?.[key]).length, 0);
   const recentWeights = [...weightLogs].filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff).sort((a,b) => a.date.localeCompare(b.date));
   const change = recentWeights.length > 1 ? (recentWeights.at(-1).weight - recentWeights[0].weight).toFixed(1) : null;
-  return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Your last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{foodDays ? Math.round(calories / foodDays) : "—"}</strong><span>Avg kcal</span></div><div className="nyf-progress-tile"><strong>{foodDays ? `${Math.round(protein / foodDays)}g` : "—"}</strong><span>Avg protein</span></div><div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Weight change</span></div></div><div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Exercise recorded: <strong>{Math.round(exercise)} kcal</strong> · Habits completed: <strong>{habitDone}/28</strong> · Food logged: <strong>{foodDays}/7 days</strong></div>{foodDays > 0 && <div style={{ marginTop: 9, fontSize: 11.5, color: "var(--ink-soft)" }}>Calorie target: {profile.calorieGoal} kcal · Protein target: {profile.proteinGoal}g</div>}</div>;
+  return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Your last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{foodDays ? Math.round(calories / foodDays) : "-"}</strong><span>Avg kcal</span></div><div className="nyf-progress-tile"><strong>{foodDays ? `${Math.round(protein / foodDays)}g` : "-"}</strong><span>Avg protein</span></div><div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "-"}</strong><span>Weight change</span></div></div><div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Exercise recorded: <strong>{Math.round(exercise)} kcal</strong> · Habits completed: <strong>{habitDone}/28</strong> · Food logged: <strong>{foodDays}/7 days</strong></div>{foodDays > 0 && <div style={{ marginTop: 9, fontSize: 11.5, color: "var(--ink-soft)" }}>Calorie target: {profile.calorieGoal} kcal · Protein target: {profile.proteinGoal}g</div>}</div>;
 }
 
 function BeginnerDailyGuide({ profile, totals, foodLogs, todayExercise, dailyHabits, setTab }) {
@@ -1393,7 +1393,7 @@ function BeginnerDailyGuide({ profile, totals, foodLogs, todayExercise, dailyHab
   ];
   const completed = tasks.filter((task) => task.done).length;
   const badge = completed === 4 ? "Consistency champion" : completed >= 2 ? "Building momentum" : "Start with one small win";
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Check size={17} /> Your simple plan for today</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Do these four things. You do not need a perfect day—just keep moving forward.</p><div className="nyf-product-card"><strong>{completed}/4 complete · {badge}</strong></div>{tasks.map((task) => <button className={`nyf-habit${task.done ? " done" : ""}`} style={{ width: "100%", marginTop: 8 }} key={task.label} onClick={task.action}><span className="nyf-habit-dot">{task.done ? <Check size={14} /> : null}</span><span>{task.label}</span></button>)}</div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Check size={17} /> Your simple plan for today</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Do these four things. You do not need a perfect day-just keep moving forward.</p><div className="nyf-product-card"><strong>{completed}/4 complete · {badge}</strong></div>{tasks.map((task) => <button className={`nyf-habit${task.done ? " done" : ""}`} style={{ width: "100%", marginTop: 8 }} key={task.label} onClick={task.action}><span className="nyf-habit-dot">{task.done ? <Check size={14} /> : null}</span><span>{task.label}</span></button>)}</div>;
 }
 
 function StepsCard({ entry, onSave, compact = false }) {
@@ -1403,7 +1403,7 @@ function StepsCard({ entry, onSave, compact = false }) {
   const current = Number(steps) || 0;
   const target = Math.max(1000, Number(goal) || 8000);
   const percentage = Math.min(100, Math.round((current / target) * 100));
-  return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{current.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{target.toLocaleString()}</strong><span>Daily goal</span></div><div className="nyf-progress-tile"><strong>{percentage}%</strong><span>Complete</span></div></div><div className="nyf-grid2"><div><label className="nyf-field-label">Your steps</label><input className="nyf-input" type="number" inputMode="numeric" min="0" step="100" value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 6500" /></div><div><label className="nyf-field-label">Step goal</label><input className="nyf-input" type="number" inputMode="numeric" min="1000" step="500" value={goal} onChange={(e) => setGoal(e.target.value)} /></div></div><button className={`nyf-btn${compact ? " ghost" : ""} full`} onClick={() => onSave(current, target)} disabled={!current}>Save today's steps</button>{entry && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>{entry.steps >= entry.goal ? "Step goal reached — well done!" : `${Math.max(0, entry.goal - entry.steps).toLocaleString()} steps remaining.`}</p>}</div>;
+  return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{current.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{target.toLocaleString()}</strong><span>Daily goal</span></div><div className="nyf-progress-tile"><strong>{percentage}%</strong><span>Complete</span></div></div><div className="nyf-grid2"><div><label className="nyf-field-label">Your steps</label><input className="nyf-input" type="number" inputMode="numeric" min="0" step="100" value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 6500" /></div><div><label className="nyf-field-label">Step goal</label><input className="nyf-input" type="number" inputMode="numeric" min="1000" step="500" value={goal} onChange={(e) => setGoal(e.target.value)} /></div></div><button className={`nyf-btn${compact ? " ghost" : ""} full`} onClick={() => onSave(current, target)} disabled={!current}>Save today's steps</button>{entry && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>{entry.steps >= entry.goal ? "Step goal reached - well done!" : `${Math.max(0, entry.goal - entry.steps).toLocaleString()} steps remaining.`}</p>}</div>;
 }
 
 function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, todaySteps, saveSteps }) {
@@ -1421,7 +1421,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <BeginnerDailyGuide profile={profile} totals={totals} foodLogs={foodLogs} todayExercise={todayExercise} dailyHabits={dailyHabits} setTab={setTab} />
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}>
         <div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>
-        {!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise—with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}
+        {!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}
         {aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}
         <button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button>
       </div>
@@ -1484,7 +1484,7 @@ function MeasurementsCard({ entries, onAdd }) {
   const [form, setForm] = useState({ waist: "", hips: "", chest: "", arm: "", thigh: "" });
   const latest = entries[0];
   function save() { onAdd(Object.fromEntries(Object.entries(form).map(([key,value]) => [key, value ? Number(value) : null]))); setOpen(false); }
-  return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "—"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "—"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "—"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
+  return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "-"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "-"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "-"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
 function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps }) {
@@ -1507,7 +1507,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
       <div className="nyf-card">
         <div className="nyf-section-title">Meals logged today</div>
         {todayLogs.length === 0 ? (
-          <div className="nyf-empty">Nothing logged yet — add your first meal above.</div>
+          <div className="nyf-empty">Nothing logged yet - add your first meal above.</div>
         ) : (
           ["Breakfast", "Lunch", "Dinner", "Snack"].map((mealType) => {
             const meals = todayLogs.filter((item) => (item.mealType || "Snack") === mealType);
@@ -1515,7 +1515,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWei
             return <div key={mealType}><div className="nyf-chip-heading" style={{ marginTop: 10 }}>{mealType}</div>{meals.map((f) => (
             <div className="nyf-log-item" key={f.id}>
               <div>
-                <div className="nyf-log-name">{f.name}{f.qty ? ` — ${f.qty}${f.unit}` : ""}</div>
+                <div className="nyf-log-name">{f.name}{f.qty ? ` - ${f.qty}${f.unit}` : ""}</div>
                 <div className="nyf-log-macro">P{f.protein} · C{f.carb} · F{f.fat}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1577,7 +1577,7 @@ function FoodPicksCard() {
     <div className="nyf-card gold">
       <div className="nyf-section-title">Smart picks at Checkers &amp; Pick n Pay</div>
       <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
-        Everyday options that give you good protein without much fat or carbs. Values are typical for the product category — always check the actual label, since brands and formulations vary.
+        Everyday options that give you good protein without much fat or carbs. Values are typical for the product category - always check the actual label, since brands and formulations vary.
       </p>
       {FOOD_PICKS.map((f, i) => (
         <div className="nyf-log-item" key={i} style={{ alignItems: "flex-start" }}>
@@ -1595,7 +1595,7 @@ function FoodPicksCard() {
         </div>
       ))}
       <p style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 10 }}>
-        Photos aren't included yet — hotlinking product photos from retailer sites is unreliable and can raise usage-rights issues. If you'd like real photos here, the cleanest option is snapping your own in-store and sending them through to add.
+        Photos aren't included yet - hotlinking product photos from retailer sites is unreliable and can raise usage-rights issues. If you'd like real photos here, the cleanest option is snapping your own in-store and sending them through to add.
       </p>
     </div>
   );
@@ -1612,7 +1612,7 @@ function LearnTab({ openArticle, setOpenArticle }) {
       <div className="nyf-card">
         <div className="nyf-section-title">Five words to know first</div>
         <div className="nyf-log-item"><div><div className="nyf-log-name">Calories</div><div className="nyf-log-macro">The energy supplied by food and used by your body.</div></div></div>
-        <div className="nyf-log-item"><div><div className="nyf-log-name">Macros</div><div className="nyf-log-macro">Protein, carbohydrates and fats—the main nutrients that contain calories.</div></div></div>
+        <div className="nyf-log-item"><div><div className="nyf-log-name">Macros</div><div className="nyf-log-macro">Protein, carbohydrates and fats-the main nutrients that contain calories.</div></div></div>
         <div className="nyf-log-item"><div><div className="nyf-log-name">Maintenance</div><div className="nyf-log-macro">The approximate calories that keep average body weight stable.</div></div></div>
         <div className="nyf-log-item"><div><div className="nyf-log-name">Calorie deficit</div><div className="nyf-log-macro">Eating less energy than your body uses over time.</div></div></div>
         <div className="nyf-log-item"><div><div className="nyf-log-name">Progressive overload</div><div className="nyf-log-macro">Gradually increasing training difficulty as you become stronger.</div></div></div>
@@ -1773,7 +1773,7 @@ function MealsTab({
       <div className="nyf-card">
         <div className="nyf-section-title">Foods you actually like</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
-          Tap the foods you enjoy — suggestions will be built around these first, so the plan is easier to stick to.
+          Tap the foods you enjoy - suggestions will be built around these first, so the plan is easier to stick to.
         </p>
         {FOOD_PREFERENCE_LIST.map((group) => (
           <div className="nyf-chip-group" key={group.category}>
@@ -1823,7 +1823,7 @@ function MealsTab({
 
       {suggestions.length > 0 && (
         <div className="nyf-card">
-          <div className="nyf-section-title">Suggestions — tap the heart to save</div>
+          <div className="nyf-section-title">Suggestions - tap the heart to save</div>
           {suggestions.map((m, i) => {
             const isFav = favoriteNames.has(m.name);
             return (
@@ -1935,7 +1935,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
         <Calculator size={16} color="var(--gold)" /> Not sure where to start?
       </div>
       <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 10 }}>
-        Get a starting estimate based on the New You Fitness weight-loss method. This is a starting point to test over 2–4 weeks, not a fixed prescription — you can always come back and recalculate as your weight changes.
+        Get a starting estimate based on the New You Fitness weight-loss method. This is a starting point to test over 2-4 weeks, not a fixed prescription - you can always come back and recalculate as your weight changes.
       </p>
 
       <div className="nyf-grid2">
@@ -1966,20 +1966,20 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
 
       <label className="nyf-field-label">Activity level</label>
       <select className="nyf-select" value={activity} onChange={(e) => setActivity(e.target.value)}>
-        <option value="1.20">Low — mostly seated, little structured activity</option>
-        <option value="1.35">Light — some purposeful exercise, modest steps</option>
-        <option value="1.50">Moderate — regular training plus daily movement</option>
-        <option value="1.70">High — physically demanding work and/or heavy training</option>
+        <option value="1.20">Low - mostly seated, little structured activity</option>
+        <option value="1.35">Light - some purposeful exercise, modest steps</option>
+        <option value="1.50">Moderate - regular training plus daily movement</option>
+        <option value="1.70">High - physically demanding work and/or heavy training</option>
       </select>
 
       <label className="nyf-field-label">Starting deficit (to work toward your goal weight)</label>
       <select className="nyf-select" value={deficit} onChange={(e) => setDeficit(e.target.value)}>
-        <option value="10">10% — gentler, easier to sustain</option>
-        <option value="15">15% — moderate starting option for many people</option>
-        <option value="20">20% — faster on paper, harder on hunger and recovery</option>
+        <option value="10">10% - gentler, easier to sustain</option>
+        <option value="15">15% - moderate starting option for many people</option>
+        <option value="20">20% - faster on paper, harder on hunger and recovery</option>
       </select>
       <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "-6px 0 12px" }}>
-        Protein is set automatically at 2g per kg of your current weight — the New You default for protecting muscle while losing fat.
+        Protein is set automatically at 2g per kg of your current weight - the New You default for protecting muscle while losing fat.
       </p>
 
       <button className="nyf-btn full" onClick={calculate} disabled={!weight || !height || !age} style={{ marginTop: 4 }}>
@@ -2265,7 +2265,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
         });
       }
     } catch (e) {
-      setLookupError("Couldn't reach the barcode database — check your connection and try again, or enter the item manually.");
+      setLookupError("Couldn't reach the barcode database - check your connection and try again, or enter the item manually.");
     }
     setLookupLoading(false);
   }
@@ -2342,7 +2342,7 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
               </button>
             </div>
             <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 12px" }}>
-              Type the digits under the barcode — this works on every device.
+              Type the digits under the barcode - this works on every device.
             </p>
 
             {cameraSupported && (
@@ -2364,13 +2364,13 @@ function FoodModal({ onAdd, onClose, recentFoods = [], savedMeals = [], onSaveMe
                 )}
                 {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
                 <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>
-                  Camera scanning depends on your specific phone and browser and doesn't work everywhere yet — if nothing happens after a few seconds, just type the number above instead.
+                  Camera scanning depends on your specific phone and browser and doesn't work everywhere yet - if nothing happens after a few seconds, just type the number above instead.
                 </p>
               </>
             )}
             {product && (
               <div className="nyf-product-card">
-                Found: <strong>{product.name}</strong> — values below are per 100g/ml, adjust the amount to match your portion.
+                Found: <strong>{product.name}</strong> - values below are per 100g/ml, adjust the amount to match your portion.
               </div>
             )}
             {lookupError && <div className="nyf-lookup-error">{lookupError}</div>}
@@ -2674,7 +2674,7 @@ function LandingScreen({ onMember, onStaff, onInstall, showInstallGuide, onClose
       <div className="nyf-landing-hero">
         <img className="nyf-landing-mark" src="/new-you-logo.png" alt="New You Transformation Studio" />
         <h1>Your transformation,<br />tracked.</h1>
-        <p className="nyf-landing-copy">Personalised calories, macros, meal inspiration, progress tracking and supportive coach insights—all in one place.</p>
+        <p className="nyf-landing-copy">Personalised calories, macros, meal inspiration, progress tracking and supportive coach insights-all in one place.</p>
         <div className="nyf-feature-row"><div className="nyf-feature-pill">Smart meals</div><div className="nyf-feature-pill">Daily tracking</div><div className="nyf-feature-pill">Coach support</div></div>
       </div>
       <div className="nyf-landing-actions">
@@ -2796,7 +2796,7 @@ function AdminScreen({ accessList, saveAccessList, onBack }) {
         </div>
 
         <p style={{ fontSize: 11.5, color: "var(--ink-soft)", textAlign: "center", padding: "0 10px" }}>
-          Give each member their code once their New You Fitness subscription is active. Toggle "Paused" to cut off access instantly — no need to remove them.
+          Give each member their code once their New You Fitness subscription is active. Toggle "Paused" to cut off access instantly - no need to remove them.
         </p>
       </div>
       <div style={{ padding: "12px 18px 20px" }}>
@@ -2942,7 +2942,7 @@ function CoachGoalsEditor({ profile, onSave }) {
   const [form, setForm] = useState({ calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50, expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
   const [saved, setSaved] = useState(false);
   async function save() { await onSave(form); setSaved(true); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0.1" max="1.5" step="0.1" value={form.expectedWeeklyLoss} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% — no extra allowance</option><option value="50">50% — recommended</option><option value="100">100% — full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><div className="nyf-grid2"><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" value={form.calorieGoal} onChange={(e) => setForm({ ...form, calorieGoal: e.target.value })} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={form.proteinGoal} onChange={(e) => setForm({ ...form, proteinGoal: e.target.value })} /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={form.carbGoal} onChange={(e) => setForm({ ...form, carbGoal: e.target.value })} /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={form.fatGoal} onChange={(e) => setForm({ ...form, fatGoal: e.target.value })} /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0.1" max="1.5" step="0.1" value={form.expectedWeeklyLoss} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% - no extra allowance</option><option value="50">50% - recommended</option><option value="100">100% - full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
 function CoachDashboard({ onLogout, onReturnToMember }) {
@@ -3037,24 +3037,24 @@ function CoachDashboard({ onLogout, onReturnToMember }) {
               <div className="nyf-card gold">
                 <div className="nyf-section-title">Goals</div>
                 <div className="nyf-grid2">
-                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.calorieGoal || "—"}</div><div className="nyf-stat-label">daily kcal</div></div>
-                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.proteinGoal || "—"}g</div><div className="nyf-stat-label">protein</div></div>
+                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.calorieGoal || "-"}</div><div className="nyf-stat-label">daily kcal</div></div>
+                  <div><div className="nyf-stat-big" style={{ fontSize: 22 }}>{profile.proteinGoal || "-"}g</div><div className="nyf-stat-label">protein</div></div>
                 </div>
               </div>
               <CoachGoalsEditor profile={profile} onSave={saveCoachGoals} />
               <div className="nyf-progress-summary">
-                <div className="nyf-progress-tile"><strong>{latestCoachWeight ? `${latestCoachWeight}kg` : "—"}</strong><span>Current</span></div>
-                <div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "—"}</strong><span>Change</span></div>
+                <div className="nyf-progress-tile"><strong>{latestCoachWeight ? `${latestCoachWeight}kg` : "-"}</strong><span>Current</span></div>
+                <div className="nyf-progress-tile"><strong>{change !== null ? `${change > 0 ? "+" : ""}${change}kg` : "-"}</strong><span>Change</span></div>
                 <div className="nyf-progress-tile"><strong>{loggedDays}</strong><span>Food days</span></div>
               </div>
               <div className="nyf-card">
                 <div className="nyf-section-title">Measurements &amp; habits</div>
                 <div className="nyf-progress-summary">
-                  <div className="nyf-progress-tile"><strong>{measurements[0]?.waist ? `${measurements[0].waist}cm` : "—"}</strong><span>Latest waist</span></div>
+                  <div className="nyf-progress-tile"><strong>{measurements[0]?.waist ? `${measurements[0].waist}cm` : "-"}</strong><span>Latest waist</span></div>
                   <div className="nyf-progress-tile"><strong>{measurements.length}</strong><span>Measure-ins</span></div>
                   <div className="nyf-progress-tile"><strong>{habitCompletions}</strong><span>Habits done</span></div>
                 </div>
-                {measurements.length ? measurements.slice(0, 5).map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.date}</div><div className="nyf-log-macro">Waist {item.waist || "—"} · Hips {item.hips || "—"} · Chest {item.chest || "—"} · Arm {item.arm || "—"} · Thigh {item.thigh || "—"} cm</div></div></div>) : <div className="nyf-empty">No measurements yet.</div>}
+                {measurements.length ? measurements.slice(0, 5).map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.date}</div><div className="nyf-log-macro">Waist {item.waist || "-"} · Hips {item.hips || "-"} · Chest {item.chest || "-"} · Arm {item.arm || "-"} · Thigh {item.thigh || "-"} cm</div></div></div>) : <div className="nyf-empty">No measurements yet.</div>}
               </div>
               <div className="nyf-card gold">
                 <div className="nyf-section-title">Weekly check-ins</div>
