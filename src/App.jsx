@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame } from "lucide-react";
 
 // Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-0630";
+const APP_RELEASE = "2026-09-07-0730";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1077,12 +1077,9 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             todayExercise={todayExercise}
             exerciseCalories={exerciseCalories}
             creditedExerciseCalories={creditedExerciseCalories}
-            addExercise={addExercise}
-            removeExercise={removeExercise}
             exerciseLogs={exerciseLogs}
             dailyHabits={dailyHabits}
             todaySteps={todaySteps}
-            saveSteps={saveSteps}
           />
         )}
         {tab === "track" && (
@@ -1108,6 +1105,10 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             removeProgressPhoto={removeProgressPhoto}
             todaySteps={todaySteps}
             saveSteps={saveSteps}
+            todayExercise={todayExercise}
+            exerciseCalories={exerciseCalories}
+            addExercise={addExercise}
+            removeExercise={removeExercise}
           />
         )}
         {tab === "workout" && <WorkoutTab setTab={changeTab} />}
@@ -1138,10 +1139,9 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       <FooterLogo />
       <div className="nyf-nav">
         <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => changeTab("home")} />
-        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => changeTab("workout")} />
         <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => changeTab("track")} />
         <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => changeTab("meals")} />
-        <NavBtn icon={<BookOpen size={19} />} label="Learn" active={tab === "learn"} onClick={() => changeTab("learn")} />
+        <NavBtn icon={<Flame size={19} />} label="Workout" active={tab === "workout"} onClick={() => changeTab("workout")} />
         <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => changeTab("profile")} />
       </div>
 
@@ -1406,59 +1406,36 @@ function StepsCard({ entry, onSave, compact = false }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{current.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{target.toLocaleString()}</strong><span>Daily goal</span></div><div className="nyf-progress-tile"><strong>{percentage}%</strong><span>Complete</span></div></div><div className="nyf-grid2"><div><label className="nyf-field-label">Your steps</label><input className="nyf-input" type="number" inputMode="numeric" min="0" step="100" value={steps} onChange={(e) => setSteps(e.target.value)} placeholder="e.g. 6500" /></div><div><label className="nyf-field-label">Step goal</label><input className="nyf-input" type="number" inputMode="numeric" min="1000" step="500" value={goal} onChange={(e) => setGoal(e.target.value)} /></div></div><button className={`nyf-btn${compact ? " ghost" : ""} full`} onClick={() => onSave(current, target)} disabled={!current}>Save today's steps</button>{entry && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>{entry.steps >= entry.goal ? "Step goal reached - well done!" : `${Math.max(0, entry.goal - entry.steps).toLocaleString()} steps remaining.`}</p>}</div>;
 }
 
-function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, addExercise, removeExercise, exerciseLogs, dailyHabits, todaySteps, saveSteps }) {
+function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, exerciseLogs, dailyHabits, todaySteps }) {
   const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
   const remaining = profile.calorieGoal - netCalories;
-  const startOfYear = new Date(new Date().getFullYear(), 0, 0);
-  const dayNumber = Math.floor((new Date() - startOfYear) / 86400000);
-  const motivation = DAILY_MOTIVATION[dayNumber % DAILY_MOTIVATION.length];
+  function weightChange(days) {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days); cutoff.setHours(0, 0, 0, 0);
+    const entries = [...weightLogs].filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff).sort((a, b) => a.date.localeCompare(b.date));
+    if (entries.length < 2) return null;
+    return Number(entries.at(-1).weight) - Number(entries[0].weight);
+  }
+  const change7 = weightChange(7);
+  const change30 = weightChange(30);
+  const formatChange = (value) => value === null ? "-" : `${value > 0 ? "+" : ""}${value.toFixed(1)}kg`;
   return (
     <>
-      <div className="nyf-card nyf-motivation">
-        <div className="nyf-motivation-label"><Sparkles size={13} /> Today's motivation</div>
-        <div className="nyf-motivation-quote">“{motivation}”</div>
-      </div>
-      <BeginnerDailyGuide profile={profile} totals={totals} foodLogs={foodLogs} todayExercise={todayExercise} dailyHabits={dailyHabits} setTab={setTab} />
-      <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}>
-        <div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>
-        {!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}
-        {aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}
-        <button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button>
-      </div>
       <div className="nyf-card">
+        <div className="nyf-section-title"><Flame size={17} /> Today's calorie overview</div>
         <div className="nyf-stat-big">{Math.max(0, remaining)} kcal</div>
         <div className="nyf-stat-label">{remaining >= 0 ? "remaining today after exercise" : `${Math.abs(remaining)} over today's adjusted goal`}</div>
-        <div className="nyf-calorie-equation"><div><strong>{totals.cal}</strong><span>Food kcal</span></div><div><strong>− {creditedExerciseCalories}</strong><span>{profile.exerciseCredit ?? 50}% exercise</span></div><div><strong>{netCalories}</strong><span>Net kcal</span></div></div>
+        <div className="nyf-calorie-equation"><div><strong>{profile.calorieGoal + creditedExerciseCalories}</strong><span>Available</span></div><div><strong>{totals.cal}</strong><span>Food used</span></div><div><strong>{Math.max(0, remaining)}</strong><span>Left</span></div></div>
         <div style={{ height: 14 }} />
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
-        <button className="nyf-btn full" onClick={() => setTab("track")} style={{ marginTop: 4 }}>
-          <Plus size={15} /> Log food
-        </button>
+        <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 7 }}>Exercise credit included: {creditedExerciseCalories} kcal ({profile.exerciseCredit ?? 50}% of the recorded estimate).</div>
       </div>
-
-      <StepsCard entry={todaySteps} onSave={saveSteps} compact />
-      <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
+      <div className="nyf-card"><div className="nyf-section-title"><Flame size={17} /> Steps today</div>{todaySteps ? <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{todaySteps.steps.toLocaleString()}</strong><span>Steps</span></div><div className="nyf-progress-tile"><strong>{todaySteps.goal.toLocaleString()}</strong><span>Goal</span></div><div className="nyf-progress-tile"><strong>{Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}%</strong><span>Complete</span></div></div> : <div className="nyf-empty">No steps logged today.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{todaySteps ? "Update steps in Track" : "Log steps in Track"}</button></div>
+      <div className="nyf-card"><div className="nyf-section-title"><Dumbbell size={17} /> Exercise today</div>{todayExercise.length ? <>{todayExercise.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Recorded in Track</div></div><strong>{item.calories} kcal</strong></div>)}<div className="nyf-product-card"><strong>{exerciseCalories} kcal</strong> total exercise estimate</div></> : <div className="nyf-empty">No exercise logged today.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{todayExercise.length ? "Update exercise in Track" : "Log exercise in Track"}</button></div>
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
-
-      {latestWeight && (
-        <div className="nyf-card">
-          <div className="nyf-section-title">Latest check-in</div>
-          <div style={{ display: "flex", gap: 24 }}>
-            <div>
-              <div className="nyf-stat-big" style={{ fontSize: 22 }}>{latestWeight.weight}kg</div>
-              <div className="nyf-stat-label">weight</div>
-            </div>
-            {latestWeight.bodyFat ? (
-              <div>
-                <div className="nyf-stat-big" style={{ fontSize: 22 }}>{latestWeight.bodyFat}%</div>
-                <div className="nyf-stat-label">body fat</div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      )}
+      <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
+      <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
       <CoachMessagesCard memberName={profile.name} />
     </>
@@ -1487,11 +1464,12 @@ function MeasurementsCard({ entries, onAdd }) {
   return <div className="nyf-card"><div className="nyf-section-title"><Calculator size={17} /> Body measurements</div>{latest && <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latest.waist ? `${latest.waist}cm` : "-"}</strong><span>Waist</span></div><div className="nyf-progress-tile"><strong>{latest.hips ? `${latest.hips}cm` : "-"}</strong><span>Hips</span></div><div className="nyf-progress-tile"><strong>{latest.chest ? `${latest.chest}cm` : "-"}</strong><span>Chest</span></div></div>}{!open ? <button className="nyf-btn ghost full" onClick={() => setOpen(true)}><Plus size={15} /> Add measurements</button> : <><div className="nyf-grid2">{[["waist","Waist"],["hips","Hips"],["chest","Chest"],["arm","Arm"],["thigh","Thigh"]].map(([key,label]) => <div key={key}><label className="nyf-field-label">{label} (cm)</label><input className="nyf-input" type="number" step="0.1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></div>)}</div><button className="nyf-btn full" onClick={save} disabled={!Object.values(form).some(Boolean)}>Save measurements</button></>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise }) {
   return (
     <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
       <StepsCard entry={todaySteps} onSave={saveSteps} />
+      <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
       <div className="nyf-card">
         <div className="nyf-section-title">Today's totals</div>
         <Bar label="Calories" value={totals.cal} goal={profile.calorieGoal} unit=" kcal" />
@@ -2066,6 +2044,11 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
           <LogOut size={15} /> Log out
         </button>
       )}
+      </div>
+      <div className="nyf-card gold">
+        <div className="nyf-section-title"><BookOpen size={17} /> Learn the basics</div>
+        <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Understand calories, protein, macros, strength training and sustainable fat loss in simple language.</p>
+        <button className="nyf-btn full" onClick={() => setTab("learn")}>Open beginner learning centre</button>
       </div>
       <div className="nyf-card gold"><div className="nyf-section-title"><Plus size={17} /> Add New You to your phone</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Place the New You app icon on your home screen for quick access. This does not use the Play Store.</p><button className="nyf-btn full" onClick={onShowInstallGuide}>Show installation instructions</button></div>
       <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
