@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
-// Consolidated New You release: 07 September 2026, 02:35 SAST.
-const APP_RELEASE = "2026-09-07-2330";
+// Consolidated New You release: 08 September 2026, launch-readiness update.
+const APP_RELEASE = "2026-09-07-2350";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -81,7 +81,7 @@ const STYLE = `
 .nyf-player-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #E2AE3D, #07539E); transition: width .3s ease; }
 .nyf-demo-picture { position: relative; min-height: 245px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 22px; background: radial-gradient(circle at 70% 25%, #E7F5FF 0, #D7EAF8 28%, #EEF4FA 70%); border: 1px solid #D3E2EE; }
 .nyf-demo-picture::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 34px; height: 5px; border-radius: 50%; background: rgba(3,29,58,.12); filter: blur(2px); }
-.nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations.webp'); background-size: 900% 100%; background-repeat: no-repeat; }
+.nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations.webp'); background-size: 300% auto; background-repeat: no-repeat; }
 .nyf-exercise-photo::after { content: "Photo form guide"; position: absolute; right: 10px; bottom: 9px; padding: 5px 8px; border-radius: 999px; color: #fff; background: rgba(3,29,58,.72); font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .nyf-player-counter { text-align: center; }
 .nyf-player-counter strong { display: block; font-family: 'Outfit', sans-serif; font-size: 58px; line-height: 1; color: var(--forest); }
@@ -963,52 +963,14 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     setShowWeightModal(false);
   }
   async function callAI(prompt, maxTokens, jsonMode) {
-    // Try the app's own backend first (works once deployed with /api/ai.js + an
-    // ANTHROPIC_API_KEY set in Vercel).
-    let backendReachable = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, maxTokens, jsonMode }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        // non-JSON response (e.g. a 404 HTML page) - endpoint likely doesn't exist at this path
-      }
-      if (res.ok && data && data.text) return data.text;
-      // The route exists and responded, but something's misconfigured server-side
-      // (e.g. missing ANTHROPIC_API_KEY) - surface that exact reason instead of
-      // silently falling through to a call that will fail anyway on a real domain.
-      throw new Error(data?.error || `/api/ai responded with status ${res.status}`);
-    } catch (e) {
-      if (e instanceof TypeError) {
-        // A genuine network-level failure to reach /api/ai at all - this is the
-        // situation inside Claude's own preview, where there's no /api backend.
-        backendReachable = false;
-      } else {
-        throw e;
-      }
-    }
-    if (!backendReachable) {
-      const res2 = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: maxTokens || 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      const data2 = await res2.json();
-      return (data2.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-    }
+      const res = await fetch("/api/ai", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, maxTokens, jsonMode }), signal: controller.signal });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.text) throw new Error(data?.error || "The secure coaching service is unavailable");
+      return data.text;
+    } finally { clearTimeout(timeout); }
   }
 
   async function getAiInsight() {
@@ -1165,8 +1127,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); const link = document.createElement("a"); link.href = url; link.download = `new-you-progress-${todayStr()}.csv`; link.click(); URL.revokeObjectURL(url);
   }
-  async function deleteProgressData() {
-    const response = await fetch("/api/delete-data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE" }) });
+  async function deleteProgressData(scope = "data") {
+    const response = await fetch("/api/delete-data", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm: "DELETE", scope }) });
     if (!response.ok) { const result = await response.json(); throw new Error(result.error || "Could not delete data"); }
     await onLogout();
   }
@@ -1355,7 +1317,9 @@ function ExerciseIllustration({ name }) {
   else if (["deadlift", "hinge", "good morning", "barbell", "dumbbell", "press", "clean", "thruster"].some((word) => value.includes(word))) panel = 5;
   else if (["row", "pull", "lat", "trx"].some((word) => value.includes(word))) panel = 6;
   else if (["stretch", "fold", "opener", "release", "rotation", "mobility", "hip-flexor", "cobra", "child's"].some((word) => value.includes(word))) panel = 7;
-  return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${(panel / 8) * 100}% center` }} />;
+  const column = panel % 3;
+  const row = Math.floor(panel / 3);
+  return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${column * 50}% ${row * 50}%` }} />;
 }
 
 function WorkoutPlayer({ title, steps, onExit, onComplete }) {
@@ -1644,7 +1608,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
             <label className="nyf-field-label">What is your main goal?</label><select className="nyf-select" value={form.goalType} onChange={(e) => setForm({ ...form, goalType: e.target.value })}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select>
             <label className="nyf-field-label">Daily activity</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option value="1.2">Mostly seated</option><option value="1.375">Lightly active</option><option value="1.55">Active / trains 3-5 days</option><option value="1.725">Very active</option></select>
             <p className="nyf-range-note">Choose what describes your normal week-not the week you hope to have.</p>
-            <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so my coach can support me. I understand that this app provides general guidance and not medical treatment.</span></label>
+            <label className="nyf-consent"><input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} /><span>I agree to the Privacy Policy and Terms. I consent to New You storing my nutrition, exercise, body measurements and optional progress photos so authorised staff can support me. I understand that this app provides general guidance, not medical treatment.</span></label>
             <button className="nyf-btn gold full" onClick={next} disabled={!form.weight || !form.goalWeight || !form.consent}>Calculate my targets</button>
             <button className="nyf-link-btn" onClick={back}>Back</button>
           </div>
@@ -2489,7 +2453,13 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
         <button className="nyf-btn full" onClick={() => setTab("learn")}>Open beginner learning centre</button>
       </div>
       <div className="nyf-card gold"><div className="nyf-section-title"><Plus size={17} /> Add New You to your phone</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Place the New You app icon on your home screen for quick access. This does not use the Play Store.</p><button className="nyf-btn full" onClick={onShowInstallGuide}>Show installation instructions</button></div>
-      <div className="nyf-card"><div className="nyf-section-title">Your data &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos are optional. Do not use the app as a replacement for medical advice.</p><button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button><button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete all your saved food, weight, measurements, photos and check-ins? This cannot be undone.")) await onDeleteData(); }}>Delete all my app data</button></div>
+      <div className="nyf-card"><div className="nyf-section-title">Your data, membership &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos and InBody uploads are optional. This app is not medical advice.</p>
+        <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Privacy Policy</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>New You stores account details, goals, food, activity, measurements, check-ins and optional photos you submit. Signed-in New You staff can view member records for coaching and support. Selected text or images may be sent to configured AI services when you request an analysis. Food and barcode searches may use third-party food databases. We retain active-account records and limited recovery copies, protect access with signed sessions and restricted staff tools, and do not sell member data. You may export or request deletion of your data. Contact New You through WhatsApp with privacy questions.</p></details>
+        <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Terms of Use</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>Nutrition, exercise, calorie and InBody guidance are estimates for general wellness and do not replace a doctor or registered dietitian. Stop exercising and seek appropriate help if you feel pain or unwell. Keep your access code private and provide accurate information. Service availability is not guaranteed. Membership fees, renewals and refunds follow your separate membership agreement. New You may pause access for non-payment, misuse or a cancelled membership.</p></details>
+        <details className="nyf-product-card" style={{ marginBottom: 12 }}><summary><strong>Cancellation &amp; account deletion</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>To cancel a paid membership, send a cancellation request. Cancellation is complete only when New You confirms it and any notice period in your membership agreement has been met. Deleting an app account removes the member record, progress data and available recovery copies, but does not by itself cancel a debit order or resolve an outstanding balance.</p><a className="nyf-btn gold full" href={`https://wa.me/27731800485?text=${encodeURIComponent("Hello New You, I would like to request cancellation of my membership. Please confirm the effective date and any notice period.")}`} target="_blank" rel="noopener noreferrer">Request cancellation on WhatsApp</a></details>
+        <button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button>
+        <button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete your account, access code, saved progress and recovery copies? This cannot be undone and does not cancel a paid membership.")) await onDeleteData("account"); }}>Permanently delete my app account</button>
+      </div>
     </>
   );
 }
@@ -2803,7 +2773,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
               </>
             )}
             {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
-            <label className="nyf-btn gold full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Take or upload a barcode photo<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
+            <label className="nyf-btn gold full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Take or upload a barcode photo<input type="file" accept="image/*" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
             <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>If live scanning does not work on your phone, photograph the barcode close-up or type the digits printed underneath it.</p>
             {product && (
               <div className="nyf-product-card">
