@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
-// Consolidated New You release: 08 September 2026, weekly workout publishing update.
-const APP_RELEASE = "2026-09-08-weekly-workout-builder";
+// Consolidated New You release: 08 September 2026, meal-category calorie totals update.
+const APP_RELEASE = "2026-09-08-meal-category-totals";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -1913,7 +1913,8 @@ function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, ch
           ["Breakfast", "Lunch", "Dinner", "Snack"].map((mealType) => {
             const meals = todayLogs.filter((item) => (item.mealType || "Snack") === mealType);
             if (!meals.length) return null;
-            return <div key={mealType}><div className="nyf-chip-heading" style={{ marginTop: 10 }}>{mealType}</div>{meals.map((f) => (
+            const mealCalories = Math.round(meals.reduce((sum, item) => sum + (Number(item.cal) || 0), 0));
+            return <div key={mealType}><div className="nyf-chip-heading" style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}><span>{mealType}</span><span style={{ color: "var(--ink)", fontSize: 13, fontWeight: 800, whiteSpace: "nowrap" }}>{mealCalories} kcal</span></div>{meals.map((f) => (
             <div className="nyf-log-item" key={f.id}>
               <div>
                 <div className="nyf-log-name">{f.name}{f.qty ? ` - ${f.qty}${f.unit}` : ""}</div>
