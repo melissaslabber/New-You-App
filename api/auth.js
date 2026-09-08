@@ -16,8 +16,8 @@ export default async function handler(req, res) {
   try {
     if (req.method === "GET" && req.query?.action === "session") {
       const session = readSession(req); if (!session) return res.status(200).json({ authenticated: false });
-      if (session.role === "member") { const member = (await getMembers()).find((item) => item.code === session.code); if (!member?.active) { clearSession(res); return res.status(200).json({ authenticated: false, paused: Boolean(member) }); } return res.status(200).json({ authenticated: true, role: "member", name: member.name }); }
-      return res.status(200).json({ authenticated: true, role: "staff", canReturnToMember: Boolean(session.returnCode) });
+      if (session.role === "member") { const member = (await getMembers()).find((item) => item.code === session.code); if (!member?.active) { clearSession(res); return res.status(200).json({ authenticated: false, paused: Boolean(member) }); } setSession(res, { role: "member", code: session.code }); return res.status(200).json({ authenticated: true, role: "member", name: member.name }); }
+      setSession(res, { role: "staff", ...(session.returnCode ? { returnCode: session.returnCode } : {}) }); return res.status(200).json({ authenticated: true, role: "staff", canReturnToMember: Boolean(session.returnCode) });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
     const action = req.body?.action;

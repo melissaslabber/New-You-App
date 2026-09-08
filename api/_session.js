@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 const COOKIE_NAME = "nyf_session";
+const SESSION_SECONDS = 400 * 86400;
 const getSecret = () => {
   const value = process.env.SESSION_SECRET;
   if (!value || value.length < 32) throw new Error("SESSION_SECRET must contain at least 32 characters");
@@ -23,8 +24,8 @@ export function readSession(req) {
 
 export function setSession(res, value) {
   const now = Date.now();
-  const payload = Buffer.from(JSON.stringify({ ...value, v: 1, iat: now, exp: now + 30 * 86400000 })).toString("base64url");
-  res.setHeader("Set-Cookie", `${COOKIE_NAME}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`);
+  const payload = Buffer.from(JSON.stringify({ ...value, v: 1, iat: now, exp: now + SESSION_SECONDS * 1000 })).toString("base64url");
+  res.setHeader("Set-Cookie", `${COOKIE_NAME}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_SECONDS}`);
 }
 
 export function clearSession(res) {
