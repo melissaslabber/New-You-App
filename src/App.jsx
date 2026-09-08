@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
 // Consolidated New You release: 08 September 2026, launch-readiness update.
-const APP_RELEASE = "2026-09-07-2350";
+const APP_RELEASE = "2026-09-08-contacts-reminders";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -832,7 +832,9 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
 
   function changeTab(nextTab) {
     setTab(nextTab);
-    requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 0, behavior: "auto" }));
+    window.scrollTo({ top: 0, behavior: "auto" });
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    requestAnimationFrame(() => { window.scrollTo(0, 0); if (scrollRef.current) scrollRef.current.scrollTop = 0; });
   }
 
   function saveSleepQuality(checkIn) {
@@ -1158,6 +1160,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       </div>
 
       <div className="nyf-scroll" ref={scrollRef}>
+        {tab === "home" && <FoodLogReminder onLogFood={() => setShowFoodModal(true)} />}
         {tab === "home" && (
           <HomeTab
             profile={profile}
@@ -1570,10 +1573,30 @@ function Bar({ label, value, goal, unit }) {
   );
 }
 
+const FOOD_REMINDER_TIMES = [{ id: "breakfast", minutes: 450, text: "Good morning. Log breakfast while it is still fresh in your mind." }, { id: "lunch", minutes: 720, text: "Lunch check-in. Log your food now to keep today's totals accurate." }, { id: "dinner", minutes: 1050, text: "Evening check-in. Log dinner and anything you had this afternoon." }];
+function FoodLogReminder({ onLogFood }) {
+  const [reminder, setReminder] = useState(null);
+  useEffect(() => {
+    const check = async () => {
+      const now = new Date(); const currentMinutes = now.getHours() * 60 + now.getMinutes(); const date = todayStr();
+      const due = [...FOOD_REMINDER_TIMES].reverse().find((slot) => currentMinutes >= slot.minutes && !localStorage.getItem(`nyf_reminder_${date}_${slot.id}`));
+      if (!due) return;
+      FOOD_REMINDER_TIMES.filter((slot) => slot.minutes <= due.minutes).forEach((slot) => localStorage.setItem(`nyf_reminder_${date}_${slot.id}`, "shown")); setReminder(due);
+      if (window.Notification?.permission === "granted") {
+        const registration = await navigator.serviceWorker?.ready.catch(() => null);
+        registration?.active?.postMessage({ type: "FOOD_REMINDER", body: due.text, tag: `food-${date}-${due.id}` });
+      }
+    };
+    check(); const timer = window.setInterval(check, 30000); return () => window.clearInterval(timer);
+  }, []);
+  if (!reminder) return null;
+  return <div className="nyf-card gold" style={{ marginBottom: 14 }}><div className="nyf-section-title"><UtensilsCrossed size={17} /> Time to log your food</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>{reminder.text}</p><div className="nyf-grid2"><button className="nyf-btn gold" onClick={() => { setReminder(null); onLogFood(); }}>Log food now</button><button className="nyf-btn ghost" onClick={() => setReminder(null)}>Dismiss</button></div></div>;
+}
+
 function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
   const [step, setStep] = useState(1);
   const [foods, setFoods] = useState(initialFoods);
-  const [form, setForm] = useState({ name: profile.name || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", goalType: profile.goalType || "fatloss", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
+  const [form, setForm] = useState({ name: profile.name || "", email: profile.email || "", phone: profile.phone || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", goalType: profile.goalType || "fatloss", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
   const calculate = () => {
     const weight = Number(form.weight); const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
     const maintenance = Math.round(bmr * Number(form.activity));
@@ -1596,9 +1619,12 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
           <div className="nyf-card gold">
             <div className="nyf-section-title"><User size={17} /> About you</div>
             <label className="nyf-field-label">Name</label><input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <label className="nyf-field-label">Email address</label><input className="nyf-input" type="email" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value.trim() })} placeholder="you@example.com" />
+            <label className="nyf-field-label">WhatsApp mobile number</label><input className="nyf-input" type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="e.g. 073 123 4567" />
+            <p className="nyf-range-note">These details are used for account recovery. Please enter an email and mobile number you can access.</p>
             <label className="nyf-field-label">Sex used for the calorie equation</label><select className="nyf-select" value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}><option value="female">Woman</option><option value="male">Man</option></select>
             <div className="nyf-grid2"><div><label className="nyf-field-label">Age</label><input className="nyf-input" type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} /></div><div><label className="nyf-field-label">Height (cm)</label><input className="nyf-input" type="number" value={form.height} onChange={(e) => setForm({ ...form, height: e.target.value })} /></div></div>
-            <button className="nyf-btn full" onClick={next} disabled={!form.name.trim() || !form.age || !form.height}>Continue</button>
+            <button className="nyf-btn full" onClick={next} disabled={!form.name.trim() || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 9 || !form.age || !form.height}>Continue</button>
           </div>
         )}
         {step === 2 && (
@@ -1616,7 +1642,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
         {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-product-card"><strong>Goal: {GOAL_SPLITS[form.goalType].label}</strong><br />Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Daily kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
         {step === 4 && <div className="nyf-card"><div className="nyf-section-title"><Heart size={17} /> Choose foods you actually like</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Tap everything you would happily eat. Meal suggestions will use these choices first.</p>{FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${foods.includes(item) ? " selected" : ""}`} onClick={() => toggleFood(item)}>{item}</button>)}</div></div>)}<div className="nyf-product-card">{foods.length} foods selected</div><button className="nyf-btn full" onClick={next} disabled={foods.length < 3}>Continue</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4-5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
-        {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Workout","Choose home or gym training and Level 1, 2 or 3."],["Learn & Goals","Understand fat loss, review targets and add the app to your phone."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal.<br />2. Add today's steps.<br />3. Record your starting weight.</div><button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
+        {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Train","Choose home or gym training and Level 1, 2 or 3."],["Goals","Review targets, privacy, installation and account settings."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal under Track.<br />2. Add today's steps under Track.<br />3. Record your starting weight under Track.</div>{"Notification" in window && Notification.permission === "default" && <button className="nyf-btn ghost full" style={{ marginBottom: 9 }} onClick={async () => { const permission = await Notification.requestPermission(); if (permission === "granted") window.alert("Food-log reminders are on for 07:30, 12:00 and 17:30 when your phone allows New You to run notifications."); }}>Allow food-log reminders</button>}<button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         <button className="nyf-link-btn" onClick={onLogout}>Sign out</button>
       </div>
       <FooterLogo />
@@ -2411,6 +2437,10 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
       {local.coachControlled && <div className="nyf-product-card">Your nutrition targets are set by your New You coach. Contact your coach if you think they need adjusting.</div>}
       <label className="nyf-field-label">Name</label>
       <input className="nyf-input" value={local.name} onChange={(e) => setLocal({ ...local, name: e.target.value })} placeholder="Your name" />
+      <label className="nyf-field-label">Email address for account recovery</label>
+      <input className="nyf-input" type="email" inputMode="email" autoComplete="email" value={local.email || ""} onChange={(e) => setLocal({ ...local, email: e.target.value.trim() })} placeholder="you@example.com" />
+      <label className="nyf-field-label">WhatsApp mobile number for account recovery</label>
+      <input className="nyf-input" type="tel" inputMode="tel" autoComplete="tel" value={local.phone || ""} onChange={(e) => setLocal({ ...local, phone: e.target.value })} placeholder="e.g. 073 123 4567" />
       <label className="nyf-field-label">Goal weight (kg)</label>
       <input className="nyf-input" type="number" value={local.goalWeight || ""} onChange={(e) => setLocal({ ...local, goalWeight: e.target.value })} placeholder="What are you working towards?" />
       <label className="nyf-field-label">Current weight (kg) - used for protein</label>
@@ -3009,6 +3039,10 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryMethod, setRecoveryMethod] = useState("whatsapp");
+  const [identifier, setIdentifier] = useState("");
+  const [recoveryMessage, setRecoveryMessage] = useState("");
 
   async function submit() {
     if (!code.trim()) return;
@@ -3016,6 +3050,13 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
     setError("");
     const err = await onLogin(code);
     if (err) setError(err);
+    setChecking(false);
+  }
+
+  async function recover() {
+    if (!identifier.trim()) return;
+    setChecking(true); setRecoveryMessage("");
+    try { const response = await fetch("/api/recover-access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ method: recoveryMethod, identifier }) }); const result = await response.json(); setRecoveryMessage(result.message || result.error || "Request received."); } catch { setRecoveryMessage("Recovery is temporarily unavailable. Please contact New You Fitness."); }
     setChecking(false);
   }
 
@@ -3050,6 +3091,8 @@ function LoginScreen({ onLogin, pausedNotice, onStaffAccess, onBack }) {
           <button className="nyf-btn full" onClick={submit} disabled={checking || !code.trim()}>
             {checking ? "Checking…" : "Unlock"}
           </button>
+          <button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0" }} onClick={() => setRecovering((value) => !value)}>Forgot your access code?</button>
+          {recovering && <div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Send my access code</strong><div className="nyf-tabswitch" style={{ margin: "9px 0" }}><button className={recoveryMethod === "whatsapp" ? "active" : ""} onClick={() => { setRecoveryMethod("whatsapp"); setIdentifier(""); }}>WhatsApp</button><button className={recoveryMethod === "email" ? "active" : ""} onClick={() => { setRecoveryMethod("email"); setIdentifier(""); }}>Email</button></div><input className="nyf-input" type={recoveryMethod === "email" ? "email" : "tel"} inputMode={recoveryMethod === "email" ? "email" : "tel"} value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder={recoveryMethod === "email" ? "Email used during setup" : "Mobile number used during setup"} /><button className="nyf-btn gold full" onClick={recover} disabled={checking || !identifier.trim()}>Send access code</button>{recoveryMessage && <p style={{ fontSize: 11.5, lineHeight: 1.5, marginTop: 9 }}>{recoveryMessage}</p>}</div>}
         </div>
         <div style={{ textAlign: "center", marginTop: 6 }}>
           <button className="nyf-link-btn" onClick={onStaffAccess}>New You staff access</button>
