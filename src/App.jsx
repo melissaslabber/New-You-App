@@ -79,9 +79,9 @@ const STYLE = `
 .nyf-player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nyf-player-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #DDE7F1; }
 .nyf-player-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #E2AE3D, #07539E); transition: width .3s ease; }
-.nyf-demo-picture { position: relative; min-height: 245px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 22px; background: radial-gradient(circle at 70% 25%, #E7F5FF 0, #D7EAF8 28%, #EEF4FA 70%); border: 1px solid #D3E2EE; }
+.nyf-demo-picture { position: relative; width: 100%; aspect-ratio: 1 / 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 22px; background: radial-gradient(circle at 70% 25%, #E7F5FF 0, #D7EAF8 28%, #EEF4FA 70%); border: 1px solid #D3E2EE; }
 .nyf-demo-picture::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 34px; height: 5px; border-radius: 50%; background: rgba(3,29,58,.12); filter: blur(2px); }
-.nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations.webp'); background-size: 300% auto; background-repeat: no-repeat; }
+.nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations-v2.webp'); background-size: 300% 300%; background-repeat: no-repeat; }
 .nyf-exercise-photo::after { content: "Photo form guide"; position: absolute; right: 10px; bottom: 9px; padding: 5px 8px; border-radius: 999px; color: #fff; background: rgba(3,29,58,.72); font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .nyf-player-counter { text-align: center; }
 .nyf-player-counter strong { display: block; font-family: 'Outfit', sans-serif; font-size: 58px; line-height: 1; color: var(--forest); }
@@ -342,7 +342,7 @@ const STYLE = `
 .nyf-player.work .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#E7F5FF,#D7EAF8 30%,#EEF4FA 72%); }
 .nyf-player.rest .nyf-demo-picture { background: radial-gradient(circle at 70% 25%,#FFF4D7,#F8E5AA 32%,#FFF9EB 72%); }
 .nyf-player.rest .nyf-player-counter strong { color: #A66B00; }
-.nyf-player.work .nyf-exercise-photo { animation: nyf-photo-focus 2.2s ease-in-out infinite alternate; }
+.nyf-player.work .nyf-exercise-photo { animation: none; }
 .nyf-player.finished .nyf-card { background: linear-gradient(145deg,#fff,#F1FBF5); }
 .nyf-meal-photo { width: 100%; height: 118px; object-fit: cover; border-radius: 16px; margin: 2px 0 13px; box-shadow: 0 8px 20px rgba(3,29,58,.1); }
 .nyf-week-chart { height: 138px; margin: 5px -10px -8px; }
@@ -1311,15 +1311,16 @@ function movementCue(name) {
 
 function ExerciseIllustration({ name }) {
   const value = name.toLowerCase();
-  let panel = 8;
+  let panel = 0;
   if (["arm circle", "step jack", "shoulder roll"].some((word) => value.includes(word))) panel = 0;
   else if (value.includes("squat") || value.includes("wall ball")) panel = 1;
   else if (value.includes("lunge") || value.includes("split squat")) panel = 2;
   else if (value.includes("push-up") || value.includes("press-up")) panel = 3;
   else if (["plank", "mountain", "dead bug", "bird dog", "bridge", "bicycle", "core"].some((word) => value.includes(word))) panel = 4;
   else if (["deadlift", "hinge", "good morning", "barbell", "dumbbell", "press", "clean", "thruster"].some((word) => value.includes(word))) panel = 5;
-  else if (["row", "pull", "lat", "trx"].some((word) => value.includes(word))) panel = 6;
+  else if (["row", "pull", "lat", "trx"].some((word) => value.includes(word)) && !value.includes("rower")) panel = 6;
   else if (["stretch", "fold", "opener", "release", "rotation", "mobility", "hip-flexor", "cobra", "child's"].some((word) => value.includes(word))) panel = 7;
+  else if (["cardio", "march", "jog", "run", "treadmill", "bike", "rower", "ski", "walk", "step", "shuttle", "skip", "high knee"].some((word) => value.includes(word))) panel = 8;
   const column = panel % 3;
   const row = Math.floor(panel / 3);
   return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${column * 50}% ${row * 50}%` }} />;
