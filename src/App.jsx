@@ -2576,6 +2576,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   const [foodHasMore, setFoodHasMore] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [cameraStatus, setCameraStatus] = useState("");
   const videoRef = useRef(null);
   const scannerControlsRef = useRef(null);
   const scannerReaderRef = useRef(null);
@@ -2598,23 +2599,39 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
 
   async function startScan() {
     setCameraError("");
-    if (!window.isSecureContext) { setCameraError("Camera scanning needs a secure HTTPS connection. You can still type the barcode or photograph it below."); return; }
-    setScanning(true);
+    setCameraStatus("Requesting camera permission…");
+    if (!window.isSecureContext) { setCameraStatus(""); setCameraError("Camera scanning needs a secure HTTPS connection. You can still type the barcode or photograph it below."); return; }
+    let requestedStream = null;
     try {
+      // Ask for camera access directly from the user's tap. This reliably
+      // triggers the browser permission prompt before the scanner starts.
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      requestedStream = stream;
+      setCameraStatus("Camera access allowed. Starting scanner…");
+      setScanning(true);
       await new Promise((resolve) => requestAnimationFrame(resolve));
       if (!videoRef.current) throw new Error("Camera preview did not start");
+      videoRef.current.srcObject = stream;
       const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 150 });
       scannerReaderRef.current = reader;
       const onResult = (result) => { if (!result) return; const value = result.getText(); stopScan(); setBarcode(value); lookupBarcode(value); };
-      let controls;
-      try {
-        controls = await reader.decodeFromConstraints({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false }, videoRef.current, onResult);
-      } catch {
-        controls = await reader.decodeFromConstraints({ video: true, audio: false }, videoRef.current, onResult);
-      }
+      const controls = await reader.decodeFromStream(stream, videoRef.current, onResult);
       scannerControlsRef.current = controls;
+      setCameraStatus("");
     } catch (e) {
-      setCameraError("The camera opened but couldn't start the scanner. Close other camera apps, reload this page and try again, or type the barcode below.");
+      const denied = e?.name === "NotAllowedError" || e?.name === "PermissionDeniedError";
+      const unavailable = e?.name === "NotFoundError" || e?.name === "DevicesNotFoundError";
+      setCameraError(denied
+        ? "Camera access was not allowed. Tap 'Allow camera access' below and choose Allow when your phone asks. If access was previously blocked, your browser may require you to change the permission once in its website settings."
+        : unavailable
+          ? "No camera was found on this device. You can upload a barcode photo or type the number below."
+          : "The camera couldn't start. Close other camera apps and tap the button again, or upload a barcode photo below.");
+      const stream = videoRef.current?.srcObject || requestedStream;
+      if (stream?.getTracks) stream.getTracks().forEach((track) => track.stop());
+      setCameraStatus("");
       setScanning(false);
     }
   }
@@ -2625,6 +2642,8 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
     scannerReaderRef.current = null;
     const stream = videoRef.current?.srcObject;
     if (stream?.getTracks) stream.getTracks().forEach((track) => track.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraStatus("");
     setScanning(false);
   }
 
@@ -2800,7 +2819,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
               <>
                 {!scanning ? (
                   <button className="nyf-btn ghost full" onClick={startScan} style={{ marginBottom: 8 }}>
-                    <Camera size={15} /> Scan barcode with camera
+                    <Camera size={15} /> Allow camera access & scan barcode
                   </button>
                 ) : (
                   <div style={{ marginBottom: 12 }}>
@@ -2815,6 +2834,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 )}
               </>
             )}
+            {cameraStatus && <div className="nyf-product-card" role="status" style={{ marginBottom: 10 }}>{cameraStatus}</div>}
             {cameraError && <div className="nyf-lookup-error" style={{ marginBottom: 10 }}>{cameraError}</div>}
             <label className="nyf-btn gold full" style={{ cursor: "pointer", marginBottom: 8 }}><Barcode size={15} /> Take or upload a barcode photo<input type="file" accept="image/*" capture="environment" hidden onChange={(event) => { scanBarcodePhoto(event.target.files?.[0]); event.target.value = ""; }} /></label>
             <p style={{ fontSize: 11.5, color: "var(--ink-soft)", margin: "2px 0 10px" }}>If live scanning does not work on your phone, photograph the barcode close-up or type the digits printed underneath it.</p>
