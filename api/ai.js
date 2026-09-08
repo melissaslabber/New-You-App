@@ -1,11 +1,21 @@
+import { readSession } from "./_session.js";
+import { getRedis } from "./_redis.js";
+
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const session = readSession(req);
+  if (!session || session.role !== "member") return res.status(401).json({ error: "Member sign-in required" });
+  const redis = getRedis(); const rateKey = `nyf:ai-rate:${session.code}:${new Date().toISOString().slice(0, 10)}`;
+  const count = await redis.incr(rateKey); if (count === 1) await redis.expire(rateKey, 86400);
+  if (count > 40) return res.status(429).json({ error: "Daily coaching limit reached. Please try again tomorrow." });
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
 
   const { prompt, maxTokens = 1200, jsonMode = false, images = [] } = req.body || {};
-  if (!prompt || typeof prompt !== "string") return res.status(400).json({ error: "A prompt is required" });
+  if (!prompt || typeof prompt !== "string" || prompt.length > 12000) return res.status(400).json({ error: "A valid prompt is required" });
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);

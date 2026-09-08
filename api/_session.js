@@ -10,22 +10,20 @@ const sign = (payload) => crypto.createHmac("sha256", getSecret()).update(payloa
 
 export function readSession(req) {
   try {
-    const raw = String(req.headers.cookie || "").split(";").map((p) => p.trim())
-      .find((p) => p.startsWith(`${COOKIE_NAME}=`))?.slice(COOKIE_NAME.length + 1);
+    const raw = String(req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${COOKIE_NAME}=`))?.slice(COOKIE_NAME.length + 1);
     if (!raw) return null;
+    if (raw.length > 2048) return null;
     const [payload, signature] = raw.split(".");
     const expected = sign(payload);
-    if (!signature || signature.length !== expected.length) return null;
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+    if (!signature || signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
     const value = JSON.parse(Buffer.from(payload, "base64url").toString());
-    return value.exp > Date.now() ? value : null;
-  } catch {
-    return null;
-  }
+    return value.v === 1 && value.iat <= Date.now() + 60000 && value.exp > Date.now() && ["member", "staff"].includes(value.role) ? value : null;
+  } catch { return null; }
 }
 
 export function setSession(res, value) {
-  const payload = Buffer.from(JSON.stringify({ ...value, exp: Date.now() + 30 * 86400000 })).toString("base64url");
+  const now = Date.now();
+  const payload = Buffer.from(JSON.stringify({ ...value, v: 1, iat: now, exp: now + 30 * 86400000 })).toString("base64url");
   res.setHeader("Set-Cookie", `${COOKIE_NAME}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`);
 }
 
