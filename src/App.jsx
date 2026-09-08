@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
-// Consolidated New You release: 08 September 2026, meal-category calorie totals update.
-const APP_RELEASE = "2026-09-08-meal-category-totals";
+// Consolidated New You release: 08 September 2026, barcode-first meal logging.
+const APP_RELEASE = "2026-09-08-barcode-first-meal-logging";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -255,6 +255,11 @@ const STYLE = `
 .nyf-quick-food { flex: 0 0 auto; max-width: 170px; border: 1px solid #D5E1EC; background: #fff; border-radius: 12px; padding: 9px 11px; text-align: left; color: var(--ink); cursor: pointer; }
 .nyf-quick-food strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
 .nyf-quick-food span { display: block; color: var(--ink-soft); font-size: 10px; margin-top: 2px; }
+.nyf-log-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 12px 0 16px; }
+.nyf-log-method { min-height: 82px; border: 1px solid #D5E1EC; border-radius: 15px; padding: 11px 9px; background: #fff; color: var(--forest); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; font: inherit; font-size: 11.5px; font-weight: 750; cursor: pointer; }
+.nyf-log-method svg { color: var(--gold); }
+.nyf-log-method.active { border: 2px solid var(--gold); background: linear-gradient(145deg, #FFF4D7, #FFFDF7); box-shadow: 0 6px 18px rgba(226,174,61,.16); }
+.nyf-log-method small { color: var(--ink-soft); font-size: 9.5px; font-weight: 600; }
 .nyf-portion-row { display: flex; gap: 6px; margin: -3px 0 11px; }
 .nyf-portion-row button { flex: 1; border: 1px solid var(--line); background: #fff; color: var(--forest); border-radius: 9px; padding: 7px 3px; font-weight: 700; font-size: 11px; cursor: pointer; }
 .nyf-calorie-equation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 12px 0; }
@@ -2562,7 +2567,7 @@ function FoodSubmissionForm({ initialName = "" }) {
 }
 
 function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
-  const [mode, setMode] = useState("manual");
+  const [mode, setMode] = useState("barcode");
   const defaultMealType = new Date().getHours() < 10 ? "Breakfast" : new Date().getHours() < 14 ? "Lunch" : new Date().getHours() < 18 ? "Snack" : "Dinner";
   const [form, setForm] = useState({ mealType: defaultMealType, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
   const [barcode, setBarcode] = useState("");
@@ -2577,7 +2582,10 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [cameraStatus, setCameraStatus] = useState("");
+  const [mealPhotoStatus, setMealPhotoStatus] = useState("");
+  const [mealPhotoPreview, setMealPhotoPreview] = useState("");
   const videoRef = useRef(null);
+  const mealPhotoInputRef = useRef(null);
   const scannerControlsRef = useRef(null);
   const scannerReaderRef = useRef(null);
   const cameraSupported = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
@@ -2592,10 +2600,63 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   }, []);
 
   useEffect(() => {
-    if (mode !== "manual" || foodQuery.trim().length < 2) { if (!foodQuery.trim()) setFoodResults([]); return; }
+    if (mode !== "search" || foodQuery.trim().length < 2) { if (!foodQuery.trim()) setFoodResults([]); return; }
     const timer = setTimeout(() => searchFoods(foodQuery), 450);
     return () => clearTimeout(timer);
   }, [foodQuery, mode]);
+
+  async function openMealCamera() {
+    setCameraError("");
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera access is not available here. You can still choose a food photo from your phone.");
+      mealPhotoInputRef.current?.click();
+      return;
+    }
+    try {
+      setMealPhotoStatus("Requesting camera permission…");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      stream.getTracks().forEach((track) => track.stop());
+      setMealPhotoStatus("");
+      mealPhotoInputRef.current?.click();
+    } catch (error) {
+      setMealPhotoStatus("");
+      setCameraError(error?.name === "NotAllowedError" ? "Camera permission was not allowed. Tap again and choose Allow, or select a photo from your gallery." : "The camera could not open. You can select a food photo from your gallery instead.");
+    }
+  }
+
+  async function analyseMealPhoto(file) {
+    if (!file) return;
+    setMealPhotoStatus("Reading your food photo…");
+    setCameraError("");
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not open that photo"));
+        reader.onload = () => {
+          const source = new Image();
+          source.onerror = () => reject(new Error("Could not read that photo"));
+          source.onload = () => {
+            const scale = Math.min(1, 1200 / Math.max(source.width, source.height));
+            const canvas = document.createElement("canvas"); canvas.width = Math.round(source.width * scale); canvas.height = Math.round(source.height * scale);
+            canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.76);
+            resolve({ dataUrl, mimeType: "image/jpeg", data: dataUrl.split(",")[1] });
+          };
+          source.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      setMealPhotoPreview(image.dataUrl);
+      const prompt = `Identify the visible meal or food and estimate the total portion and nutrition. Use familiar South African food names where relevant. Return only JSON: {"name":"","qty":0,"unit":"g","cal":0,"protein":0,"carb":0,"fat":0,"confidence":"high|medium|low"}. Values must describe the whole visible portion, not per 100 g. If several foods are visible, name the combined meal. Do not claim an exact result from a photo.`;
+      const response = await fetch("/api/ai", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, jsonMode: true, maxTokens: 500, images: [{ data: image.data, mimeType: image.mimeType }] }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not analyse the food photo");
+      const estimate = JSON.parse(String(result.text || "{}").replace(/```json|```/g, "").trim());
+      setProduct({ name: estimate.name || "Photo meal estimate", per100: null, photoEstimate: true });
+      setForm((value) => ({ ...value, name: estimate.name || "Photo meal estimate", qty: String(estimate.qty || 1), unit: ["g", "ml", "serving"].includes(estimate.unit) ? estimate.unit : "serving", cal: String(Math.round(Number(estimate.cal) || 0)), protein: String(Math.round(Number(estimate.protein) || 0)), carb: String(Math.round(Number(estimate.carb) || 0)), fat: String(Math.round(Number(estimate.fat) || 0)) }));
+      setMealPhotoStatus(`Estimated from photo (${estimate.confidence || "low"} confidence). Check and adjust the portion and values before adding.`);
+    } catch (error) { setMealPhotoStatus(""); setCameraError(error.message || "The food photo could not be analysed. Try a clearer photo or add it manually."); }
+  }
 
   async function startScan() {
     setCameraError("");
@@ -2752,7 +2813,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
 
   function applyQty(newQty, unitOverride = form.unit) {
     setForm((f) => ({ ...f, qty: newQty, unit: unitOverride }));
-    if (product) {
+    if (product?.per100) {
       const factor = equivalentAmount(newQty, unitOverride) / 100;
       setForm((f) => ({
         ...f,
@@ -2784,17 +2845,15 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
           <button className="nyf-close-btn" onClick={() => { stopScan(); onClose(); }}><X size={14} /></button>
         </div>
 
-        <div className="nyf-tabswitch">
-          <button className={mode === "manual" ? "active" : ""} onClick={() => { stopScan(); setMode("manual"); }}>
-            <Search size={13} /> Search food
-          </button>
-          <button className={mode === "barcode" ? "active" : ""} onClick={() => setMode("barcode")}>
-            <Barcode size={13} /> Barcode
-          </button>
-        </div>
-
-        <label className="nyf-field-label">1. Which meal are you logging?</label>
+        <label className="nyf-field-label">Which meal are you logging?</label>
         <select className="nyf-select" value={form.mealType} onChange={(e) => setForm({ ...form, mealType: e.target.value })}><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select>
+
+        <div className="nyf-log-methods" aria-label="Choose how to log food">
+          <button className={`nyf-log-method ${mode === "barcode" ? "active" : ""}`} onClick={() => setMode("barcode")}><Barcode size={24} /><span>1. Scan barcode</span><small>Fastest for packaged foods</small></button>
+          <button className={`nyf-log-method ${mode === "search" ? "active" : ""}`} onClick={() => { stopScan(); setMode("search"); }}><Search size={24} /><span>2. Search food</span><small>Food and brand directory</small></button>
+          <button className={`nyf-log-method ${mode === "photo" ? "active" : ""}`} onClick={() => { stopScan(); setMode("photo"); }}><Camera size={24} /><span>3. Photograph food</span><small>Estimate a plated meal</small></button>
+          <button className={`nyf-log-method ${mode === "manual" ? "active" : ""}`} onClick={() => { stopScan(); setMode("manual"); setProduct(null); }}><Pencil size={24} /><span>4. Add manually</span><small>Last resort</small></button>
+        </div>
 
         {mode === "barcode" && (
           <>
@@ -2843,14 +2902,27 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 Found: <strong>{product.name}</strong> - values below are per 100g/ml, adjust the amount to match your portion.
               </div>
             )}
-            {lookupError && <div className="nyf-lookup-error">{lookupError}</div>}
+            {lookupError && <div className="nyf-lookup-error">{lookupError}<button className="nyf-btn ghost full" style={{ marginTop: 9 }} onClick={() => setMode("manual")}><Pencil size={14} /> Add this food manually</button></div>}
           </>
         )}
 
-        {(mode === "manual" || product || lookupError) && (
+        {mode === "photo" && (
+          <div className="nyf-product-card" style={{ marginBottom: 12 }}>
+            <strong><Camera size={15} style={{ verticalAlign: "middle", marginRight: 6 }} />Photograph your meal</strong>
+            <p style={{ fontSize: 11.5, color: "var(--ink-soft)", lineHeight: 1.45 }}>Take a clear photo from above. New You will estimate the food, portion and macros; you can check everything before adding it.</p>
+            {mealPhotoPreview && <img src={mealPhotoPreview} alt="Food being analysed" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginBottom: 9 }} />}
+            <button className="nyf-btn gold full" onClick={openMealCamera} disabled={mealPhotoStatus.startsWith("Reading")}><Camera size={16} /> {mealPhotoPreview ? "Retake food photo" : "Allow camera & take food photo"}</button>
+            <input ref={mealPhotoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { analyseMealPhoto(event.target.files?.[0]); event.target.value = ""; }} />
+            {mealPhotoStatus && <div className="nyf-product-card" role="status" style={{ marginTop: 9 }}>{mealPhotoStatus}</div>}
+            {cameraError && <div className="nyf-lookup-error" style={{ marginTop: 9 }}>{cameraError}</div>}
+            <button className="nyf-link-btn" style={{ display: "block", margin: "10px auto 0" }} onClick={() => mealPhotoInputRef.current?.click()}>Choose a photo from gallery</button>
+          </div>
+        )}
+
+        {(mode === "manual" || mode === "search" || product) && (
           <>
             <div style={{ height: mode === "barcode" ? 4 : 0 }} />
-            {mode === "manual" && (
+            {mode === "search" && (
               <>
                 <div style={{ background: "linear-gradient(135deg, #FFF4D7, #FFF9EA)", border: "2px solid var(--gold)", borderRadius: 16, padding: "15px 14px 12px", margin: "4px 0 14px", boxShadow: "0 8px 20px rgba(226,174,61,.18)" }}>
                 <label className="nyf-field-label" style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "Outfit, sans-serif", fontSize: 20, lineHeight: 1.2, fontWeight: 800, color: "var(--forest-deep)", margin: "0 0 10px" }}><Search size={21} color="var(--gold)" /> 2. Search for a food or product</label>
@@ -2888,7 +2960,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 <FoodSubmissionForm initialName={foodQuery} />
               </>
             )}
-            <label className="nyf-field-label">Meal or food name</label>
+            {(mode === "manual" || product) && <><label className="nyf-field-label">{mode === "manual" ? "Food name" : "Selected food or meal"}</label>
             <input className="nyf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Chicken & rice bowl" />
 
             <label className="nyf-field-label">Amount</label>
@@ -2908,7 +2980,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 <option value="serving">servings</option>
               </select>
             </div>
-            {product && <><div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>{["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit))}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{Math.round(Number(form.cal) || 0)} kcal · P{Math.round(Number(form.protein) || 0)}g · C{Math.round(Number(form.carb) || 0)}g · F{Math.round(Number(form.fat) || 0)}g</strong></div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
+            {product && <>{product.per100 && <div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>}{product.per100 && ["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit))}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{Math.round(Number(form.cal) || 0)} kcal · P{Math.round(Number(form.protein) || 0)}g · C{Math.round(Number(form.carb) || 0)}g · F{Math.round(Number(form.fat) || 0)}g</strong>{product.photoEstimate && <div style={{ marginTop: 5, fontSize: 10.5, color: "var(--ink-soft)" }}>Photo estimates vary with hidden ingredients, oil and portion size.</div>}</div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setMealPhotoPreview(""); setMealPhotoStatus(""); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
 
             <label className="nyf-field-label">Calories (kcal)</label>
             <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
@@ -2932,7 +3004,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
             >
               Add to today
             </button>
-            <button className="nyf-btn ghost full" disabled={!valid} onClick={() => onSaveMeal?.({ mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 })} style={{ marginTop: 8 }}><Heart size={14} /> Save as usual meal</button>
+            <button className="nyf-btn ghost full" disabled={!valid} onClick={() => onSaveMeal?.({ mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Number(form.cal) || 0, protein: Number(form.protein) || 0, carb: Number(form.carb) || 0, fat: Number(form.fat) || 0 })} style={{ marginTop: 8 }}><Heart size={14} /> Save as usual meal</button></>}
           </>
         )}
       </div>
