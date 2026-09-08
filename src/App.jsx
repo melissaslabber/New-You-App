@@ -2586,6 +2586,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   const [mealPhotoPreview, setMealPhotoPreview] = useState("");
   const videoRef = useRef(null);
   const mealPhotoInputRef = useRef(null);
+  const mealGalleryInputRef = useRef(null);
   const scannerControlsRef = useRef(null);
   const scannerReaderRef = useRef(null);
   const cameraSupported = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
@@ -2913,9 +2914,10 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
             {mealPhotoPreview && <img src={mealPhotoPreview} alt="Food being analysed" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginBottom: 9 }} />}
             <button className="nyf-btn gold full" onClick={openMealCamera} disabled={mealPhotoStatus.startsWith("Reading")}><Camera size={16} /> {mealPhotoPreview ? "Retake food photo" : "Allow camera & take food photo"}</button>
             <input ref={mealPhotoInputRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => { analyseMealPhoto(event.target.files?.[0]); event.target.value = ""; }} />
+            <input ref={mealGalleryInputRef} type="file" accept="image/*" hidden onChange={(event) => { analyseMealPhoto(event.target.files?.[0]); event.target.value = ""; }} />
             {mealPhotoStatus && <div className="nyf-product-card" role="status" style={{ marginTop: 9 }}>{mealPhotoStatus}</div>}
             {cameraError && <div className="nyf-lookup-error" style={{ marginTop: 9 }}>{cameraError}</div>}
-            <button className="nyf-link-btn" style={{ display: "block", margin: "10px auto 0" }} onClick={() => mealPhotoInputRef.current?.click()}>Choose a photo from gallery</button>
+            <button className="nyf-link-btn" style={{ display: "block", margin: "10px auto 0" }} onClick={() => mealGalleryInputRef.current?.click()}>Choose a photo from gallery</button>
           </div>
         )}
 
