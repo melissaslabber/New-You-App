@@ -4,6 +4,8 @@
 
 - Set a unique `SESSION_SECRET` of at least 32 random characters in Vercel Production.
 - Set a strong, unique `STAFF_PIN`. Change it immediately if it has ever been shared outside authorised staff.
+- For automated email recovery, set `RESEND_API_KEY` and `RECOVERY_FROM_EMAIL`.
+- For automated WhatsApp recovery, set `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` and an approved `WHATSAPP_RECOVERY_TEMPLATE` containing one access-code variable.
 - Keep the Upstash Redis integration connected to the Production environment.
 - Download the coach JSON backup at least weekly and store it in an encrypted, access-controlled location.
 - Test account pause, login rate limits, logout, data export and permanent deletion before accepting paying members.
@@ -24,6 +26,10 @@ Run these checks on at least one current and one older Android phone, plus one c
 9. Check small-screen text, keyboard overlap, scrolling, landscape mode and slow mobile data.
 
 Record phone model, operating-system version, browser, result and screenshot for every failure. Camera support must not be called complete until this matrix passes on physical devices.
+
+## Reminder limitation
+
+The app checks food reminders at 07:30, 12:00 and 17:30 and can show phone notifications after the member grants permission. Installed web apps can be suspended by iPhone or Android, so exact background delivery while the app is fully closed is not guaranteed by browser timers. Guaranteed closed-app delivery requires a Web Push provider, saved push subscriptions and a Vercel scheduled job. The in-app reminder remains available when the member next opens the app.
 
 ## Food accuracy rules
 
