@@ -3,8 +3,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
-// Consolidated New You release: 08 September 2026, launch-readiness update.
-const APP_RELEASE = "2026-09-08-contacts-reminders";
+// Consolidated New You release: 08 September 2026, weekly workout publishing update.
+const APP_RELEASE = "2026-09-08-weekly-workout-builder";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -652,6 +652,8 @@ const FOOD_PREFERENCE_LIST = [
 ];
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+const localDateStr = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const dateForWeekday = (weekday) => { const date = new Date(); date.setDate(date.getDate() + Number(weekday) - date.getDay()); return localDateStr(date); };
 const uid = () => Math.random().toString(36).slice(2, 10);
 const GOAL_SPLITS = {
   fatloss: { label: "Fat loss" },
@@ -1386,6 +1388,13 @@ function WorkoutTab({ setTab, addExercise }) {
   const [venue, setVenue] = useState("home");
   const [open, setOpen] = useState(null);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
+  const [coachPlan, setCoachPlan] = useState(null);
+  const [coachPlanLoading, setCoachPlanLoading] = useState(false);
+  useEffect(() => {
+    let active = true; setCoachPlanLoading(true);
+    fetch(`/api/weekly-workouts?date=${dateForWeekday(selectedDay)}`, { credentials: "same-origin" }).then((response) => response.json()).then((result) => { if (active) setCoachPlan(result.plan || null); }).catch(() => { if (active) setCoachPlan(null); }).finally(() => { if (active) setCoachPlanLoading(false); });
+    return () => { active = false; };
+  }, [selectedDay]);
   const workout = (venue === "gym" ? GYM_WORKOUTS : WORKOUTS)[selectedDay];
   const gymPlan = [
     ["Set 1 · Strength & skill", "15 min", `3 rounds: ${workout.exercises.map((item) => item[0]).join(", ")}. Work for 45 sec and use 15 sec to change equipment after every exercise.`],
@@ -1484,13 +1493,15 @@ function WorkoutTab({ setTab, addExercise }) {
     ...["Easy cardio machine", "Bodyweight squat", "Hip hinge and reach", "Arm circles", "Movement rehearsal"].map((name, index) => ({ label: `WARM-UP ${index + 1}`, name, duration: 45, rest: 15 })),
     ...Array.from({ length: section === "strength" ? 4 : 5 }, (_, round) => gymProgramme.exercises.map((name, index) => ({ label: `SET ${round + 1} · EXERCISE ${index + 1}`, name, duration: 45, rest: section === "strength" ? 45 : 30, instructions: section === "strength" ? `${movementCue(name)} Use a controlled load for ${level === 1 ? "8" : level === 2 ? "6" : "3 to 5"} strong reps. Stop before technique breaks down.` : `${movementCue(name)} Complete ${level === 1 ? "10 to 12" : level === 2 ? "12 to 15" : "15 to 20"} controlled reps with good form.` }))).flat(),
   ] : [];
+  const coachPlanSteps = coachPlan?.exercises?.map((item, index) => ({ label: `${item.section === "warmup" ? "WARM-UP" : "WORKOUT"} ${index + 1}`, name: item.name, duration: item.work, rest: item.rest, instructions: `${item.instructions || movementCue(item.name)}${item[`level${level}`] ? ` Level ${level}: ${item[`level${level}`]}` : ""}` })) || [];
   if (playerMode) {
-    const details = playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : playerMode === "hyrox" ? { title: `HYROX ${hyroxDay.title} - Level ${level}`, steps: hyroxPlayerSteps, calories: 350 } : playerMode === "strength" || playerMode === "weightlifting" ? { title: `${playerMode === "strength" ? "Strength" : "Weightlifting"} - ${gymProgramme.title}`, steps: gymProgrammeSteps, calories: playerMode === "strength" ? 220 : 260 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
+    const details = playerMode === "coach" ? { title: coachPlan.title, steps: coachPlanSteps, calories: coachPlan.estimatedCalories || 250 } : playerMode === "daily" ? { title: `${workout.day} ${workout.title}`, steps: dailyPlayerSteps, calories: 250 } : playerMode === "quick" ? { title: quick.title, steps: quickPlayerSteps, calories: 100 } : playerMode === "hyrox" ? { title: `HYROX ${hyroxDay.title} - Level ${level}`, steps: hyroxPlayerSteps, calories: 350 } : playerMode === "strength" || playerMode === "weightlifting" ? { title: `${playerMode === "strength" ? "Strength" : "Weightlifting"} - ${gymProgramme.title}`, steps: gymProgrammeSteps, calories: playerMode === "strength" ? 220 : 260 } : { title: stretch.title, steps: stretchPlayerSteps, calories: 40 };
     return <WorkoutPlayer title={details.title} steps={details.steps} onExit={() => setPlayerMode(null)} onComplete={() => { addExercise({ activity: details.title, calories: details.calories }); setPlayerMode(null); setTab("track"); }} />;
   }
 
   if (section === "menu") return <>
     <div className="nyf-card nyf-workout-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2 style={{ fontSize: 28 }}>What would you like to do?</h2></div>
+    {coachPlanLoading ? <div className="nyf-card"><div className="nyf-empty">Checking today's coach workout…</div></div> : coachPlan && <div className="nyf-card gold"><div className="nyf-step">PUBLISHED BY YOUR COACH</div><div className="nyf-section-title" style={{ marginTop: 6 }}>{coachPlan.title}</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{coachPlan.exercises.length} timed movements · {coachPlan.location === "both" ? "Home or gym" : coachPlan.location === "gym" ? "Gym" : "At home"}</p><div className="nyf-levels" style={{ marginBottom: 10 }}><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3</button></div><button className="nyf-btn gold full" onClick={() => setPlayerMode("coach")}><Dumbbell size={17} /> Start coach workout</button></div>}
     <div className="nyf-workout-menu">
       <button className="nyf-workout-choice daily" onClick={() => setSection("daily")}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Daily workout</strong><span>45 min · Home or gym</span></div></button>
       <button className="nyf-workout-choice quick" onClick={() => setSection("quick")}><div className="nyf-workout-visual"><div className="nyf-workout-minutes">15<small>MINUTES</small></div></div><div className="nyf-workout-choice-copy"><strong>Quick workout</strong><span>Short, focused and effective</span></div></button>
@@ -3391,6 +3402,33 @@ function CoachGoalsEditor({ profile, onSave }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><label className="nyf-field-label">Main goal</label><select className="nyf-select" value={form.goalType} onChange={(e) => updateNutrition(form.calorieGoal, e.target.value)}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select><div className="nyf-product-card" style={{ marginTop: 10 }}>Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="1" value={form.weight} onChange={(e) => updateNutrition(form.calorieGoal, form.goalType, e.target.value)} /></div><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" step="1" value={form.calorieGoal} onChange={(e) => updateNutrition(e.target.value)} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.proteinGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.carbGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.fatGoal) || 0)} disabled /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0" max="2" step="1" value={Math.round(Number(form.expectedWeeklyLoss) || 0)} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% - no extra allowance</option><option value="50">50% - recommended</option><option value="100">100% - full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
+function WeeklyWorkoutBuilder() {
+  const emptyMove = (section = "workout") => ({ id: uid(), section, name: "", work: 45, rest: 15, instructions: "", level1: "", level2: "", level3: "" });
+  const [date, setDate] = useState(localDateStr(new Date(Date.now() + 86400000)));
+  const [plan, setPlan] = useState({ title: "New You daily workout", location: "both", estimatedCalories: 250, exercises: [emptyMove("warmup"), emptyMove("workout")] });
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  async function load(selectedDate = date) {
+    setLoading(true); setStatus("");
+    try { const response = await fetch(`/api/weekly-workouts?date=${selectedDate}`, { credentials: "same-origin" }); const result = await response.json(); if (!response.ok) throw new Error(result.error); setPlan(result.plan || { title: "New You daily workout", location: "both", estimatedCalories: 250, exercises: [emptyMove("warmup"), emptyMove("workout")] }); setStatus(result.plan ? "Published workout loaded." : "No workout published for this date yet."); } catch (error) { setStatus(error.message || "Could not load workout."); }
+    setLoading(false);
+  }
+  useEffect(() => { load(date); }, [date]);
+  const updateMove = (id, key, value) => setPlan((current) => ({ ...current, exercises: current.exercises.map((item) => item.id === id ? { ...item, [key]: value } : item) }));
+  async function publish() {
+    setLoading(true); setStatus("");
+    try { const response = await fetch("/api/weekly-workouts", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date, plan }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); setPlan(result.plan); setStatus(`Published for ${new Date(`${date}T12:00:00`).toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}. Members will see it in Train.`); } catch (error) { setStatus(error.message || "Could not publish workout."); }
+    setLoading(false);
+  }
+  async function removePublished() {
+    if (!window.confirm(`Remove the published workout for ${date}?`)) return;
+    const response = await fetch("/api/weekly-workouts", { method: "DELETE", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ date }) });
+    if (response.ok) { setPlan({ title: "New You daily workout", location: "both", estimatedCalories: 250, exercises: [emptyMove("warmup"), emptyMove("workout")] }); setStatus("Published workout removed."); }
+  }
+  const sectionSeconds = (section) => (plan.exercises || []).filter((item) => item.section === section).reduce((sum, item) => sum + (Number(item.work) || 0) + (Number(item.rest) || 0), 0);
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Publish weekly workouts</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>Choose each date in the coming week, set every timer and publish. Members automatically receive that day's workout in Train.</p><label className="nyf-field-label">Workout date</label><input className="nyf-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /><label className="nyf-field-label">Workout title</label><input className="nyf-input" value={plan.title || ""} onChange={(event) => setPlan({ ...plan, title: event.target.value })} placeholder="e.g. Monday full-body strength" /><div className="nyf-grid2"><div><label className="nyf-field-label">Location</label><select className="nyf-select" value={plan.location || "both"} onChange={(event) => setPlan({ ...plan, location: event.target.value })}><option value="both">Home or gym</option><option value="home">At home</option><option value="gym">Gym only</option></select></div><div><label className="nyf-field-label">Estimated calories</label><input className="nyf-input" type="number" inputMode="numeric" value={plan.estimatedCalories || 0} onChange={(event) => setPlan({ ...plan, estimatedCalories: event.target.value })} /></div></div><div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Current timer total:</strong> Warm-up {Math.round(sectionSeconds("warmup") / 60)} min + workout {Math.round(sectionSeconds("workout") / 60)} min = {Math.round((sectionSeconds("warmup") + sectionSeconds("workout")) / 60)} min</div><div className="nyf-section-title" style={{ marginTop: 16 }}>Timed movements</div>{(plan.exercises || []).map((move, index) => <div className="nyf-product-card" key={move.id} style={{ marginBottom: 10 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}><strong>{index + 1}. {move.name || "New movement"}</strong><button className="nyf-close-btn" onClick={() => setPlan((current) => ({ ...current, exercises: current.exercises.filter((item) => item.id !== move.id) }))} aria-label="Remove movement"><Trash2 size={14} /></button></div><label className="nyf-field-label">Part of workout</label><select className="nyf-select" value={move.section} onChange={(event) => updateMove(move.id, "section", event.target.value)}><option value="warmup">Warm-up</option><option value="workout">Main workout</option></select><label className="nyf-field-label">Exercise name</label><input className="nyf-input" value={move.name} onChange={(event) => updateMove(move.id, "name", event.target.value)} placeholder="e.g. Bodyweight squat" /><div className="nyf-grid2"><div><label className="nyf-field-label">Work seconds</label><input className="nyf-input" type="number" inputMode="numeric" value={move.work} onChange={(event) => updateMove(move.id, "work", event.target.value)} /></div><div><label className="nyf-field-label">Rest seconds</label><input className="nyf-input" type="number" inputMode="numeric" value={move.rest} onChange={(event) => updateMove(move.id, "rest", event.target.value)} /></div></div><label className="nyf-field-label">How to do it</label><textarea className="nyf-input" rows="2" value={move.instructions || ""} onChange={(event) => updateMove(move.id, "instructions", event.target.value)} placeholder="Short, clear technique instructions" /><label className="nyf-field-label">Level options</label><input className="nyf-input" value={move.level1 || ""} onChange={(event) => updateMove(move.id, "level1", event.target.value)} placeholder="Level 1 - beginner variation" /><input className="nyf-input" style={{ marginTop: 7 }} value={move.level2 || ""} onChange={(event) => updateMove(move.id, "level2", event.target.value)} placeholder="Level 2 - intermediate variation" /><input className="nyf-input" style={{ marginTop: 7 }} value={move.level3 || ""} onChange={(event) => updateMove(move.id, "level3", event.target.value)} placeholder="Level 3 - experienced variation" /></div>)}<div className="nyf-grid2"><button className="nyf-btn ghost" onClick={() => setPlan((current) => ({ ...current, exercises: [...current.exercises, emptyMove("warmup")] }))}>+ Warm-up</button><button className="nyf-btn ghost" onClick={() => setPlan((current) => ({ ...current, exercises: [...current.exercises, emptyMove("workout")] }))}>+ Exercise</button></div>{status && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}<button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={publish} disabled={loading || !(plan.exercises || []).some((item) => item.name.trim())}>{loading ? "Saving…" : "Publish workout"}</button><button className="nyf-link-btn" style={{ display: "block", margin: "11px auto 0", color: "var(--clay)" }} onClick={removePublished}>Remove this day's published workout</button></div>;
+}
+
 function CoachDashboard({ onLogout, onReturnToMember }) {
   const [members, setMembers] = useState([]);
   const [name, setName] = useState("");
@@ -3556,6 +3594,7 @@ function CoachDashboard({ onLogout, onReturnToMember }) {
         <div className="nyf-greeting">Coach dashboard</div>
       </div>
       <div className="nyf-scroll">
+        <WeeklyWorkoutBuilder />
         <div className="nyf-card gold">
           <div className="nyf-section-title"><UserPlus size={16} /> Add a member</div>
           <label className="nyf-field-label">Member name</label>
