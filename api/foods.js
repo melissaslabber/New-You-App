@@ -2,14 +2,18 @@ import { getRedis } from "./_redis.js";
 
 function servingMeasures(name, unit = "g") {
   const value = String(name).toLowerCase();
-  if (unit === "ml" || value.includes("milk")) return { tsp: 5, tbsp: 15, cup: 250 };
-  if (value.includes("pb2") || value.includes("powdered peanut")) return { tsp: 2.2, tbsp: 6.5, cup: 104 };
-  if (value.includes("peanut butter")) return { tsp: 5.3, tbsp: 16, cup: 258 };
-  if (value.includes("oil")) return { tsp: 4.5, tbsp: 13.5, cup: 216 };
-  if (value.includes("yoghurt") || value.includes("yogurt")) return { tsp: 5.1, tbsp: 15.3, cup: 245 };
-  if (value.includes("oats")) return { tsp: 1.7, tbsp: 5, cup: 80 };
-  if (value.includes("rice")) return { tsp: 3.8, tbsp: 11.5, cup: 185 };
-  return { tsp: 5, tbsp: 15, cup: 240 };
+  if (unit === "ml" || value.includes("milk") || value.includes("juice") || value.includes("cooldrink")) return { tsp: 5, tbsp: 15 };
+  if (value.includes("pb2") || value.includes("powdered peanut")) return { tsp: 2.2, tbsp: 6.5 };
+  if (value.includes("peanut butter")) return { tsp: 5.3, tbsp: 16 };
+  if (value.includes("oil")) return { tsp: 4.5, tbsp: 13.5 };
+  if (value.includes("mayonnaise") || value.includes("mayo")) return { tsp: 4.7, tbsp: 14 };
+  if (value.includes("honey") || value.includes("syrup")) return { tsp: 7, tbsp: 21 };
+  if (value.includes("yoghurt") || value.includes("yogurt")) return { tsp: 5.1, tbsp: 15.3 };
+  if (value.includes("whey") || value.includes("protein powder")) return { tsp: 2.7, tbsp: 8 };
+  if (value.includes("oats")) return { tsp: 1.7, tbsp: 5 };
+  if (value.includes("rice")) return { tsp: 3.8, tbsp: 11.5 };
+  if (value.includes("sauce") || value.includes("dressing")) return { tsp: 5, tbsp: 15 };
+  return {};
 }
 
 const COMMON_FOODS = [
