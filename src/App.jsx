@@ -7,7 +7,6 @@ import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDo
 // Consolidated New You release: 08 September 2026, barcode-first meal logging.
 const APP_RELEASE = "2026-09-10-rise-onboarding-v2";
 const ONBOARDING_VERSION = "2026-09-rise-profile-setup-v2";
-
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -50,15 +49,15 @@ const STYLE = `
   box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
 .nyf-header::after { content: ""; position: absolute; width: 190px; height: 190px; right: -75px; bottom: -115px; border-radius: 50%; background: rgba(255,255,255,.055); pointer-events: none; }
-.nyf-header.home-header { padding-bottom: 24px; background: radial-gradient(circle at 88% 72%, rgba(20,139,218,.35), transparent 36%), linear-gradient(135deg, #02172F 0%, #063B75 58%, #0878BE 100%); border-bottom-width: 4px; }
+.nyf-header.home-header { padding: 10px 18px 24px; background: radial-gradient(circle at 86% 52%, rgba(27,188,245,.48), transparent 38%), radial-gradient(circle at 8% 92%, rgba(20,105,205,.36), transparent 40%), linear-gradient(135deg, #02172F 0%, #063D7A 54%, #0785C9 100%); border-bottom-width: 4px; box-shadow: 0 14px 35px rgba(3,47,93,.25); }
 .nyf-header.home-header::before { content: ""; position: absolute; width: 230px; height: 230px; right: -120px; top: 68px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255,255,255,.025), 0 0 0 68px rgba(255,255,255,.018); pointer-events: none; }
 .nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -18px 16px; padding: 9px 16px; min-height: 68px; background: #fff; box-shadow: 0 7px 20px rgba(1,18,38,.16); }
-.nyf-header.home-header .nyf-header-top { min-height: 82px; margin-bottom: 21px; border-bottom: 1px solid rgba(7,53,107,.12); }
+.nyf-header.home-header .nyf-header-top { min-height: 78px; margin: 0 0 22px; padding: 8px 12px; border: 1px solid rgba(117,183,226,.34); border-radius: 19px; background: linear-gradient(135deg,#FFFFFF 0%,#F7FCFF 70%,#EAF8FF 100%); box-shadow: 0 12px 28px rgba(1,24,52,.24), inset 0 -2px 0 rgba(5,130,199,.08); }
 .nyf-header.has-back .nyf-header-top { padding-left: 46px; }
 .nyf-header-action { position: absolute; z-index: 3; left: 12px; top: 16px; width: 36px; height: 36px; border: 1px solid #D4E1ED; border-radius: 12px; background: #EEF6FD; color: var(--forest); display: grid; place-items: center; cursor: pointer; }
 .nyf-header-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .nyf-header-logo { width: 112px; height: 50px; object-fit: contain; object-position: left center; }
-.nyf-header.home-header .nyf-header-logo { width: 146px; height: 62px; filter: drop-shadow(0 4px 7px rgba(4,44,89,.12)); }
+.nyf-header.home-header .nyf-header-logo { width: 150px; height: 62px; filter: drop-shadow(0 5px 8px rgba(4,70,130,.16)); }
 .nyf-header-menu { display: flex; gap: 6px; flex-shrink: 0; }
 .nyf-header-menu button { min-height: 36px; border: 1px solid #D4E1ED; border-radius: 11px; background: #F3F8FC; color: var(--forest); padding: 0 8px; display: flex; align-items: center; gap: 4px; font: 750 9px/1 'Inter',sans-serif; cursor: pointer; }
 .nyf-settings-list { display: grid; gap: 9px; }
@@ -71,6 +70,8 @@ const STYLE = `
 .nyf-header.home-header .nyf-header-kicker { display: inline-flex; width: auto; margin-bottom: 9px; padding: 6px 10px; border: 1px solid rgba(245,207,115,.45); border-radius: 999px; background: rgba(226,174,61,.12); color: #F6D77F; font-size: 10px; letter-spacing: .12em; }
 .nyf-header.home-header .nyf-greeting { max-width: 420px; font-size: clamp(31px,8.4vw,40px); line-height: 1.01; text-shadow: 0 3px 16px rgba(0,0,0,.18); }
 .nyf-header.home-header .nyf-sub { margin-top: 8px; font-size: 14px; color: #E7F2FC; }
+.nyf-header-motivation { position: relative; z-index: 2; display: flex; align-items: center; gap: 7px; width: fit-content; max-width: 100%; margin-top: 13px; padding: 8px 11px; border: 1px solid rgba(255,255,255,.18); border-radius: 12px; background: rgba(1,24,51,.28); backdrop-filter: blur(8px); color: #fff; font: 650 12px/1.35 'Inter',sans-serif; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.nyf-header-motivation svg { flex: 0 0 auto; color: #FFD56A; }
 .nyf-greeting { max-width: 100%; font-size: clamp(25px,7vw,33px); line-height: 1.04; font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere; }
 .nyf-sub { color: #D7E7F7; font-size: 13px; margin-top: 4px; }
 .nyf-logo-strip {
@@ -165,7 +166,7 @@ const STYLE = `
   background: none; border: none; border-radius: 12px; padding: 7px 2px; cursor: pointer;
   color: var(--ink-soft); font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 600;
 }
-.nyf-navbtn.active { color: var(--forest); background: #EFF6FD; }
+.nyf-navbtn.active { color: #053B72; background: linear-gradient(145deg,#FFF8E5,#EAF8FF); box-shadow: inset 0 0 0 1px rgba(226,174,61,.28), 0 6px 15px rgba(3,53,107,.08); }
 .nyf-navbtn.active svg { color: var(--gold); }
 
 .nyf-card {
@@ -375,8 +376,8 @@ const STYLE = `
 .nyf-section-title { font-size: 17px; letter-spacing: -.02em; }
 .nyf-btn { min-height: 46px; border-radius: 14px; box-shadow: 0 9px 20px rgba(7,53,107,.18); }
 .nyf-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(7,53,107,.22); }
-.nyf-dashboard-card { position: relative; overflow: hidden; padding: 21px; color: #fff; border: 0; background: linear-gradient(145deg,#031D3A 0%,#07457F 57%,#0877BA 100%); box-shadow: 0 18px 38px rgba(3,29,58,.22); }
-.nyf-dashboard-card::after { content: ""; position: absolute; width: 180px; height: 180px; right: -65px; top: -75px; border-radius: 50%; background: rgba(255,255,255,.075); }
+.nyf-dashboard-card { position: relative; overflow: hidden; padding: 22px; color: #fff; border: 1px solid rgba(58,194,244,.28); border-top: 4px solid #F2BE45; background: radial-gradient(circle at 92% 8%,rgba(55,210,255,.30),transparent 31%), radial-gradient(circle at 8% 92%,rgba(0,101,210,.35),transparent 35%), linear-gradient(145deg,#021A35 0%,#064983 54%,#0792CC 100%); box-shadow: 0 22px 45px rgba(3,48,91,.28), 0 3px 0 rgba(255,255,255,.7); }
+.nyf-dashboard-card::after { content: ""; position: absolute; width: 210px; height: 210px; right: -75px; top: -88px; border-radius: 50%; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.055); box-shadow: 0 0 0 28px rgba(255,255,255,.025); }
 .nyf-dashboard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; position: relative; z-index: 1; }
 .nyf-goal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #F8D77E; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .nyf-ring { --value: 0; width: 112px; height: 112px; flex: 0 0 112px; border-radius: 50%; padding: 8px; background: conic-gradient(#42A5D9 calc(var(--value) * 1%),rgba(255,255,255,.14) 0); box-shadow: 0 10px 28px rgba(0,0,0,.14); }
@@ -387,7 +388,8 @@ const STYLE = `
 .nyf-dashboard-copy strong { display: block; font: 800 32px/1 'Outfit',sans-serif; }
 .nyf-dashboard-copy span { display: block; color: #CDE0F1; font-size: 11px; line-height: 1.4; margin-top: 7px; }
 .nyf-dashboard-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 13px 0 11px; position: relative; z-index: 1; }
-.nyf-dashboard-tile { min-width: 0; padding: 8px 3px; text-align: center; border-radius: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+.nyf-dashboard-tile { min-width: 0; padding: 9px 3px; text-align: center; border-radius: 13px; background: linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.075)); border: 1px solid rgba(151,225,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 7px 15px rgba(0,23,53,.10); }
+.nyf-dashboard-tile:nth-child(1) svg, .nyf-dashboard-tile:nth-child(3) svg { color: #FFD56A; }
 .nyf-dashboard-tile svg { display: block; margin: 0 auto 4px; color: #8DD6F4; }
 .nyf-dashboard-tile strong { display: block; font: 750 14px/1.15 'Outfit',sans-serif; }
 .nyf-dashboard-tile span { display: block; color: #E1EDF8; font-size: clamp(7px,2.1vw,8.5px); line-height: 1.15; font-weight: 750; text-transform: uppercase; margin-top: 4px; overflow-wrap: anywhere; }
@@ -396,7 +398,7 @@ const STYLE = `
 .nyf-dashboard-card .nyf-bar-row { margin-bottom: 8px; }
 .nyf-dashboard-card .nyf-bar-track { height: 7px; }
 .nyf-dashboard-card .nyf-bar-fill { background: linear-gradient(90deg,#168DCE,#71D4F4); }
-.nyf-dashboard-card .nyf-btn { position: relative; z-index: 1; }
+.nyf-dashboard-card .nyf-btn { position: relative; z-index: 1; background: linear-gradient(135deg,#FFD66C,#F0B52C); box-shadow: 0 10px 24px rgba(226,174,61,.30), inset 0 1px 0 rgba(255,255,255,.55); }
 .nyf-overview-card { padding: 17px 18px; }
 .nyf-overview-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .nyf-overview-icon { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: #EEF6FD; color: var(--forest); }
@@ -1258,6 +1260,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "Member dashboard"}</div>
         <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
+        {tab === "home" && <div className="nyf-header-motivation"><Sparkles size={15} /> {DAILY_MOTIVATION[Math.floor(Date.now() / 86400000) % DAILY_MOTIVATION.length]}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
 
