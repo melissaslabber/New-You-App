@@ -6,6 +6,20 @@ function activityName(item) {
   return String(item.name || item.sport_type || item.type || "Strava activity").slice(0, 100);
 }
 
+function johannesburgDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-ZA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type) => parts.find((part) => part.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
 function estimatedCalories(item, weightKg) {
   const minutes = Math.max(0, Number(item.moving_time || item.elapsed_time || 0) / 60);
   const weight = Math.max(35, Number(weightKg) || 70);
@@ -93,7 +107,9 @@ export default async function handler(req, res) {
         id: `strava-${item.id}`,
         stravaId: String(item.id),
         source: "strava",
-        date: String(item.start_date_local || item.start_date || "").slice(0, 10),
+        // Strava's start_date is UTC. Convert it to South African time so an
+        // evening workout is not stored against the previous calendar day.
+        date: johannesburgDate(item.start_date) || String(item.start_date_local || "").slice(0, 10),
         activity: activityName(item),
         sportType: item.sport_type || item.type || "Activity",
         calories: hasStravaCalories ? Math.round(stravaCalories) : estimatedCalories(item, weightKg),
