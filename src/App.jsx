@@ -42,22 +42,20 @@ const STYLE = `
 .nyf-header {
   position: relative;
   overflow: hidden;
-  padding: 14px 18px 19px;
+  padding: 0 18px 19px;
   background: linear-gradient(135deg, #031D3A 0%, #073E7A 64%, #07539E 100%);
   color: #fff;
   border-bottom: 3px solid var(--gold);
   box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
 .nyf-header::after { content: ""; position: absolute; width: 190px; height: 190px; right: -75px; bottom: -115px; border-radius: 50%; background: rgba(255,255,255,.055); pointer-events: none; }
-.nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+.nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -18px 16px; padding: 9px 16px; min-height: 68px; background: #fff; box-shadow: 0 7px 20px rgba(1,18,38,.16); }
 .nyf-header.has-back .nyf-header-top { padding-left: 46px; }
-.nyf-header-action { position: absolute; z-index: 3; left: 18px; top: 18px; width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.nyf-header-action { position: absolute; z-index: 3; left: 12px; top: 16px; width: 36px; height: 36px; border: 1px solid #D4E1ED; border-radius: 12px; background: #EEF6FD; color: var(--forest); display: grid; place-items: center; cursor: pointer; }
 .nyf-header-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.nyf-header-brand img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 18px rgba(0,0,0,.22); }
-.nyf-header-brand-copy strong { display: block; font: 800 17px/1 'Outfit',sans-serif; letter-spacing: .08em; }
-.nyf-header-brand-copy span { display: block; margin-top: 4px; color: #AFCDE6; font-size: 7.5px; font-weight: 800; letter-spacing: .16em; }
+.nyf-header-logo { width: 112px; height: 50px; object-fit: contain; object-position: left center; }
 .nyf-header-menu { display: flex; gap: 6px; flex-shrink: 0; }
-.nyf-header-menu button { min-height: 34px; border: 1px solid rgba(255,255,255,.2); border-radius: 11px; background: rgba(255,255,255,.1); color: #fff; padding: 0 8px; display: flex; align-items: center; gap: 4px; font: 700 9px/1 'Inter',sans-serif; cursor: pointer; backdrop-filter: blur(5px); }
+.nyf-header-menu button { min-height: 36px; border: 1px solid #D4E1ED; border-radius: 11px; background: #F3F8FC; color: var(--forest); padding: 0 8px; display: flex; align-items: center; gap: 4px; font: 750 9px/1 'Inter',sans-serif; cursor: pointer; }
 .nyf-settings-list { display: grid; gap: 9px; }
 .nyf-settings-row { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); padding: 13px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font: inherit; cursor: pointer; }
 .nyf-settings-row > svg { color: var(--forest); flex: 0 0 auto; }
@@ -1243,7 +1241,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       <div className={`nyf-header${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
         {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={20} /></button>}
         <div className="nyf-header-top">
-          <div className="nyf-header-brand"><img src="/icon-192.png" alt="New You phoenix" /><div className="nyf-header-brand-copy"><strong>RISE</strong><span>BY NEW YOU</span></div></div>
+          <div className="nyf-header-brand"><img className="nyf-header-logo" src="/header-logo-blue.png" alt="RISE by New You" /></div>
           <div className="nyf-header-menu">
             {tab !== "learn" && <button onClick={() => changeTab("learn")}><BookOpen size={14} /> Learn</button>}
             {tab !== "settings" && <button onClick={() => changeTab("settings")}><Settings size={14} /> Settings</button>}
