@@ -1448,20 +1448,86 @@ function movementCue(name) {
 
 function ExerciseIllustration({ name }) {
   const value = name.toLowerCase();
-  let panel = null;
-  if (["arm circles", "arm circle"].some((word) => value === word || value.startsWith(`${word} and`))) panel = 0;
-  else if (["squat", "bodyweight squat"].includes(value)) panel = 1;
-  else if (["reverse lunge", "supported reverse lunge"].includes(value)) panel = 2;
-  else if (["push-up", "press-up", "incline push-up"].includes(value)) panel = 3;
-  else if (["forearm plank", "plank"].includes(value)) panel = 4;
-  else if (["hip hinge", "hip hinge and reach", "romanian deadlift", "dumbbell romanian deadlift"].includes(value)) panel = 5;
-  else if (["dumbbell row", "one-arm dumbbell row", "supported dumbbell row"].includes(value)) panel = 6;
-  else if (["quad stretch", "standing quad stretch", "quadriceps stretch"].includes(value)) panel = 7;
-  else if (["treadmill walk", "incline treadmill walk", "treadmill incline walk", "incline treadmill"].includes(value)) panel = 8;
-  if (panel === null) return <div className="nyf-exercise-placeholder" role="img" aria-label={`${name} movement guide`}><div className="nyf-exercise-placeholder-icon"><Dumbbell size={42} strokeWidth={1.7} /></div><strong>{name}</strong></div>;
+  const rules = [
+    ["exercise-bodyweight.webp", 0, ["squat to reach", "full-body reach"]],
+    ["exercise-bodyweight.webp", 1, ["mountain climber"]],
+    ["exercise-bodyweight.webp", 2, ["dead bug"]],
+    ["exercise-bodyweight.webp", 3, ["glute bridge"]],
+    ["exercise-bodyweight.webp", 4, ["bird dog"]],
+    ["exercise-bodyweight.webp", 5, ["bicycle crunch", "sit-up", "crunch"]],
+    ["exercise-bodyweight.webp", 6, ["plank shoulder tap", "weighted plank"]],
+    ["exercise-bodyweight.webp", 7, ["bench burpee", "step-back burpee", "burpee or step-back"]],
+    ["exercise-bodyweight.webp", 8, ["step jack"]],
+    ["exercise-gym.webp", 0, ["barbell back squat", "paused squat", "front squat", "hack squat", "leg extension"]],
+    ["exercise-gym.webp", 1, ["barbell bench press", "paused bench press", "machine chest press"]],
+    ["exercise-gym.webp", 2, ["barbell overhead press", "overhead press", "shoulder press", "arnold press", "lateral raise"]],
+    ["exercise-gym.webp", 3, ["lat pulldown"]],
+    ["exercise-gym.webp", 4, ["seated cable row", "cable row"]],
+    ["exercise-gym.webp", 5, ["leg press"]],
+    ["exercise-gym.webp", 6, ["barbell hip thrust", "hip thrust"]],
+    ["exercise-gym.webp", 7, ["cable crunch"]],
+    ["exercise-gym.webp", 8, ["dumbbell curl", "biceps curl"]],
+    ["exercise-gym-accessory.webp", 0, ["face pull", "rear-delt fly"]],
+    ["exercise-gym-accessory.webp", 1, ["pallof press"]],
+    ["exercise-gym-accessory.webp", 2, ["back extension"]],
+    ["exercise-gym-accessory.webp", 3, ["stationary bike", "spin bike"]],
+    ["exercise-gym-accessory.webp", 4, ["cable wood chop", "cable woodchop"]],
+    ["exercise-gym-accessory.webp", 5, ["captain's chair knee raise", "hanging knee raise"]],
+    ["exercise-gym-accessory.webp", 6, ["kettlebell swing"]],
+    ["exercise-gym-accessory.webp", 7, ["dumbbell box step-up", "step-up"]],
+    ["exercise-gym-accessory.webp", 8, ["dumbbell push press", "push press"]],
+    ["exercise-home-weights.webp", 0, ["dumbbell bench press", "incline dumbbell press", "chest press"]],
+    ["exercise-home-weights.webp", 1, ["floor press"]],
+    ["exercise-home-weights.webp", 2, ["bent-over row", "barbell row", "chest-supported row"]],
+    ["exercise-home-weights.webp", 3, ["dumbbell clean"]],
+    ["exercise-home-weights.webp", 4, ["loaded carry"]],
+    ["exercise-home-weights.webp", 5, ["thruster", "squat to press"]],
+    ["exercise-home-weights.webp", 6, ["split squat"]],
+    ["exercise-home-weights.webp", 7, ["renegade row", "plank drag"]],
+    ["exercise-home-weights.webp", 8, ["ground-to-overhead"]],
+    ["exercise-hyrox.webp", 0, ["skierg"]],
+    ["exercise-hyrox.webp", 1, ["rowerg", "rower"]],
+    ["exercise-hyrox.webp", 2, ["sled push", "backpack push march"]],
+    ["exercise-hyrox.webp", 3, ["sled pull"]],
+    ["exercise-hyrox.webp", 4, ["farmer carry"]],
+    ["exercise-hyrox.webp", 5, ["wall ball"]],
+    ["exercise-hyrox.webp", 6, ["burpee broad jump"]],
+    ["exercise-hyrox.webp", 7, ["sandbag lunge", "backpack lunge"]],
+    ["exercise-hyrox.webp", 8, ["suitcase carry"]],
+    ["exercise-stretch.webp", 0, ["child's pose"]],
+    ["exercise-stretch.webp", 1, ["hip-flexor stretch", "world's greatest stretch"]],
+    ["exercise-stretch.webp", 2, ["figure-four glute stretch", "glute stretch"]],
+    ["exercise-stretch.webp", 3, ["chest doorway stretch", "chest stretch", "chest opener"]],
+    ["exercise-stretch.webp", 4, ["spinal rotation", "torso rotation", "thread the needle"]],
+    ["exercise-stretch.webp", 5, ["hamstring stretch", "hamstring fold", "breathing fold"]],
+    ["exercise-stretch.webp", 6, ["calf stretch"]],
+    ["exercise-stretch.webp", 7, ["triceps stretch", "triceps pressdown", "triceps extension"]],
+    ["exercise-stretch.webp", 8, ["lat stretch"]],
+    ["exercise-cardio.webp", 0, ["cross-trainer", "cardio machine", "low-impact cardio", "cardio burst"]],
+    ["exercise-cardio.webp", 1, ["assault bike"]],
+    ["exercise-cardio.webp", 2, ["high knees"]],
+    ["exercise-cardio.webp", 3, ["fast feet"]],
+    ["exercise-cardio.webp", 4, ["shuttle"]],
+    ["exercise-cardio.webp", 5, ["skipping", "jump rope"]],
+    ["exercise-cardio.webp", 6, ["skater step"]],
+    ["exercise-cardio.webp", 7, ["cobra stretch"]],
+    ["exercise-cardio.webp", 8, ["cross-body shoulder stretch", "shoulder stretch", "upper-trap release", "neck and upper-trap"]],
+    ["exercise-demonstrations-v2.webp", 0, ["arm circle", "shoulder roll"]],
+    ["exercise-demonstrations-v2.webp", 1, ["squat", "wall ball", "leg curl"]],
+    ["exercise-demonstrations-v2.webp", 2, ["lunge"]],
+    ["exercise-demonstrations-v2.webp", 3, ["push-up", "press-up", "weighted dip"]],
+    ["exercise-demonstrations-v2.webp", 4, ["forearm plank", "side plank", "plank"]],
+    ["exercise-demonstrations-v2.webp", 5, ["romanian deadlift", "deadlift", "hip hinge", "good morning"]],
+    ["exercise-demonstrations-v2.webp", 6, ["dumbbell row", "single-arm cable row", "trx or bar row", "band or towel row", "band row"]],
+    ["exercise-demonstrations-v2.webp", 7, ["quad stretch"]],
+    ["exercise-demonstrations-v2.webp", 8, ["treadmill", "march", "jog", "walk"]],
+  ];
+  const matched = rules.find(([, , terms]) => terms.some((term) => value.includes(term)));
+  if (!matched) return <div className="nyf-exercise-placeholder" role="img" aria-label={`${name} movement guide`}><div className="nyf-exercise-placeholder-icon"><Dumbbell size={42} strokeWidth={1.7} /></div><strong>{name}</strong></div>;
+  const [sheet, panel] = matched;
   const column = panel % 3;
   const row = Math.floor(panel / 3);
-  return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${column * 50}% ${row * 50}%` }} />;
+  return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundImage: `url('/${sheet}')`, backgroundPosition: `${column * 50}% ${row * 50}%` }} />;
 }
 
 function WorkoutPlayer({ title, steps, onExit, onComplete }) {
