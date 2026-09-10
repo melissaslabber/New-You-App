@@ -6,6 +6,42 @@ function activityName(item) {
   return String(item.name || item.sport_type || item.type || "Strava activity").slice(0, 100);
 }
 
+function estimatedCalories(item, weightKg) {
+  const minutes = Math.max(0, Number(item.moving_time || item.elapsed_time || 0) / 60);
+  const weight = Math.max(35, Number(weightKg) || 70);
+  const type = String(item.sport_type || item.type || "").toLowerCase();
+  const met = type.includes("walk") ? 3.8
+    : type.includes("hike") ? 6
+    : type.includes("run") ? 9.8
+    : type.includes("ride") || type.includes("cycl") ? 7.5
+    : type.includes("weight") ? 5
+    : type.includes("yoga") ? 3
+    : type.includes("swim") ? 8
+    : type.includes("hiit") || type.includes("workout") || type.includes("training") ? 8
+    : 6;
+  return Math.max(0, Math.round((met * 3.5 * weight / 200) * minutes));
+}
+
+async function detailedActivities(accessToken, summaries) {
+  const results = [];
+  for (let index = 0; index < summaries.length; index += 5) {
+    const batch = summaries.slice(index, index + 5);
+    const detailed = await Promise.all(batch.map(async (summary) => {
+      try {
+        const response = await fetch(`https://www.strava.com/api/v3/activities/${summary.id}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!response.ok) return summary;
+        return { ...summary, ...(await response.json()) };
+      } catch {
+        return summary;
+      }
+    }));
+    results.push(...detailed);
+  }
+  return results;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   try {
@@ -45,18 +81,28 @@ export default async function handler(req, res) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Could not load Strava activities");
-      const activities = data.map((item) => ({
+      const detailed = await detailedActivities(token.access_token, data.slice(0, 50));
+      const redis = getRedis();
+      const savedData = await redis.get(`nyf:data:${session.code}`);
+      const memberData = !savedData ? {} : typeof savedData === "string" ? JSON.parse(savedData) : savedData;
+      const weightKg = Number(memberData?.profile?.weight) || 70;
+      const activities = detailed.map((item) => {
+        const stravaCalories = Number(item.calories) || ((Number(item.kilojoules) || 0) / 4.184);
+        const hasStravaCalories = stravaCalories > 0;
+        return {
         id: `strava-${item.id}`,
         stravaId: String(item.id),
         source: "strava",
         date: String(item.start_date_local || item.start_date || "").slice(0, 10),
         activity: activityName(item),
         sportType: item.sport_type || item.type || "Activity",
-        calories: Math.max(0, Math.round((Number(item.kilojoules) || 0) / 4.184)),
+        calories: hasStravaCalories ? Math.round(stravaCalories) : estimatedCalories(item, weightKg),
+        calorieSource: hasStravaCalories ? "strava" : "estimated",
         durationMinutes: Math.max(0, Math.round((Number(item.moving_time) || 0) / 60)),
         distanceKm: Math.max(0, Math.round((Number(item.distance) || 0) / 100) / 10),
         syncedAt: new Date().toISOString(),
-      })).filter((item) => item.date);
+      };
+      }).filter((item) => item.date);
       return res.status(200).json({ activities, syncedAt: new Date().toISOString() });
     }
 
