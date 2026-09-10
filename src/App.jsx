@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import StravaCard from "./StravaCard.jsx";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, ChevronLeft, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
 
 // Consolidated New You release: 08 September 2026, barcode-first meal logging.
 const APP_RELEASE = "2026-09-08-barcode-first-meal-logging";
@@ -40,12 +40,22 @@ const STYLE = `
 .nyf-scroll { flex: 1; overflow-y: auto; padding: 22px 18px 28px; }
 
 .nyf-header {
+  position: relative;
   padding: 22px 20px 20px;
   background: linear-gradient(135deg, #031D3A 0%, #073E7A 64%, #07539E 100%);
   color: #fff;
   border-bottom: 3px solid var(--gold);
   box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
+.nyf-header-action { position: absolute; z-index: 2; right: 17px; top: 18px; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.nyf-header-action.back { left: 17px; right: auto; }
+.nyf-header.has-back { padding-left: 70px; }
+.nyf-settings-list { display: grid; gap: 9px; }
+.nyf-settings-row { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); padding: 13px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font: inherit; cursor: pointer; }
+.nyf-settings-row > svg { color: var(--forest); flex: 0 0 auto; }
+.nyf-settings-row-copy { min-width: 0; flex: 1; }
+.nyf-settings-row-copy strong { display: block; font-size: 13.5px; }
+.nyf-settings-row-copy span { display: block; margin-top: 2px; color: var(--ink-soft); font-size: 11.5px; line-height: 1.35; }
 .nyf-greeting { font-size: 27px; font-weight: 800; letter-spacing: -0.025em; }
 .nyf-sub { color: #D7E7F7; font-size: 13px; margin-top: 4px; }
 .nyf-logo-strip {
@@ -810,6 +820,7 @@ const WORKOUT_PLANS = [
 ];
 function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstallGuide, onCloseInstallGuide, onShowInstallGuide }) {
   const [tab, setTab] = useState("home");
+  const tabRef = useRef("home");
   const [loaded, setLoaded] = useState(false);
   const [profile, setProfile] = useState({ name: memberName || "", goalType: "fatloss", weight: 70, calorieGoal: 1800, ...macrosFromCalories(1800, 70), exerciseCredit: 50, onboardingComplete: false });
   const [weightLogs, setWeightLogs] = useState([]);
@@ -838,12 +849,29 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const saveTimer = useRef(null);
   const scrollRef = useRef(null);
 
-  function changeTab(nextTab) {
+  function changeTab(nextTab, options = {}) {
+    if (nextTab === tabRef.current) return;
+    tabRef.current = nextTab;
     setTab(nextTab);
+    if (!options.fromHistory) window.history.pushState({ ...(window.history.state || {}), nyfApp: true, nyfTab: nextTab }, "", window.location.href);
     window.scrollTo({ top: 0, behavior: "auto" });
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
     requestAnimationFrame(() => { window.scrollTo(0, 0); if (scrollRef.current) scrollRef.current.scrollTop = 0; });
   }
+
+  useEffect(() => { tabRef.current = tab; }, [tab]);
+
+  useEffect(() => {
+    window.history.replaceState({ ...(window.history.state || {}), nyfApp: true, nyfTab: "home", nyfRoot: true }, "", window.location.href);
+    window.history.pushState({ nyfApp: true, nyfTab: "home", nyfGuard: true }, "", window.location.href);
+    const onPopState = (event) => {
+      const nextTab = event.state?.nyfApp ? (event.state.nyfTab || "home") : "home";
+      if (nextTab !== tabRef.current) changeTab(nextTab, { fromHistory: true });
+      if (!event.state?.nyfApp || event.state?.nyfRoot) window.history.pushState({ nyfApp: true, nyfTab: "home", nyfGuard: true }, "", window.location.href);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   function saveSleepQuality(checkIn) {
     const date = todayStr();
@@ -1167,11 +1195,13 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className="nyf-header">
-        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "New You"}</div>
-        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "learn" ? "Learn" : "Goals"}</div>
+      <div className={`nyf-header${tab === "settings" ? " has-back" : ""}`}>
+        {tab === "settings" && <button className="nyf-header-action back" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={22} /></button>}
+        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "RISE by NEW YOU"}</div>
+        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "learn" ? "Learn" : tab === "settings" ? "Settings" : "Goals"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
+        {tab !== "settings" && <button className="nyf-header-action" onClick={() => changeTab("settings")} aria-label="Open settings"><Settings size={20} /></button>}
       </div>
 
       <div className="nyf-scroll" ref={scrollRef}>
@@ -1254,7 +1284,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} />}
+        {tab === "settings" && <SettingsTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
       </div>
 
       <FooterLogo />
@@ -1953,7 +1984,6 @@ function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, ch
 
       <StepsCard entry={todaySteps} onSave={saveSteps} />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
-      <StravaCard onImport={onImportStrava} />
 
       <div className="nyf-card">
         <div className="nyf-section-title">Weight &amp; body fat</div>
@@ -2432,7 +2462,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide }) {
+function ProfileTab({ profile, setProfile, setTab }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -2463,12 +2493,6 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
       <div className="nyf-card">
       <div className="nyf-section-title">Your goals</div>
       {local.coachControlled && <div className="nyf-product-card">Your nutrition targets are set by your New You coach. Contact your coach if you think they need adjusting.</div>}
-      <label className="nyf-field-label">Name</label>
-      <input className="nyf-input" value={local.name} onChange={(e) => setLocal({ ...local, name: e.target.value })} placeholder="Your name" />
-      <label className="nyf-field-label">Email address for account recovery</label>
-      <input className="nyf-input" type="email" inputMode="email" autoComplete="email" value={local.email || ""} onChange={(e) => setLocal({ ...local, email: e.target.value.trim() })} placeholder="you@example.com" />
-      <label className="nyf-field-label">WhatsApp mobile number for account recovery</label>
-      <input className="nyf-input" type="tel" inputMode="tel" autoComplete="tel" value={local.phone || ""} onChange={(e) => setLocal({ ...local, phone: e.target.value })} placeholder="e.g. 073 123 4567" />
       <label className="nyf-field-label">Goal weight (kg)</label>
       <input className="nyf-input" type="number" value={local.goalWeight || ""} onChange={(e) => setLocal({ ...local, goalWeight: e.target.value })} placeholder="What are you working towards?" />
       <label className="nyf-field-label">Current weight (kg) - used for protein</label>
@@ -2498,28 +2522,58 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
           <ChefHat size={15} /> See meal ideas for these goals
         </button>
       )}
-      {onSwitchToStaff && <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={onSwitchToStaff}><UserPlus size={15} /> Switch to staff access</button>}
-      {onLogout && (
-        <button className="nyf-btn ghost full" style={{ marginTop: 10 }} onClick={onLogout}>
-          <LogOut size={15} /> Log out
-        </button>
-      )}
       </div>
       <div className="nyf-card gold">
         <div className="nyf-section-title"><BookOpen size={17} /> Learn the basics</div>
-        <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Understand calories, protein, macros, strength training and sustainable fat loss in simple language.</p>
         <button className="nyf-btn full" onClick={() => setTab("learn")}>Open beginner learning centre</button>
-      </div>
-      <div className="nyf-card gold"><div className="nyf-section-title"><Plus size={17} /> Add New You to your phone</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Place the New You app icon on your home screen for quick access. This does not use the Play Store.</p><button className="nyf-btn full" onClick={onShowInstallGuide}>Show installation instructions</button></div>
-      <div className="nyf-card"><div className="nyf-section-title">Your data, membership &amp; privacy</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Your health and progress information is used to provide New You coaching support. Progress photos and InBody uploads are optional. This app is not medical advice.</p>
-        <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Privacy Policy</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>New You stores account details, goals, food, activity, measurements, check-ins and optional photos you submit. Signed-in New You staff can view member records for coaching and support. Selected text or images may be sent to configured AI services when you request an analysis. Food and barcode searches may use third-party food databases. We retain active-account records and limited recovery copies, protect access with signed sessions and restricted staff tools, and do not sell member data. You may export or request deletion of your data. Contact New You through WhatsApp with privacy questions.</p></details>
-        <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Terms of Use</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>Nutrition, exercise, calorie and InBody guidance are estimates for general wellness and do not replace a doctor or registered dietitian. Stop exercising and seek appropriate help if you feel pain or unwell. Keep your access code private and provide accurate information. Service availability is not guaranteed. Membership fees, renewals and refunds follow your separate membership agreement. New You may pause access for non-payment, misuse or a cancelled membership.</p></details>
-        <details className="nyf-product-card" style={{ marginBottom: 12 }}><summary><strong>Cancellation &amp; account deletion</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>To cancel a paid membership, send a cancellation request. Cancellation is complete only when New You confirms it and any notice period in your membership agreement has been met. Deleting an app account removes the member record, progress data and available recovery copies, but does not by itself cancel a debit order or resolve an outstanding balance.</p><a className="nyf-btn gold full" href={`https://wa.me/27731800485?text=${encodeURIComponent("Hello New You, I would like to request cancellation of my membership. Please confirm the effective date and any notice period.")}`} target="_blank" rel="noopener noreferrer">Request cancellation on WhatsApp</a></details>
-        <button className="nyf-btn ghost full" onClick={onExport}>Download my progress (CSV)</button>
-        <button className="nyf-link-btn" style={{ display: "block", margin: "12px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete your account, access code, saved progress and recovery copies? This cannot be undone and does not cancel a paid membership.")) await onDeleteData("account"); }}>Permanently delete my app account</button>
       </div>
     </>
   );
+}
+
+function SettingsTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide, onImportStrava }) {
+  const [account, setAccount] = useState({ name: profile.name || "", email: profile.email || "", phone: profile.phone || "" });
+  const [saved, setSaved] = useState(false);
+  function saveAccount() {
+    setProfile((current) => ({ ...current, name: account.name.trim(), email: account.email.trim(), phone: account.phone.trim() }));
+    setSaved(true);
+  }
+  return <>
+    <div className="nyf-card">
+      <div className="nyf-section-title"><User size={17} /> Account</div>
+      <label className="nyf-field-label">Name</label>
+      <input className="nyf-input" value={account.name} onChange={(e) => { setAccount({ ...account, name: e.target.value }); setSaved(false); }} />
+      <label className="nyf-field-label">Recovery email</label>
+      <input className="nyf-input" type="email" inputMode="email" autoComplete="email" value={account.email} onChange={(e) => { setAccount({ ...account, email: e.target.value }); setSaved(false); }} placeholder="you@example.com" />
+      <label className="nyf-field-label">WhatsApp number</label>
+      <input className="nyf-input" type="tel" inputMode="tel" autoComplete="tel" value={account.phone} onChange={(e) => { setAccount({ ...account, phone: e.target.value }); setSaved(false); }} placeholder="073 123 4567" />
+      <button className="nyf-btn full" onClick={saveAccount}><Check size={15} /> {saved ? "Account saved" : "Save account"}</button>
+    </div>
+    <StravaCard onImport={onImportStrava} />
+    <div className="nyf-card">
+      <div className="nyf-section-title"><Settings size={17} /> App</div>
+      <div className="nyf-settings-list">
+        <button className="nyf-settings-row" onClick={() => setTab("learn")}><BookOpen size={19} /><span className="nyf-settings-row-copy"><strong>Learning centre</strong><span>Calories, macros, training and fat loss</span></span><ChevronRightIcon /></button>
+        <button className="nyf-settings-row" onClick={onShowInstallGuide}><Plus size={19} /><span className="nyf-settings-row-copy"><strong>Add RISE to this phone</strong><span>Install the app icon on your home screen</span></span><ChevronRightIcon /></button>
+        <button className="nyf-settings-row" onClick={onExport}><TrendingUp size={19} /><span className="nyf-settings-row-copy"><strong>Download my progress</strong><span>Export a CSV copy of your records</span></span><ChevronRightIcon /></button>
+      </div>
+    </div>
+    <div className="nyf-card">
+      <div className="nyf-section-title"><ShieldCheck size={17} /> Privacy &amp; membership</div>
+      <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Privacy Policy</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>New You stores the account, health and progress information you submit to provide coaching support. Signed-in staff may view member records. Requested analyses may use configured AI and food-data services. We do not sell member data. You may export or request deletion of your data.</p></details>
+      <details className="nyf-product-card" style={{ marginBottom: 9 }}><summary><strong>Terms of Use</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>Nutrition, exercise and assessment guidance is for general wellness and does not replace professional medical advice. Membership fees, renewals and refunds follow your membership agreement.</p></details>
+      <details className="nyf-product-card"><summary><strong>Cancellation &amp; account deletion</strong></summary><p style={{ fontSize: 11.5, lineHeight: 1.55 }}>Deleting app data does not cancel a paid membership or debit order. Contact New You to cancel your membership.</p><a className="nyf-btn gold full" href={`https://wa.me/27731800485?text=${encodeURIComponent("Hello New You, I would like to request cancellation of my membership. Please confirm the effective date and any notice period.")}`} target="_blank" rel="noopener noreferrer">Request cancellation on WhatsApp</a></details>
+    </div>
+    <div className="nyf-card">
+      {onSwitchToStaff && <button className="nyf-btn gold full" onClick={onSwitchToStaff}><UserPlus size={15} /> Switch to staff access</button>}
+      {onLogout && <button className="nyf-btn ghost full" style={{ marginTop: 10 }} onClick={onLogout}><LogOut size={15} /> Log out</button>}
+      <button className="nyf-link-btn" style={{ display: "block", margin: "14px auto 0", color: "var(--clay)" }} onClick={async () => { if (window.confirm("Delete your account, access code and all saved progress? This cannot be undone.")) await onDeleteData("account"); }}>Permanently delete my account</button>
+    </div>
+  </>;
+}
+
+function ChevronRightIcon() {
+  return <span aria-hidden="true" style={{ color: "var(--ink-soft)", fontSize: 20, lineHeight: 1 }}>›</span>;
 }
 
 function FoodSubmissionForm({ initialName = "" }) {
