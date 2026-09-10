@@ -657,7 +657,11 @@ const FOOD_PREFERENCE_LIST = [
   },
 ];
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => {
+  const parts = new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const get = (type) => parts.find((part) => part.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+};
 const localDateStr = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const dateForWeekday = (weekday) => { const date = new Date(); date.setDate(date.getDate() + Number(weekday) - date.getDay()); return localDateStr(date); };
 const uid = () => Math.random().toString(36).slice(2, 10);
