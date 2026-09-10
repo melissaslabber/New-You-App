@@ -49,6 +49,8 @@ const STYLE = `
 }
 .nyf-header-action { position: absolute; z-index: 2; right: 17px; top: 18px; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .nyf-header-action.back { left: 17px; right: auto; }
+.nyf-header-menu { position: absolute; z-index: 2; right: 14px; top: 14px; display: flex; gap: 6px; }
+.nyf-header-menu button { min-height: 36px; border: 1px solid rgba(255,255,255,.22); border-radius: 11px; background: rgba(255,255,255,.12); color: #fff; padding: 0 9px; display: flex; align-items: center; gap: 5px; font: 700 10px/1 'Inter',sans-serif; cursor: pointer; }
 .nyf-header.has-back { padding-left: 70px; }
 .nyf-settings-list { display: grid; gap: 9px; }
 .nyf-settings-row { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); padding: 13px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font: inherit; cursor: pointer; }
@@ -86,6 +88,20 @@ const STYLE = `
 .nyf-workout-choice-copy { position: absolute; left: 20px; right: 112px; bottom: 20px; z-index: 2; }
 .nyf-workout-choice-copy strong { display: block; font-family: 'Outfit', sans-serif; font-size: 22px; line-height: 1.05; }
 .nyf-workout-choice-copy span { display: block; margin-top: 7px; font-size: 11.5px; line-height: 1.35; opacity: .88; }
+.nyf-workout-menu { gap: 8px; }
+.nyf-workout-menu .nyf-workout-choice { min-height: 68px; border-radius: 14px; }
+.nyf-workout-menu .nyf-workout-choice::after { width: 90px; height: 90px; right: -28px; top: -35px; }
+.nyf-workout-menu .nyf-workout-visual { width: 46px; height: 46px; right: 13px; top: 11px; border-radius: 14px; }
+.nyf-workout-menu .nyf-workout-visual svg { width: 29px; height: 29px; }
+.nyf-workout-menu .nyf-workout-minutes { font-size: 17px; }
+.nyf-workout-menu .nyf-workout-minutes small { font-size: 7px; margin-top: 3px; }
+.nyf-workout-menu .nyf-workout-choice-copy { left: 16px; right: 70px; bottom: 13px; }
+.nyf-workout-menu .nyf-workout-choice-copy strong { font-size: 17px; }
+.nyf-workout-menu .nyf-workout-choice-copy span { margin-top: 3px; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nyf-workout-menu + * { margin-top: 0; }
+.nyf-train-menu-hero { padding: 13px 16px; margin-bottom: 10px; }
+.nyf-train-menu-hero h2 { font-size: 21px !important; }
+.nyf-train-menu-hero .nyf-step { margin-bottom: 2px; }
 .nyf-player { min-height: 620px; display: flex; flex-direction: column; gap: 14px; }
 .nyf-player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nyf-player-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #DDE7F1; }
@@ -1195,13 +1211,16 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className={`nyf-header${tab === "settings" ? " has-back" : ""}`}>
-        {tab === "settings" && <button className="nyf-header-action back" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={22} /></button>}
+      <div className={`nyf-header${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
+        {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action back" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={22} /></button>}
         <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "RISE by NEW YOU"}</div>
-        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "learn" ? "Learn" : tab === "settings" ? "Settings" : "Goals"}</div>
+        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
-        {tab !== "settings" && <button className="nyf-header-action" onClick={() => changeTab("settings")} aria-label="Open settings"><Settings size={20} /></button>}
+        <div className="nyf-header-menu">
+          {tab !== "learn" && <button onClick={() => changeTab("learn")}><BookOpen size={15} /> Learn</button>}
+          {tab !== "settings" && <button onClick={() => changeTab("settings")}><Settings size={15} /> Settings</button>}
+        </div>
       </div>
 
       <div className="nyf-scroll" ref={scrollRef}>
@@ -1232,6 +1251,9 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
           <TrackTab
             profile={profile}
             totals={totals}
+            foodLogs={foodLogs}
+            weightLogs={weightLogs}
+            exerciseLogs={exerciseLogs}
             todayLogs={todayLogs}
             removeFood={removeFood}
             updateFoodAmount={updateFoodAmount}
@@ -1284,7 +1306,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} />}
+        {tab === "restaurant" && <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />}
         {tab === "settings" && <SettingsTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
       </div>
 
@@ -1292,9 +1314,8 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
       <div className="nyf-nav">
         <NavBtn icon={<Dumbbell size={19} />} label="Today" active={tab === "home"} onClick={() => changeTab("home")} />
         <NavBtn icon={<UtensilsCrossed size={19} />} label="Track" active={tab === "track"} onClick={() => changeTab("track")} />
-        <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals"} onClick={() => changeTab("meals")} />
+        <NavBtn icon={<ChefHat size={19} />} label="Meals" active={tab === "meals" || tab === "restaurant"} onClick={() => changeTab("meals")} />
         <NavBtn icon={<Flame size={19} />} label="Train" active={tab === "workout"} onClick={() => changeTab("workout")} />
-        <NavBtn icon={<User size={19} />} label="Goals" active={tab === "profile"} onClick={() => changeTab("profile")} />
       </div>
 
       {showFoodModal && <FoodModal onAdd={addFood} onAddAndContinue={addFoodAndContinue} onClose={() => setShowFoodModal(false)} recentFoods={foodLogs} savedMeals={savedMeals} onSaveMeal={saveMeal} />}
@@ -1545,7 +1566,7 @@ function WorkoutTab({ setTab, addExercise }) {
   }
 
   if (section === "menu") return <>
-    <div className="nyf-card nyf-workout-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2 style={{ fontSize: 28 }}>What would you like to do?</h2></div>
+    <div className="nyf-card nyf-workout-hero nyf-train-menu-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2>What would you like to do?</h2></div>
     {coachPlanLoading ? <div className="nyf-card"><div className="nyf-empty">Checking today's coach workout…</div></div> : coachPlan && <div className="nyf-card gold"><div className="nyf-step">PUBLISHED BY YOUR COACH</div><div className="nyf-section-title" style={{ marginTop: 6 }}>{coachPlan.title}</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{coachPlan.exercises.length} timed movements · {coachPlan.location === "both" ? "Home or gym" : coachPlan.location === "gym" ? "Gym" : "At home"}</p><div className="nyf-levels" style={{ marginBottom: 10 }}><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3</button></div><button className="nyf-btn gold full" onClick={() => setPlayerMode("coach")}><Dumbbell size={17} /> Start coach workout</button></div>}
     <div className="nyf-workout-menu">
       <button className="nyf-workout-choice daily" onClick={() => setSection("daily")}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Daily workout</strong><span>45 min · Home or gym</span></div></button>
@@ -1838,6 +1859,9 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   }
   const change7 = weightChange(7);
   const change30 = weightChange(30);
+  const allWeights = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+  const startingWeight = allWeights[0]?.weight;
+  const totalWeightChange = allWeights.length >= 2 ? Number(allWeights.at(-1).weight) - Number(allWeights[0].weight) : null;
   const formatChange = (value) => value === null ? "-" : `${value > 0 ? "+" : ""}${value.toFixed(1)}kg`;
   return (
     <>
@@ -1846,18 +1870,19 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
           <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left today after your exercise credit" : `${Math.abs(remaining)} kcal over today's adjusted goal`}</span></div>
           <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>calories used</span></div></div>
         </div>
-        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Calorie target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories used</span></div><div className="nyf-dashboard-tile"><PersonStanding size={14} /><strong>{todaySteps?.steps?.toLocaleString() || "0"}</strong><span>Steps</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise kcal</span></div></div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories in</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise out</span></div><div className="nyf-dashboard-tile"><TrendingUp size={14} /><strong>{netCalories}</strong><span>Net calories</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
         <button className="nyf-btn gold full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
         <div style={{ fontSize: 10.5, color: "#CDE0F1", marginTop: 9, position: "relative", zIndex: 1 }}>Includes {creditedExerciseCalories} kcal exercise credit at {profile.exerciseCredit ?? 50}%.</div>
       </div>
+      <button className="nyf-card nyf-settings-row" style={{ borderLeft: "4px solid var(--gold)", marginBottom: 16 }} onClick={() => setTab("restaurant")}><ChefHat size={22} /><span className="nyf-settings-row-copy"><strong>Eating out?</strong><span>Open Restaurant Help for choices that fit today’s remaining calories and protein.</span></span><ChevronRightIcon /></button>
+      <div className="nyf-card nyf-overview-card"><div className="nyf-section-title"><TrendingUp size={17} /> Progress since you started</div>{latestWeight ? <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{startingWeight}kg</strong><span>Starting</span></div><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Current</span></div><div className="nyf-progress-tile"><strong>{totalWeightChange === null ? "-" : `${Math.abs(totalWeightChange).toFixed(1)}kg`}</strong><span>{totalWeightChange === null ? "Change" : totalWeightChange <= 0 ? "Lost" : "Gained"}</span></div></div> : <div className="nyf-empty">Add your first weight in Track to begin your progress overview.</div>}</div>
       <div className="nyf-card"><div className="nyf-section-title"><TrendingUp size={17} /> Your calorie week</div><div style={{ color: "var(--ink-soft)", fontSize: 11.5 }}>Daily calories logged against your {profile.calorieGoal} kcal target.</div><div className="nyf-week-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={weeklyCalories} margin={{ top: 12, right: 12, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4ECF4" /><XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94A3B8" }} /><Tooltip formatter={(value) => [`${value} kcal`, "Calories"]} /><Line type="monotone" dataKey="calories" stroke="#0878C9" strokeWidth={3} dot={{ r: 3, fill: "#0878C9", strokeWidth: 0 }} activeDot={{ r: 5, fill: "#E2AE3D" }} /></LineChart></ResponsiveContainer></div></div>
       <div className={`nyf-card nyf-overview-card${todaySteps && todaySteps.steps >= todaySteps.goal ? " nyf-achievement" : ""}`}><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "0 steps"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} step goal` : "Add today's movement in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit" : "Add"}</button></div></div>
-      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? `${exerciseCalories} kcal` : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => item.activity).join(", ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "Edit" : "Add"}</button></div></div>
-      <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
-      <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
+      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? `${todayExercise.length} workout${todayExercise.length === 1 ? "" : "s"} · ${exerciseCalories} kcal` : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => [item.activity, item.durationMinutes ? `${item.durationMinutes} min` : "", item.distanceKm ? `${item.distanceKm} km` : ""].filter(Boolean).join(" · ")).join(" | ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "View" : "Add"}</button></div></div>
+      <div className="nyf-card"><div className="nyf-section-title">Recent weight trend</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
       <WeeklyCheckIn entries={weeklyCheckIns} onAdd={addWeeklyCheckIn} profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} />
       <CommunityReviews />
@@ -1932,7 +1957,7 @@ function InBodyCard({ assessments, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Calculator size={17} /> InBody assessments</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Upload a clear JPG image of your full InBody assessment. New You will save the report and its results, then compare it with your previous assessment.</p><label className="nyf-btn full" style={{ display: "flex", cursor: status.startsWith("Reading") ? "wait" : "pointer" }}><Camera size={15} /> {status.startsWith("Reading") ? status : "Upload InBody image"}<input type="file" accept="image/jpeg,.jpg,.jpeg" style={{ display: "none" }} disabled={status.startsWith("Reading")} onChange={(event) => { const file = event.target.files?.[0]; upload(file); event.target.value = ""; }} /></label>{error && <div className="nyf-error" style={{ marginTop: 10 }}>{error}</div>}{status && !status.startsWith("Reading") && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}{latest && <><div className="nyf-chip-heading" style={{ marginTop: 16 }}>Latest assessment - {latest.testDate || "date not found"}</div><div className="nyf-progress-summary">{INBODY_FIELDS.slice(0, 3).map(([key,label,unit]) => <div className="nyf-progress-tile" key={key}><strong>{latest[key] ?? "-"}{latest[key] != null ? unit : ""}</strong><span>{label}</span>{previous && formatChange(key, unit) && <small>{formatChange(key, unit)}</small>}</div>)}</div><div className="nyf-ai-box"><strong>Your report in short</strong><p style={{ margin: "7px 0 0" }}>{reportSummary}</p>{latest.notes && <p style={{ margin: "7px 0 0" }}>{latest.notes}</p>}</div>{latest.recommendedComparison && <div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Compared with the recommended ranges</strong><p style={{ margin: "7px 0 0" }}>{latest.recommendedComparison}</p></div>}{latest.advice?.length > 0 && <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>How to improve your results</strong>{latest.advice.map((tip, index) => <p key={`${index}-${tip}`} style={{ margin: "7px 0 0" }}>{index + 1}. {tip}</p>)}</div>}{feedback.length ? <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>Compared with your previous report</strong>{feedback.map((line) => <p key={line} style={{ margin: "7px 0 0" }}>{line}</p>)}<p style={{ margin: "9px 0 0", fontSize: 11 }}>InBody readings can shift with hydration, food, exercise and test timing. Compare reports taken under similar conditions.</p></div> : <div className="nyf-product-card">This is your first uploaded assessment. Your next report will be compared with this baseline.</div>}</>}{ordered.length > 0 && <div style={{ marginTop: 14 }}><div className="nyf-chip-heading">All saved reports</div>{ordered.map((item) => <div className="nyf-log-item" key={item.id} style={{ alignItems: "flex-start" }}>{item.image && <a href={item.image} target="_blank" rel="noreferrer"><img src={item.image} alt={`InBody report ${item.testDate || ""}`} style={{ width: 50, height: 68, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)", marginRight: 9 }} /></a>}<div style={{ flex: 1 }}><div className="nyf-log-name">{item.testDate || "InBody assessment"}</div><div className="nyf-log-macro">{item.fileName} · Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.percentBodyFat ?? "-"}%</div>{item.image && <a href={item.image} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: "var(--forest)", fontWeight: 700 }}>View report image</a>}</div><button className="nyf-close-btn" onClick={() => onRemove(item.id)} aria-label="Remove assessment"><Trash2 size={13} /></button></div>)}</div>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, onImportStrava, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
+function TrackTab({ profile, totals, foodLogs, weightLogs, exerciseLogs, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, onImportStrava, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
   const [editingFood, setEditingFood] = useState(null);
   const [editingQty, setEditingQty] = useState("");
   return (
@@ -2020,6 +2045,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, ch
       <MeasurementsCard entries={measurementLogs} onAdd={addMeasurements} />
       <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
       <InBodyCard assessments={inbodyAssessments} onAdd={addInbodyAssessment} onRemove={removeInbodyAssessment} />
+      <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
     </>
   );
 }
@@ -2221,40 +2247,6 @@ function MealsTab({
   return (
     <>
       <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
-      <EasyFoodSwaps />
-      <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
-      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><img className="nyf-meal-photo" src="/new-you-meals.webp" alt="Scrambled eggs, protein yoghurt, chicken salad and biltong meal ideas" /><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women, with protein included across every meal. Nutrition values are estimates and may vary by brand and cooking method.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g<br /><span style={{ fontSize: 11.5 }}>Your targets: {profile.calorieGoal} kcal · P{profile.proteinGoal}g · C{profile.carbGoal}g · F{profile.fatGoal}g. Choose low-fat yoghurt when a lighter option is needed.</span></div></div>
-      <div className="nyf-card">
-        <div className="nyf-section-title">Foods you actually like</div>
-        <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>
-          Tap the foods you enjoy - suggestions will be built around these first, so the plan is easier to stick to.
-        </p>
-        {FOOD_PREFERENCE_LIST.map((group) => (
-          <div className="nyf-chip-group" key={group.category}>
-            <div className="nyf-chip-heading">{group.category}</div>
-            <div className="nyf-chips">
-              {group.items.map((item) => {
-                const selected = likedFoods.includes(item);
-                return (
-                  <button
-                    key={item}
-                    className={`nyf-chip${selected ? " selected" : ""}`}
-                    onClick={() => toggleLikedFood(item)}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        {likedFoods.length > 0 && (
-          <p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 2 }}>
-            {likedFoods.length} food{likedFoods.length === 1 ? "" : "s"} selected.
-          </p>
-        )}
-      </div>
-
       <div className="nyf-card gold">
         <div className="nyf-section-title">
           <ChefHat size={16} color="var(--gold)" /> Meals for your goals
@@ -2265,7 +2257,7 @@ function MealsTab({
         {!hasGoals ? (
           <>
             <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>Set your calorie and macro goals first so suggestions actually fit your targets.</p>
-            <button className="nyf-btn full" onClick={() => setTab("profile")} style={{ marginTop: 6 }}>Go to goals</button>
+            <button className="nyf-btn full" onClick={() => setTab("settings")} style={{ marginTop: 6 }}>Go to goals</button>
           </>
         ) : (
           <button className="nyf-btn gold full" onClick={getMealSuggestions} disabled={loading}>
@@ -2348,6 +2340,14 @@ function MealsTab({
           </button>
         </div>
       )}
+      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><img className="nyf-meal-photo" src="/new-you-meals.webp" alt="Scrambled eggs, protein yoghurt, chicken salad and biltong meal ideas" /><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g</div></div>
+      <EasyFoodSwaps />
+      <div className="nyf-card">
+        <div className="nyf-section-title">Food preferences</div>
+        <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>Update these only when your tastes change. Meal suggestions use your selections.</p>
+        {FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => { const selected = likedFoods.includes(item); return <button key={item} className={`nyf-chip${selected ? " selected" : ""}`} onClick={() => toggleLikedFood(item)}>{item}</button>; })}</div></div>)}
+        {likedFoods.length > 0 && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 2 }}>{likedFoods.length} food{likedFoods.length === 1 ? "" : "s"} selected.</p>}
+      </div>
     </>
   );
 }
@@ -2523,10 +2523,6 @@ function ProfileTab({ profile, setProfile, setTab }) {
         </button>
       )}
       </div>
-      <div className="nyf-card gold">
-        <div className="nyf-section-title"><BookOpen size={17} /> Learn the basics</div>
-        <button className="nyf-btn full" onClick={() => setTab("learn")}>Open beginner learning centre</button>
-      </div>
     </>
   );
 }
@@ -2539,6 +2535,7 @@ function SettingsTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, o
     setSaved(true);
   }
   return <>
+    <ProfileTab profile={profile} setProfile={setProfile} setTab={setTab} />
     <div className="nyf-card">
       <div className="nyf-section-title"><User size={17} /> Account</div>
       <label className="nyf-field-label">Name</label>
