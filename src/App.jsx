@@ -1226,7 +1226,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             exerciseCalories={exerciseCalories}
             addExercise={addExercise}
             removeExercise={removeExercise}
-            onImportStrava={importStravaActivities}
+            exerciseLogs={exerciseLogs}
             inbodyAssessments={inbodyAssessments}
             addInbodyAssessment={addInbodyAssessment}
             removeInbodyAssessment={removeInbodyAssessment}
@@ -1254,7 +1254,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} />}
+        {tab === "profile" && <ProfileTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
       </div>
 
       <FooterLogo />
@@ -1748,7 +1748,21 @@ function ExerciseCard({ entries, calories, onAdd, onRemove }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ activity: "New You class", calories: "" });
   function save() { if (!form.calories) return; onAdd({ activity: form.activity || "Exercise", calories: Number(form.calories) }); setForm({ activity: "New You class", calories: "" }); setOpen(false); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Exercise calories</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="From your watch or machine" /><button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity} {item.source === "strava" && <span style={{ background: "#FC4C02", color: "#fff", borderRadius: 999, padding: "2px 6px", fontSize: 9, fontWeight: 800, marginLeft: 5 }}>STRAVA</span>}</div><div className="nyf-log-macro">{item.durationMinutes ? `${item.durationMinutes} min` : "Exercise"}{item.distanceKm ? ` · ${item.distanceKm} km` : ""}</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories || 0} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="From your watch or machine" /><button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
+}
+
+function ActivityHistoryCard({ entries }) {
+  const [showAll, setShowAll] = useState(false);
+  const sorted = [...entries].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+  const visible = showAll ? sorted : sorted.slice(0, 7);
+  return <div className="nyf-card"><div className="nyf-section-title"><TrendingUp size={17} /> Activity history</div>
+    {!visible.length ? <div className="nyf-empty">Your logged and synced activities will appear here.</div> : visible.map((item) => <div className="nyf-log-item" key={item.id}>
+      <div><div className="nyf-log-name">{item.activity || "Exercise"} {item.source === "strava" && <span style={{ background: "#FC4C02", color: "#fff", borderRadius: 999, padding: "2px 6px", fontSize: 9, fontWeight: 800, marginLeft: 5 }}>STRAVA</span>}</div>
+      <div className="nyf-log-macro">{item.date || "No date"}{item.durationMinutes ? ` · ${item.durationMinutes} min` : ""}{item.distanceKm ? ` · ${item.distanceKm} km` : ""}</div></div>
+      <strong style={{ whiteSpace: "nowrap" }}>{Number(item.calories) || 0} kcal</strong>
+    </div>)}
+    {sorted.length > 7 && <button className="nyf-btn ghost full" onClick={() => setShowAll((value) => !value)} style={{ marginTop: 10 }}>{showAll ? "Show recent only" : `View all ${sorted.length} activities`}</button>}
+  </div>;
 }
 
 function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits }) {
@@ -1901,7 +1915,7 @@ function InBodyCard({ assessments, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Calculator size={17} /> InBody assessments</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Upload a clear JPG image of your full InBody assessment. New You will save the report and its results, then compare it with your previous assessment.</p><label className="nyf-btn full" style={{ display: "flex", cursor: status.startsWith("Reading") ? "wait" : "pointer" }}><Camera size={15} /> {status.startsWith("Reading") ? status : "Upload InBody image"}<input type="file" accept="image/jpeg,.jpg,.jpeg" style={{ display: "none" }} disabled={status.startsWith("Reading")} onChange={(event) => { const file = event.target.files?.[0]; upload(file); event.target.value = ""; }} /></label>{error && <div className="nyf-error" style={{ marginTop: 10 }}>{error}</div>}{status && !status.startsWith("Reading") && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}{latest && <><div className="nyf-chip-heading" style={{ marginTop: 16 }}>Latest assessment - {latest.testDate || "date not found"}</div><div className="nyf-progress-summary">{INBODY_FIELDS.slice(0, 3).map(([key,label,unit]) => <div className="nyf-progress-tile" key={key}><strong>{latest[key] ?? "-"}{latest[key] != null ? unit : ""}</strong><span>{label}</span>{previous && formatChange(key, unit) && <small>{formatChange(key, unit)}</small>}</div>)}</div><div className="nyf-ai-box"><strong>Your report in short</strong><p style={{ margin: "7px 0 0" }}>{reportSummary}</p>{latest.notes && <p style={{ margin: "7px 0 0" }}>{latest.notes}</p>}</div>{latest.recommendedComparison && <div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Compared with the recommended ranges</strong><p style={{ margin: "7px 0 0" }}>{latest.recommendedComparison}</p></div>}{latest.advice?.length > 0 && <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>How to improve your results</strong>{latest.advice.map((tip, index) => <p key={`${index}-${tip}`} style={{ margin: "7px 0 0" }}>{index + 1}. {tip}</p>)}</div>}{feedback.length ? <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>Compared with your previous report</strong>{feedback.map((line) => <p key={line} style={{ margin: "7px 0 0" }}>{line}</p>)}<p style={{ margin: "9px 0 0", fontSize: 11 }}>InBody readings can shift with hydration, food, exercise and test timing. Compare reports taken under similar conditions.</p></div> : <div className="nyf-product-card">This is your first uploaded assessment. Your next report will be compared with this baseline.</div>}</>}{ordered.length > 0 && <div style={{ marginTop: 14 }}><div className="nyf-chip-heading">All saved reports</div>{ordered.map((item) => <div className="nyf-log-item" key={item.id} style={{ alignItems: "flex-start" }}>{item.image && <a href={item.image} target="_blank" rel="noreferrer"><img src={item.image} alt={`InBody report ${item.testDate || ""}`} style={{ width: 50, height: 68, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)", marginRight: 9 }} /></a>}<div style={{ flex: 1 }}><div className="nyf-log-name">{item.testDate || "InBody assessment"}</div><div className="nyf-log-macro">{item.fileName} · Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.percentBodyFat ?? "-"}%</div>{item.image && <a href={item.image} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: "var(--forest)", fontWeight: 700 }}>View report image</a>}</div><button className="nyf-close-btn" onClick={() => onRemove(item.id)} aria-label="Remove assessment"><Trash2 size={13} /></button></div>)}</div>}</div>;
 }
 
-function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, onImportStrava, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
+function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, exerciseLogs, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
   const [editingFood, setEditingFood] = useState(null);
   const [editingQty, setEditingQty] = useState("");
   return (
@@ -1953,7 +1967,7 @@ function TrackTab({ profile, totals, todayLogs, removeFood, updateFoodAmount, ch
 
       <StepsCard entry={todaySteps} onSave={saveSteps} />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
-      <StravaCard onImport={onImportStrava} />
+      <ActivityHistoryCard entries={exerciseLogs} />
 
       <div className="nyf-card">
         <div className="nyf-section-title">Weight &amp; body fat</div>
@@ -2432,7 +2446,7 @@ function GoalsCalculator({ onApply, initialGoalWeight }) {
   );
 }
 
-function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide }) {
+function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide, onImportStrava }) {
   const [local, setLocal] = useState(profile);
   const [justSaved, setJustSaved] = useState(false);
   useEffect(() => setLocal(profile), [profile]);
@@ -2505,6 +2519,7 @@ function ProfileTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, on
         </button>
       )}
       </div>
+      <StravaCard onImport={onImportStrava} />
       <div className="nyf-card gold">
         <div className="nyf-section-title"><BookOpen size={17} /> Learn the basics</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Understand calories, protein, macros, strength training and sustainable fat loss in simple language.</p>
