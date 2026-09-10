@@ -88,20 +88,23 @@ const STYLE = `
 .nyf-workout-choice-copy { position: absolute; left: 20px; right: 112px; bottom: 20px; z-index: 2; }
 .nyf-workout-choice-copy strong { display: block; font-family: 'Outfit', sans-serif; font-size: 22px; line-height: 1.05; }
 .nyf-workout-choice-copy span { display: block; margin-top: 7px; font-size: 11.5px; line-height: 1.35; opacity: .88; }
-.nyf-workout-menu { gap: 8px; }
-.nyf-workout-menu .nyf-workout-choice { min-height: 68px; border-radius: 14px; }
-.nyf-workout-menu .nyf-workout-choice::after { width: 90px; height: 90px; right: -28px; top: -35px; }
-.nyf-workout-menu .nyf-workout-visual { width: 46px; height: 46px; right: 13px; top: 11px; border-radius: 14px; }
+.nyf-workout-menu { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.nyf-workout-menu .nyf-workout-choice { min-height: 132px; border-radius: 18px; border: 1px solid #D8E4F0; color: var(--ink); background: #fff; box-shadow: 0 7px 20px rgba(3,29,58,.075); }
+.nyf-workout-menu .nyf-workout-choice::after { display: none; }
+.nyf-workout-menu .nyf-workout-visual { position: relative; width: 54px; height: 54px; right: auto; top: auto; margin: 14px auto 0; border-radius: 50%; color: #fff; background: linear-gradient(145deg,#073E7A,#0A82C8); transform: none; }
+.nyf-workout-menu .nyf-workout-choice.quick .nyf-workout-visual { background: linear-gradient(145deg,#E2AE3D,#F3C95D); color: #213349; transform: none; }
+.nyf-workout-menu .nyf-workout-choice.stretch .nyf-workout-visual { background: linear-gradient(145deg,#0E7490,#35A9B8); }
 .nyf-workout-menu .nyf-workout-visual svg { width: 29px; height: 29px; }
 .nyf-workout-menu .nyf-workout-minutes { font-size: 17px; }
 .nyf-workout-menu .nyf-workout-minutes small { font-size: 7px; margin-top: 3px; }
-.nyf-workout-menu .nyf-workout-choice-copy { left: 16px; right: 70px; bottom: 13px; }
-.nyf-workout-menu .nyf-workout-choice-copy strong { font-size: 17px; }
-.nyf-workout-menu .nyf-workout-choice-copy span { margin-top: 3px; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nyf-workout-menu .nyf-workout-choice-copy { position: relative; left: auto; right: auto; bottom: auto; padding: 9px 8px 12px; text-align: center; }
+.nyf-workout-menu .nyf-workout-choice-copy strong { font-size: 15px; line-height: 1.1; }
+.nyf-workout-menu .nyf-workout-choice-copy span { margin-top: 4px; color: var(--ink-soft); font-size: 9.5px; line-height: 1.2; opacity: 1; }
 .nyf-workout-menu + * { margin-top: 0; }
-.nyf-train-menu-hero { padding: 13px 16px; margin-bottom: 10px; }
-.nyf-train-menu-hero h2 { font-size: 21px !important; }
-.nyf-train-menu-hero .nyf-step { margin-bottom: 2px; }
+.nyf-train-menu-hero { padding: 18px 18px 17px; margin-bottom: 12px; text-align: center; border-left: 0; border-bottom: 4px solid var(--gold); }
+.nyf-train-menu-hero h2 { font-size: 25px !important; line-height: 1.05; }
+.nyf-train-menu-hero .nyf-step { margin-bottom: 5px; color: #F5CF73; }
+.nyf-train-menu-hero p { margin: 7px 0 0; color: #D7E7F7; font-size: 11px; }
 .nyf-player { min-height: 620px; display: flex; flex-direction: column; gap: 14px; }
 .nyf-player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nyf-player-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #DDE7F1; }
@@ -1566,7 +1569,7 @@ function WorkoutTab({ setTab, addExercise }) {
   }
 
   if (section === "menu") return <>
-    <div className="nyf-card nyf-workout-hero nyf-train-menu-hero"><div className="nyf-step">MOVE YOUR WAY</div><h2>What would you like to do?</h2></div>
+    <div className="nyf-card nyf-workout-hero nyf-train-menu-hero"><div className="nyf-step">TODAY'S TRAINING</div><h2>What do you want to train today?</h2><p>Choose one option to see your workout.</p></div>
     {coachPlanLoading ? <div className="nyf-card"><div className="nyf-empty">Checking today's coach workout…</div></div> : coachPlan && <div className="nyf-card gold"><div className="nyf-step">PUBLISHED BY YOUR COACH</div><div className="nyf-section-title" style={{ marginTop: 6 }}>{coachPlan.title}</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{coachPlan.exercises.length} timed movements · {coachPlan.location === "both" ? "Home or gym" : coachPlan.location === "gym" ? "Gym" : "At home"}</p><div className="nyf-levels" style={{ marginBottom: 10 }}><button className={level === 1 ? "active" : ""} onClick={() => setLevel(1)}>Level 1</button><button className={level === 2 ? "active" : ""} onClick={() => setLevel(2)}>Level 2</button><button className={level === 3 ? "active" : ""} onClick={() => setLevel(3)}>Level 3</button></div><button className="nyf-btn gold full" onClick={() => setPlayerMode("coach")}><Dumbbell size={17} /> Start coach workout</button></div>}
     <div className="nyf-workout-menu">
       <button className="nyf-workout-choice daily" onClick={() => setSection("daily")}><div className="nyf-workout-visual"><Dumbbell size={48} strokeWidth={1.8} /></div><div className="nyf-workout-choice-copy"><strong>Daily workout</strong><span>45 min · Home or gym</span></div></button>
