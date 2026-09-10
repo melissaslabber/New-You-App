@@ -41,24 +41,31 @@ const STYLE = `
 
 .nyf-header {
   position: relative;
-  padding: 22px 20px 20px;
+  overflow: hidden;
+  padding: 14px 18px 19px;
   background: linear-gradient(135deg, #031D3A 0%, #073E7A 64%, #07539E 100%);
   color: #fff;
   border-bottom: 3px solid var(--gold);
   box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
-.nyf-header-action { position: absolute; z-index: 2; right: 17px; top: 18px; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer; }
-.nyf-header-action.back { left: 17px; right: auto; }
-.nyf-header-menu { position: absolute; z-index: 2; right: 14px; top: 14px; display: flex; gap: 6px; }
-.nyf-header-menu button { min-height: 36px; border: 1px solid rgba(255,255,255,.22); border-radius: 11px; background: rgba(255,255,255,.12); color: #fff; padding: 0 9px; display: flex; align-items: center; gap: 5px; font: 700 10px/1 'Inter',sans-serif; cursor: pointer; }
-.nyf-header.has-back { padding-left: 70px; }
+.nyf-header::after { content: ""; position: absolute; width: 190px; height: 190px; right: -75px; bottom: -115px; border-radius: 50%; background: rgba(255,255,255,.055); pointer-events: none; }
+.nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+.nyf-header.has-back .nyf-header-top { padding-left: 46px; }
+.nyf-header-action { position: absolute; z-index: 3; left: 18px; top: 18px; width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(255,255,255,.12); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.nyf-header-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.nyf-header-brand img { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 18px rgba(0,0,0,.22); }
+.nyf-header-brand-copy strong { display: block; font: 800 17px/1 'Outfit',sans-serif; letter-spacing: .08em; }
+.nyf-header-brand-copy span { display: block; margin-top: 4px; color: #AFCDE6; font-size: 7.5px; font-weight: 800; letter-spacing: .16em; }
+.nyf-header-menu { display: flex; gap: 6px; flex-shrink: 0; }
+.nyf-header-menu button { min-height: 34px; border: 1px solid rgba(255,255,255,.2); border-radius: 11px; background: rgba(255,255,255,.1); color: #fff; padding: 0 8px; display: flex; align-items: center; gap: 4px; font: 700 9px/1 'Inter',sans-serif; cursor: pointer; backdrop-filter: blur(5px); }
 .nyf-settings-list { display: grid; gap: 9px; }
 .nyf-settings-row { width: 100%; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); padding: 13px 14px; display: flex; align-items: center; gap: 12px; text-align: left; font: inherit; cursor: pointer; }
 .nyf-settings-row > svg { color: var(--forest); flex: 0 0 auto; }
 .nyf-settings-row-copy { min-width: 0; flex: 1; }
 .nyf-settings-row-copy strong { display: block; font-size: 13.5px; }
 .nyf-settings-row-copy span { display: block; margin-top: 2px; color: var(--ink-soft); font-size: 11.5px; line-height: 1.35; }
-.nyf-greeting { font-size: 27px; font-weight: 800; letter-spacing: -0.025em; }
+.nyf-header-kicker, .nyf-greeting, .nyf-sub, .nyf-save-state { position: relative; z-index: 2; }
+.nyf-greeting { max-width: 100%; font-size: clamp(25px,7vw,33px); line-height: 1.04; font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere; }
 .nyf-sub { color: #D7E7F7; font-size: 13px; margin-top: 4px; }
 .nyf-logo-strip {
   flex-shrink: 0; min-height: 92px; background: #fff; border-top: 1px solid var(--line);
@@ -1234,15 +1241,18 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
     <div className="nyf">
       <style>{STYLE}</style>
       <div className={`nyf-header${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
-        {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action back" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={22} /></button>}
-        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "RISE by NEW YOU"}</div>
+        {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={20} /></button>}
+        <div className="nyf-header-top">
+          <div className="nyf-header-brand"><img src="/icon-192.png" alt="New You phoenix" /><div className="nyf-header-brand-copy"><strong>RISE</strong><span>BY NEW YOU</span></div></div>
+          <div className="nyf-header-menu">
+            {tab !== "learn" && <button onClick={() => changeTab("learn")}><BookOpen size={14} /> Learn</button>}
+            {tab !== "settings" && <button onClick={() => changeTab("settings")}><Settings size={14} /> Settings</button>}
+          </div>
+        </div>
+        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "Member dashboard"}</div>
         <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
-        <div className="nyf-header-menu">
-          {tab !== "learn" && <button onClick={() => changeTab("learn")}><BookOpen size={15} /> Learn</button>}
-          {tab !== "settings" && <button onClick={() => changeTab("settings")}><Settings size={15} /> Settings</button>}
-        </div>
       </div>
 
       <div className="nyf-scroll" ref={scrollRef}>
