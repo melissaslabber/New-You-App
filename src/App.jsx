@@ -898,7 +898,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const [tab, setTab] = useState("home");
   const tabRef = useRef("home");
   const [loaded, setLoaded] = useState(false);
-  const [profile, setProfile] = useState({ name: memberName || "", goalType: "fatloss", weight: 70, calorieGoal: 1800, ...macrosFromCalories(1800, 70), exerciseCredit: 50, onboardingComplete: false });
+  const [profile, setProfile] = useState({ name: memberName || "", goalType: "fatloss", weight: 70, calorieGoal: 1800, ...macrosFromCalories(1800, 70), exerciseCredit: 0, onboardingComplete: false });
   const [weightLogs, setWeightLogs] = useState([]);
   const [foodLogs, setFoodLogs] = useState([]);
   const [showFoodModal, setShowFoodModal] = useState(false);
@@ -1028,7 +1028,8 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const todayExercise = useMemo(() => exerciseLogs.filter((item) => item.date === todayStr()), [exerciseLogs]);
   const todaySteps = stepLogs.find((item) => item.date === todayStr()) || null;
   const exerciseCalories = useMemo(() => todayExercise.reduce((sum, item) => sum + (Number(item.calories) || 0), 0), [todayExercise]);
-  const creditedExerciseCalories = Math.round(exerciseCalories * ((profile.exerciseCredit ?? 50) / 100));
+  // Exercise is tracked for progress, but never increases the member's food allowance.
+  const creditedExerciseCalories = 0;
 
   const sortedWeights = useMemo(() => [...weightLogs].sort((a, b) => a.date.localeCompare(b.date)), [weightLogs]);
   const latestWeight = sortedWeights[sortedWeights.length - 1];
@@ -1097,7 +1098,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   async function getAiInsight() {
     setAiLoading(true);
     setAiText("");
-    const overCal = totals.cal - creditedExerciseCalories - profile.calorieGoal;
+    const overCal = totals.cal - profile.calorieGoal;
     const overCarb = totals.carb - profile.carbGoal;
     const now = new Date();
     const currentTime = now.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" });
@@ -1121,7 +1122,7 @@ Steps: ${todaySteps ? `${todaySteps.steps} of ${todaySteps.goal}` : "not logged 
 Exercise: ${todayExercise.length ? todayExercise.map((item) => `${item.activity} (${item.calories} kcal estimate)`).join(", ") : "none logged yet"}.
 
 Calorie goal: ${profile.calorieGoal} kcal. Consumed today: ${totals.cal} kcal (${overCal > 0 ? `${overCal} over` : `${Math.abs(overCal)} under`}).
-Exercise logged today: ${exerciseCalories} kcal. Coach-approved calorie credit: ${creditedExerciseCalories} kcal (${profile.exerciseCredit ?? 50}%). Net calories after the approved credit: ${Math.max(0, totals.cal - creditedExerciseCalories)} kcal. Treat exercise-calorie estimates as approximate.
+Exercise logged today: ${exerciseCalories} kcal. Exercise calories are shown for activity tracking only and are not added to the member's food allowance. Food calories used: ${totals.cal} kcal. Treat exercise-calorie estimates as approximate.
 Protein goal: ${profile.proteinGoal}g. Consumed: ${totals.protein}g.
 Carb goal: ${profile.carbGoal}g. Consumed: ${totals.carb}g (${overCarb > 0 ? `${overCarb}g over` : `${Math.abs(overCarb)}g under`}).
 Fat goal: ${profile.fatGoal}g. Consumed: ${totals.fat}g.
@@ -1905,9 +1906,8 @@ function StepsCard({ entry, onSave, compact = false }) {
 }
 
 function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsight, setTab, weeklyCheckIns, addWeeklyCheckIn, foodLogs, weightLogs, todayExercise, exerciseCalories, creditedExerciseCalories, exerciseLogs, dailyHabits, todaySteps, setShowFoodModal }) {
-  const netCalories = Math.max(0, totals.cal - creditedExerciseCalories);
-  const remaining = profile.calorieGoal - netCalories;
-  const available = profile.calorieGoal + creditedExerciseCalories;
+  const remaining = profile.calorieGoal - totals.cal;
+  const available = profile.calorieGoal;
   const calorieProgress = Math.min(100, Math.round((totals.cal / Math.max(1, available)) * 100));
   const goalLabel = profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss";
   const allWeights = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
@@ -1917,15 +1917,15 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
     <>
       <div className={`nyf-card nyf-dashboard-card${totals.protein >= profile.proteinGoal ? " nyf-achievement" : ""}`}>
         <div className="nyf-dashboard-top">
-          <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left today after your exercise credit" : `${Math.abs(remaining)} kcal over today's adjusted goal`}</span></div>
+          <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left from your food target today" : `${Math.abs(remaining)} kcal over today's food target`}</span></div>
           <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>calories used</span></div></div>
         </div>
-        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories in</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise out</span></div><div className="nyf-dashboard-tile"><TrendingUp size={14} /><strong>{netCalories}</strong><span>Net calories</span></div></div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Food target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories in</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise out</span></div><div className="nyf-dashboard-tile"><TrendingUp size={14} /><strong>{Math.max(0, remaining)}</strong><span>Food left</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
         <button className="nyf-btn gold full" onClick={() => setShowFoodModal(true)} style={{ marginTop: 12 }}><Plus size={15} /> Log food or add a meal</button>
-        <div style={{ fontSize: 10.5, color: "#CDE0F1", marginTop: 9, position: "relative", zIndex: 1 }}>Includes {creditedExerciseCalories} kcal exercise credit at {profile.exerciseCredit ?? 50}%.</div>
+        <div style={{ fontSize: 10.5, color: "#CDE0F1", marginTop: 9, position: "relative", zIndex: 1 }}>Exercise calories are tracked separately and do not increase your food target.</div>
       </div>
       <button className="nyf-home-restaurant" onClick={() => setTab("restaurant")}><ChefHat size={22} /><span className="nyf-settings-row-copy"><strong>Eating out?</strong><span>Open Restaurant Help for choices that fit today’s remaining calories and protein.</span></span><ChevronRightIcon /></button>
       <div className="nyf-home-status-grid">
@@ -2199,7 +2199,7 @@ function LearnTab({ openArticle, setOpenArticle }) {
   );
 }
 
-function RestaurantHelper({ profile, totals = {}, creditedExerciseCalories = 0 }) {
+function RestaurantHelper({ profile, totals = {} }) {
   const [restaurant, setRestaurant] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState([]);
@@ -2207,7 +2207,7 @@ function RestaurantHelper({ profile, totals = {}, creditedExerciseCalories = 0 }
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const remaining = {
-    cal: Math.max(0, profile.calorieGoal - Math.max(0, (totals.cal || 0) - creditedExerciseCalories)),
+    cal: Math.max(0, profile.calorieGoal - (totals.cal || 0)),
     protein: Math.max(0, profile.proteinGoal - (totals.protein || 0)),
     carb: Math.max(0, profile.carbGoal - (totals.carb || 0)),
     fat: Math.max(0, profile.fatGoal - (totals.fat || 0)),
@@ -2230,7 +2230,7 @@ function RestaurantHelper({ profile, totals = {}, creditedExerciseCalories = 0 }
   async function analyse() {
     if (!restaurant.trim() && !notes.trim() && !photos.length) { setError("Enter the restaurant name, add menu details or take a menu photo."); return; }
     setLoading(true); setError(""); setAnswer("");
-    const prompt = `You are the practical restaurant meal assistant for New You Fitness in South Africa. The member has approximately ${remaining.cal} kcal, ${remaining.protein}g protein, ${remaining.carb}g carbs and ${remaining.fat}g fat remaining today after their logged food and approved exercise credit.
+    const prompt = `You are the practical restaurant meal assistant for New You Fitness in South Africa. The member has approximately ${remaining.cal} kcal, ${remaining.protein}g protein, ${remaining.carb}g carbs and ${remaining.fat}g fat remaining today after their logged food. Exercise calories must not increase the food allowance.
 
 Restaurant: ${restaurant.trim() || "Not provided"}
 Member's menu notes: ${notes.trim() || "None"}
@@ -2267,9 +2267,9 @@ const QUICK_CHOICE_GROUPS = {
   ],
 };
 
-function FoodDecisionHelper({ profile, totals, creditedExerciseCalories }) {
+function FoodDecisionHelper({ profile, totals }) {
   const [choice, setChoice] = useState("Meal");
-  const remainingCalories = Math.max(0, profile.calorieGoal - Math.max(0, totals.cal - creditedExerciseCalories));
+  const remainingCalories = Math.max(0, profile.calorieGoal - totals.cal);
   const remainingProtein = Math.max(0, profile.proteinGoal - totals.protein);
   const options = QUICK_CHOICE_GROUPS[choice].map((item) => ({ ...item, fits: item.cal <= remainingCalories })).sort((a, b) => Number(b.fits) - Number(a.fits) || b.protein - a.protein);
   return <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> What can I eat now?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>You have about <strong>{remainingCalories} kcal</strong> and <strong>{remainingProtein}g protein</strong> left. Choose what you need:</p><div className="nyf-tabswitch">{Object.keys(QUICK_CHOICE_GROUPS).map((name) => <button className={choice === name ? "active" : ""} onClick={() => setChoice(name)} key={name}>{name}</button>)}</div>{options.map((item) => <div className="nyf-log-item" key={item.name} style={{ alignItems: "flex-start" }}><div><div className="nyf-log-name">{item.fits ? "🟢" : "🟡"} {item.name}</div><div className="nyf-log-macro">P{item.protein} · C{item.carb} · F{item.fat} · {item.tip}</div></div><strong style={{ whiteSpace: "nowrap", marginLeft: 8 }}>{item.cal} kcal</strong></div>)}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 10 }}>🟢 fits your remaining calories · 🟡 reduce the portion or choose a lighter option. Values are estimates.</p></div>;
@@ -3649,11 +3649,11 @@ function CentralStaffLogin({ onBack, onLogin }) {
 }
 
 function CoachGoalsEditor({ profile, onSave }) {
-  const [form, setForm] = useState({ goalType: profile.goalType || "fatloss", weight: profile.weight || "", calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", exerciseCredit: profile.exerciseCredit ?? 50, expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
+  const [form, setForm] = useState({ goalType: profile.goalType || "fatloss", weight: profile.weight || "", calorieGoal: profile.calorieGoal || "", proteinGoal: profile.proteinGoal || "", carbGoal: profile.carbGoal || "", fatGoal: profile.fatGoal || "", expectedWeeklyLoss: profile.expectedWeeklyLoss || 0.5 });
   const [saved, setSaved] = useState(false);
   function updateNutrition(calories, goalType = form.goalType, weight = form.weight) { const calorieGoal = Math.round(Number(calories) || 0); setForm((current) => ({ ...current, goalType, weight, calorieGoal, ...macrosFromCalories(calorieGoal, weight) })); setSaved(false); }
-  async function save() { await onSave({ ...form, weight: Math.round(Number(form.weight) || 0), calorieGoal: Math.round(Number(form.calorieGoal) || 0), proteinGoal: Math.round(Number(form.proteinGoal) || 0), carbGoal: Math.round(Number(form.carbGoal) || 0), fatGoal: Math.round(Number(form.fatGoal) || 0) }); setSaved(true); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><label className="nyf-field-label">Main goal</label><select className="nyf-select" value={form.goalType} onChange={(e) => updateNutrition(form.calorieGoal, e.target.value)}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select><div className="nyf-product-card" style={{ marginTop: 10 }}>Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="1" value={form.weight} onChange={(e) => updateNutrition(form.calorieGoal, form.goalType, e.target.value)} /></div><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" step="1" value={form.calorieGoal} onChange={(e) => updateNutrition(e.target.value)} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.proteinGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.carbGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.fatGoal) || 0)} disabled /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0" max="2" step="1" value={Math.round(Number(form.expectedWeeklyLoss) || 0)} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><label className="nyf-field-label">Exercise calories added back</label><select className="nyf-select" value={form.exerciseCredit} onChange={(e) => setForm({ ...form, exerciseCredit: Number(e.target.value) })}><option value="0">0% - no extra allowance</option><option value="50">50% - recommended</option><option value="100">100% - full estimate</option></select><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
+  async function save() { await onSave({ ...form, exerciseCredit: 0, weight: Math.round(Number(form.weight) || 0), calorieGoal: Math.round(Number(form.calorieGoal) || 0), proteinGoal: Math.round(Number(form.proteinGoal) || 0), carbGoal: Math.round(Number(form.carbGoal) || 0), fatGoal: Math.round(Number(form.fatGoal) || 0) }); setSaved(true); }
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Settings size={17} /> Coach-set targets</div><label className="nyf-field-label">Main goal</label><select className="nyf-select" value={form.goalType} onChange={(e) => updateNutrition(form.calorieGoal, e.target.value)}><option value="fatloss">Fat loss</option><option value="maintenance">Maintenance</option><option value="leanbulk">Lean bulk</option></select><div className="nyf-product-card" style={{ marginTop: 10 }}>Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-grid2"><div><label className="nyf-field-label">Current weight (kg)</label><input className="nyf-input" type="number" step="1" value={form.weight} onChange={(e) => updateNutrition(form.calorieGoal, form.goalType, e.target.value)} /></div><div><label className="nyf-field-label">Calories</label><input className="nyf-input" type="number" step="1" value={form.calorieGoal} onChange={(e) => updateNutrition(e.target.value)} /></div><div><label className="nyf-field-label">Protein (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.proteinGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Carbs (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.carbGoal) || 0)} disabled /></div><div><label className="nyf-field-label">Fat (g)</label><input className="nyf-input" type="number" value={Math.round(Number(form.fatGoal) || 0)} disabled /></div></div><label className="nyf-field-label">Expected weekly loss (kg)</label><input className="nyf-input" type="number" min="0" max="2" step="1" value={Math.round(Number(form.expectedWeeklyLoss) || 0)} onChange={(e) => setForm({ ...form, expectedWeeklyLoss: e.target.value })} /><div className="nyf-product-card">Exercise calories are tracked separately and are never added to the food target.</div><button className="nyf-btn full" onClick={save}>Save member targets</button>{saved && <div className="nyf-product-card">Targets updated successfully.</div>}</div>;
 }
 
 function WeeklyWorkoutBuilder() {
