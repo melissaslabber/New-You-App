@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       if (!name || !number(item.cal)) return res.status(400).json({ error: "Food name and calories are required" });
       const approved = await readList(redis, APPROVED_KEY);
       const barcode = text(item.barcode, 32).replace(/[^0-9]/g, ""); const brand = text(item.brand, 80);
-      const food = { id: `community-${crypto.randomUUID()}`, submittedAt: new Date().toISOString(), memberCode: session.code, name, brand, barcode, cal: number(item.cal), protein: number(item.protein), carb: number(item.carb), fat: number(item.fat), servingSize: number(item.servingSize) || 100, defaultQty: number(item.servingSize) || 100, unit: ["g", "ml"].includes(item.unit) ? item.unit : "g", verified: false, communityAdded: true, aliases: `${name} ${brand}` };
+      const food = { id: `community-${crypto.randomUUID()}`, submittedAt: new Date().toISOString(), memberCode: session.code, name, brand, barcode, kj: number(item.kj || (number(item.cal) * 4.184)), cal: number(item.cal), protein: number(item.protein), carb: number(item.carb), fat: number(item.fat), servingSize: number(item.servingSize) || 100, defaultQty: number(item.servingSize) || 100, unit: ["g", "ml"].includes(item.unit) ? item.unit : "g", verified: false, communityAdded: true, aliases: `${name} ${brand} ${barcode}` };
       const duplicate = (entry) => (barcode && entry.barcode === barcode) || (!barcode && `${entry.name}|${entry.brand}`.toLowerCase() === `${name}|${brand}`.toLowerCase());
       await redis.set(APPROVED_KEY, JSON.stringify([food, ...approved.filter((entry) => !duplicate(entry))].slice(0, 2000)));
       return res.status(201).json({ saved: true, food });
