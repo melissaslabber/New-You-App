@@ -105,6 +105,15 @@ const STYLE = `
 .nyf-train-menu-hero h2 { font-size: 25px !important; line-height: 1.05; }
 .nyf-train-menu-hero .nyf-step { margin-bottom: 5px; color: #F5CF73; }
 .nyf-train-menu-hero p { margin: 7px 0 0; color: #D7E7F7; font-size: 11px; }
+.nyf-meal-hub { padding: 16px; text-align: center; }
+.nyf-meal-hub h2 { font-size: 24px; color: var(--forest-deep); }
+.nyf-meal-hub p { margin: 5px 0 14px; color: var(--ink-soft); font-size: 11.5px; }
+.nyf-meal-menu { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.nyf-meal-menu button { min-width: 0; border: 1px solid #D8E4F0; border-radius: 15px; padding: 10px 5px 9px; background: #fff; color: var(--ink); font: 700 10px/1.15 'Inter',sans-serif; cursor: pointer; }
+.nyf-meal-menu button.active { border-color: var(--gold); background: #FFF9EA; box-shadow: 0 0 0 2px rgba(226,174,61,.15); color: var(--forest-deep); }
+.nyf-meal-menu-icon { width: 39px; height: 39px; margin: 0 auto 7px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(145deg,#073E7A,#0A82C8); color: #fff; }
+.nyf-meal-menu button:nth-child(2) .nyf-meal-menu-icon, .nyf-meal-menu button:nth-child(4) .nyf-meal-menu-icon { background: linear-gradient(145deg,#E2AE3D,#F1C95E); color: #17304A; }
+.nyf-meal-menu button:nth-child(3) .nyf-meal-menu-icon, .nyf-meal-menu button:nth-child(6) .nyf-meal-menu-icon { background: linear-gradient(145deg,#0E7490,#36A9B8); }
 .nyf-player { min-height: 620px; display: flex; flex-direction: column; gap: 14px; }
 .nyf-player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nyf-player-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #DDE7F1; }
@@ -2222,6 +2231,7 @@ function MealsTab({
   likedFoods,
   toggleLikedFood,
 }) {
+  const [mealSection, setMealSection] = useState("eatnow");
   const hasGoals = profile.calorieGoal > 0;
   const favoriteNames = new Set(favoriteMeals.map((m) => m.name));
   const basicPlan = useMemo(() => {
@@ -2249,8 +2259,20 @@ function MealsTab({
 
   return (
     <>
-      <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />
-      <div className="nyf-card gold">
+      <div className="nyf-card nyf-meal-hub">
+        <h2>What do you need?</h2>
+        <p>Choose one option to keep your Meals page simple.</p>
+        <div className="nyf-meal-menu">
+          <button className={mealSection === "eatnow" ? "active" : ""} onClick={() => setMealSection("eatnow")}><span className="nyf-meal-menu-icon"><Sparkles size={19} /></span>Eat now</button>
+          <button className={mealSection === "ideas" ? "active" : ""} onClick={() => setMealSection("ideas")}><span className="nyf-meal-menu-icon"><ChefHat size={19} /></span>Meal ideas</button>
+          <button className={mealSection === "saved" ? "active" : ""} onClick={() => setMealSection("saved")}><span className="nyf-meal-menu-icon"><Heart size={19} /></span>Saved</button>
+          <button className={mealSection === "grocery" ? "active" : ""} onClick={() => setMealSection("grocery")}><span className="nyf-meal-menu-icon"><ShoppingCart size={19} /></span>Grocery list</button>
+          <button className={mealSection === "basic" ? "active" : ""} onClick={() => setMealSection("basic")}><span className="nyf-meal-menu-icon"><BookOpen size={19} /></span>Basic plan</button>
+          <button className={mealSection === "preferences" ? "active" : ""} onClick={() => setMealSection("preferences")}><span className="nyf-meal-menu-icon"><Settings size={19} /></span>Preferences</button>
+        </div>
+      </div>
+      {mealSection === "eatnow" && <FoodDecisionHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />}
+      {mealSection === "ideas" && <div className="nyf-card gold">
         <div className="nyf-section-title">
           <ChefHat size={16} color="var(--gold)" /> Meals for your goals
         </div>
@@ -2268,9 +2290,9 @@ function MealsTab({
           </button>
         )}
         {error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}
-      </div>
+      </div>}
 
-      {suggestions.length > 0 && (
+      {mealSection === "ideas" && suggestions.length > 0 && (
         <div className="nyf-card">
           <div className="nyf-section-title">Suggestions - tap the heart to save</div>
           {suggestions.map((m, i) => {
@@ -2300,12 +2322,12 @@ function MealsTab({
         </div>
       )}
 
-      {favoriteMeals.length > 0 && (
+      {mealSection === "saved" && (
         <div className="nyf-card">
           <div className="nyf-section-title">
             <Heart size={16} color="var(--clay)" fill="var(--clay)" /> Your favorite meals ({favoriteMeals.length})
           </div>
-          {favoriteMeals.map((m, i) => (
+          {favoriteMeals.length ? favoriteMeals.map((m, i) => (
             <div className="nyf-log-item" key={i}>
               <div>
                 <div className="nyf-log-name">{m.name}</div>
@@ -2315,11 +2337,11 @@ function MealsTab({
                 <X size={13} />
               </button>
             </div>
-          ))}
+          )) : <div className="nyf-empty">Save meal ideas with the heart and they will appear here.</div>}
         </div>
       )}
 
-      {groceryItems.length > 0 && (
+      {mealSection === "grocery" && (
         <div className="nyf-card">
           <div className="nyf-section-title">
             <ShoppingCart size={16} /> Grocery list from your favorites
@@ -2327,7 +2349,7 @@ function MealsTab({
           <p style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 10 }}>
             Combined ingredients from every meal you've favorited. Tick items off as you shop.
           </p>
-          {groceryItems.map((item, i) => {
+          {groceryItems.length ? groceryItems.map((item, i) => {
             const checked = checkedGroceryItems.includes(item);
             return (
               <div className="nyf-member-row" key={i} onClick={() => toggleGroceryItem(item)} style={{ cursor: "pointer" }}>
@@ -2337,20 +2359,19 @@ function MealsTab({
                 <span className={`nyf-toggle ${checked ? "on" : "off"}`}>{checked ? "Got it" : "Need it"}</span>
               </div>
             );
-          })}
-          <button className="nyf-btn ghost full" style={{ marginTop: 12 }} onClick={clearGroceryChecks}>
+          }) : <div className="nyf-empty">Save meal ideas first and their ingredients will build your grocery list.</div>}
+          {groceryItems.length > 0 && <button className="nyf-btn ghost full" style={{ marginTop: 12 }} onClick={clearGroceryChecks}>
             Clear ticks
-          </button>
+          </button>}
         </div>
       )}
-      <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><img className="nyf-meal-photo" src="/new-you-meals.webp" alt="Scrambled eggs, protein yoghurt, chicken salad and biltong meal ideas" /><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g</div></div>
-      <EasyFoodSwaps />
-      <div className="nyf-card">
+      {mealSection === "basic" && <><div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={16} /> Your basic New You meal plan</div><img className="nyf-meal-photo" src="/new-you-meals.webp" alt="Scrambled eggs, protein yoghurt, chicken salad and biltong meal ideas" /><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>A simple high-protein starting plan for women.</p>{basicPlan.meals.map((meal) => <div className="nyf-log-item" key={meal.name} style={{ alignItems: "flex-start" }}><div style={{ flex: 1 }}><div className="nyf-log-name">{meal.name}</div><div className="nyf-log-macro">{meal.serving}</div></div><div style={{ textAlign: "right", whiteSpace: "nowrap", fontSize: 11.5 }}>{Math.round(meal.cal)} kcal<br /><span style={{ color: "var(--ink-soft)" }}>P{Math.round(meal.protein)} · C{Math.round(meal.carb)} · F{Math.round(meal.fat)}</span></div></div>)}<div className="nyf-product-card" style={{ marginTop: 12 }}><strong>Estimated day:</strong> {Math.round(basicPlan.totals.cal)} kcal · P{Math.round(basicPlan.totals.protein)}g · C{Math.round(basicPlan.totals.carb)}g · F{Math.round(basicPlan.totals.fat)}g</div></div><EasyFoodSwaps /></>}
+      {mealSection === "preferences" && <div className="nyf-card">
         <div className="nyf-section-title">Food preferences</div>
         <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 12 }}>Update these only when your tastes change. Meal suggestions use your selections.</p>
         {FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => { const selected = likedFoods.includes(item); return <button key={item} className={`nyf-chip${selected ? " selected" : ""}`} onClick={() => toggleLikedFood(item)}>{item}</button>; })}</div></div>)}
         {likedFoods.length > 0 && <p style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 2 }}>{likedFoods.length} food{likedFoods.length === 1 ? "" : "s"} selected.</p>}
-      </div>
+      </div>}
     </>
   );
 }
