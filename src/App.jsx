@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import StravaCard from "./StravaCard.jsx";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, ChevronLeft, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, ChevronLeft, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp, CalendarDays } from "lucide-react";
 
 // Consolidated New You release: 08 September 2026, barcode-first meal logging.
 const APP_RELEASE = "2026-09-08-barcode-first-meal-logging";
@@ -114,6 +114,16 @@ const STYLE = `
 .nyf-meal-menu-icon { width: 39px; height: 39px; margin: 0 auto 7px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(145deg,#073E7A,#0A82C8); color: #fff; }
 .nyf-meal-menu button:nth-child(2) .nyf-meal-menu-icon, .nyf-meal-menu button:nth-child(4) .nyf-meal-menu-icon { background: linear-gradient(145deg,#E2AE3D,#F1C95E); color: #17304A; }
 .nyf-meal-menu button:nth-child(3) .nyf-meal-menu-icon, .nyf-meal-menu button:nth-child(6) .nyf-meal-menu-icon { background: linear-gradient(145deg,#0E7490,#36A9B8); }
+.nyf-track-hub { padding: 15px; }
+.nyf-track-hub h2 { font-size: 23px; text-align: center; }
+.nyf-track-hub p { margin: 5px 0 13px; color: var(--ink-soft); font-size: 11.5px; text-align: center; }
+.nyf-track-menu { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 7px; }
+.nyf-track-menu button { min-width: 0; border: 1px solid #D8E4F0; border-radius: 13px; padding: 9px 3px 8px; background: #fff; color: var(--ink); font: 700 9px/1.15 'Inter',sans-serif; cursor: pointer; }
+.nyf-track-menu button.active { border-color: var(--gold); background: #FFF9EA; box-shadow: 0 0 0 2px rgba(226,174,61,.15); }
+.nyf-track-menu-icon { width: 35px; height: 35px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg,#073E7A,#0A82C8); }
+.nyf-track-menu button:nth-child(2) .nyf-track-menu-icon { background: linear-gradient(145deg,#E2AE3D,#F1C95E); color: #17304A; }
+.nyf-track-menu button:nth-child(3) .nyf-track-menu-icon { background: linear-gradient(145deg,#0E7490,#36A9B8); }
+.nyf-track-menu button:nth-child(4) .nyf-track-menu-icon { background: linear-gradient(145deg,#2E7D5B,#56A67F); }
 .nyf-player { min-height: 620px; display: flex; flex-direction: column; gap: 14px; }
 .nyf-player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .nyf-player-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #DDE7F1; }
@@ -1969,11 +1979,34 @@ function InBodyCard({ assessments, onAdd, onRemove }) {
   return <div className="nyf-card gold"><div className="nyf-section-title"><Calculator size={17} /> InBody assessments</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>Upload a clear JPG image of your full InBody assessment. New You will save the report and its results, then compare it with your previous assessment.</p><label className="nyf-btn full" style={{ display: "flex", cursor: status.startsWith("Reading") ? "wait" : "pointer" }}><Camera size={15} /> {status.startsWith("Reading") ? status : "Upload InBody image"}<input type="file" accept="image/jpeg,.jpg,.jpeg" style={{ display: "none" }} disabled={status.startsWith("Reading")} onChange={(event) => { const file = event.target.files?.[0]; upload(file); event.target.value = ""; }} /></label>{error && <div className="nyf-error" style={{ marginTop: 10 }}>{error}</div>}{status && !status.startsWith("Reading") && <div className="nyf-product-card" style={{ marginTop: 10 }}>{status}</div>}{latest && <><div className="nyf-chip-heading" style={{ marginTop: 16 }}>Latest assessment - {latest.testDate || "date not found"}</div><div className="nyf-progress-summary">{INBODY_FIELDS.slice(0, 3).map(([key,label,unit]) => <div className="nyf-progress-tile" key={key}><strong>{latest[key] ?? "-"}{latest[key] != null ? unit : ""}</strong><span>{label}</span>{previous && formatChange(key, unit) && <small>{formatChange(key, unit)}</small>}</div>)}</div><div className="nyf-ai-box"><strong>Your report in short</strong><p style={{ margin: "7px 0 0" }}>{reportSummary}</p>{latest.notes && <p style={{ margin: "7px 0 0" }}>{latest.notes}</p>}</div>{latest.recommendedComparison && <div className="nyf-product-card" style={{ marginTop: 10 }}><strong>Compared with the recommended ranges</strong><p style={{ margin: "7px 0 0" }}>{latest.recommendedComparison}</p></div>}{latest.advice?.length > 0 && <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>How to improve your results</strong>{latest.advice.map((tip, index) => <p key={`${index}-${tip}`} style={{ margin: "7px 0 0" }}>{index + 1}. {tip}</p>)}</div>}{feedback.length ? <div className="nyf-ai-box" style={{ marginTop: 10 }}><strong>Compared with your previous report</strong>{feedback.map((line) => <p key={line} style={{ margin: "7px 0 0" }}>{line}</p>)}<p style={{ margin: "9px 0 0", fontSize: 11 }}>InBody readings can shift with hydration, food, exercise and test timing. Compare reports taken under similar conditions.</p></div> : <div className="nyf-product-card">This is your first uploaded assessment. Your next report will be compared with this baseline.</div>}</>}{ordered.length > 0 && <div style={{ marginTop: 14 }}><div className="nyf-chip-heading">All saved reports</div>{ordered.map((item) => <div className="nyf-log-item" key={item.id} style={{ alignItems: "flex-start" }}>{item.image && <a href={item.image} target="_blank" rel="noreferrer"><img src={item.image} alt={`InBody report ${item.testDate || ""}`} style={{ width: 50, height: 68, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)", marginRight: 9 }} /></a>}<div style={{ flex: 1 }}><div className="nyf-log-name">{item.testDate || "InBody assessment"}</div><div className="nyf-log-macro">{item.fileName} · Weight {item.weight ?? "-"}kg · Muscle {item.skeletalMuscleMass ?? "-"}kg · Body fat {item.percentBodyFat ?? "-"}%</div>{item.image && <a href={item.image} target="_blank" rel="noreferrer" style={{ fontSize: 11.5, color: "var(--forest)", fontWeight: 700 }}>View report image</a>}</div><button className="nyf-close-btn" onClick={() => onRemove(item.id)} aria-label="Remove assessment"><Trash2 size={13} /></button></div>)}</div>}</div>;
 }
 
+function SevenDayActivity({ exerciseLogs }) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 6);
+  cutoff.setHours(0, 0, 0, 0);
+  const activities = [...exerciseLogs].filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  const totalCalories = activities.reduce((sum, item) => sum + (Number(item.calories) || 0), 0);
+  const totalMinutes = activities.reduce((sum, item) => sum + (Number(item.durationMinutes) || 0), 0);
+  const totalDistance = activities.reduce((sum, item) => sum + (Number(item.distanceKm) || 0), 0);
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Exercises in the last 7 days</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{activities.length}</strong><span>Workouts</span></div><div className="nyf-progress-tile"><strong>{totalMinutes || "-"}</strong><span>Minutes</span></div><div className="nyf-progress-tile"><strong>{totalCalories}</strong><span>Calories</span></div></div>{totalDistance > 0 && <div className="nyf-product-card" style={{ marginBottom: 10 }}><strong>{Math.round(totalDistance * 10) / 10} km</strong> total distance</div>}{activities.length ? activities.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity || "Exercise"} {item.source === "strava" && <span style={{ background: "#FC4C02", color: "#fff", borderRadius: 999, padding: "2px 6px", fontSize: 9, fontWeight: 800, marginLeft: 5 }}>STRAVA</span>}</div><div className="nyf-log-macro">{item.date}{item.durationMinutes ? ` · ${item.durationMinutes} min` : ""}{item.distanceKm ? ` · ${item.distanceKm} km` : ""}</div></div><strong>{item.calories || 0} kcal</strong></div>) : <div className="nyf-empty">No exercises recorded in the last seven days.</div>}</div>;
+}
+
 function TrackTab({ profile, totals, foodLogs, weightLogs, exerciseLogs, todayLogs, removeFood, updateFoodAmount, chartData, latestWeight, setShowFoodModal, setShowWeightModal, measurementLogs, addMeasurements, todayHabits, dailyHabits, toggleHabit, repeatFood, previousDayLogs, copyPreviousDay, progressPhotos, addProgressPhoto, removeProgressPhoto, todaySteps, saveSteps, todayExercise, exerciseCalories, addExercise, removeExercise, onImportStrava, inbodyAssessments, addInbodyAssessment, removeInbodyAssessment }) {
+  const [trackSection, setTrackSection] = useState("today");
   const [editingFood, setEditingFood] = useState(null);
   const [editingQty, setEditingQty] = useState("");
   return (
     <>
+      <div className="nyf-card nyf-track-hub">
+        <h2>What do you want to track?</h2>
+        <p>Choose a section to keep everything clear.</p>
+        <div className="nyf-track-menu">
+          <button className={trackSection === "today" ? "active" : ""} onClick={() => setTrackSection("today")}><span className="nyf-track-menu-icon"><UtensilsCrossed size={17} /></span>Today</button>
+          <button className={trackSection === "activity" ? "active" : ""} onClick={() => setTrackSection("activity")}><span className="nyf-track-menu-icon"><Dumbbell size={17} /></span>Activity</button>
+          <button className={trackSection === "progress" ? "active" : ""} onClick={() => setTrackSection("progress")}><span className="nyf-track-menu-icon"><TrendingUp size={17} /></span>Progress</button>
+          <button className={trackSection === "week" ? "active" : ""} onClick={() => setTrackSection("week")}><span className="nyf-track-menu-icon"><CalendarDays size={17} /></span>7 days</button>
+        </div>
+      </div>
+      {trackSection === "today" && <>
       <HabitTracker todayHabits={todayHabits} dailyHabits={dailyHabits} toggleHabit={toggleHabit} />
       <div className="nyf-card">
         <div className="nyf-section-title">Today's totals</div>
@@ -2018,10 +2051,15 @@ function TrackTab({ profile, totals, foodLogs, weightLogs, exerciseLogs, todayLo
       </div>
 
       {editingFood && (() => { const food = todayLogs.find((item) => item.id === editingFood); return food ? <div className="nyf-modal-backdrop" onClick={() => setEditingFood(null)}><div className="nyf-modal" onClick={(event) => event.stopPropagation()} style={{ paddingBottom: 24 }}><div className="nyf-modal-head"><h3>Edit food amount</h3><button className="nyf-close-btn" onClick={() => setEditingFood(null)}><X size={14} /></button></div><div className="nyf-product-card"><strong>{food.name}</strong><br /><span style={{ fontSize: 12, color: "var(--ink-soft)" }}>Current: {food.qty || 0}{food.unit || "g"} · {food.cal} kcal</span></div><label className="nyf-field-label">New amount ({food.unit || "g"})</label><input className="nyf-input" type="number" min="0.1" step="0.1" inputMode="decimal" autoFocus value={editingQty} onChange={(event) => setEditingQty(event.target.value)} /><p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>Calories, protein, carbs and fat will update automatically in the same proportion.</p><button className="nyf-btn gold full" disabled={!Number(editingQty) || Number(editingQty) <= 0} onClick={() => { updateFoodAmount(food.id, editingQty); setEditingFood(null); setEditingQty(""); }}>Save new amount</button></div></div> : null; })()}
+      </>}
 
+      {trackSection === "activity" && <>
       <StepsCard entry={todaySteps} onSave={saveSteps} />
       <ExerciseCard entries={todayExercise} calories={exerciseCalories} onAdd={addExercise} onRemove={removeExercise} />
+      <SevenDayActivity exerciseLogs={exerciseLogs} />
+      </>}
 
+      {trackSection === "progress" && <>
       <div className="nyf-card">
         <div className="nyf-section-title">Weight &amp; body fat</div>
         {chartData.length >= 2 ? (
@@ -2057,7 +2095,8 @@ function TrackTab({ profile, totals, foodLogs, weightLogs, exerciseLogs, todayLo
       <MeasurementsCard entries={measurementLogs} onAdd={addMeasurements} />
       <ProgressPhotosCard photos={progressPhotos} onAdd={addProgressPhoto} onRemove={removeProgressPhoto} />
       <InBodyCard assessments={inbodyAssessments} onAdd={addInbodyAssessment} onRemove={removeInbodyAssessment} />
-      <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
+      </>}
+      {trackSection === "week" && <><WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} /><SevenDayActivity exerciseLogs={exerciseLogs} /></>}
     </>
   );
 }
