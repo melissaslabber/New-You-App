@@ -145,6 +145,10 @@ const STYLE = `
 .nyf-demo-picture::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: 34px; height: 5px; border-radius: 50%; background: rgba(3,29,58,.12); filter: blur(2px); }
 .nyf-exercise-photo { position: absolute; inset: 0; z-index: 1; background-image: url('/exercise-demonstrations-v2.webp'); background-size: 312% 312%; background-repeat: no-repeat; }
 .nyf-exercise-photo::after { content: "Photo form guide"; position: absolute; right: 10px; bottom: 9px; padding: 5px 8px; border-radius: 999px; color: #fff; background: rgba(3,29,58,.72); font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.nyf-exercise-placeholder { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 13px; padding: 28px; text-align: center; color: #fff; background: radial-gradient(circle at 75% 20%,rgba(55,200,245,.34),transparent 34%),linear-gradient(145deg,#031D3A,#0868AA); }
+.nyf-exercise-placeholder::after { content: "Follow the form instructions below"; color: #CDE2F3; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.nyf-exercise-placeholder-icon { width: 82px; height: 82px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: grid; place-items: center; color: #F4C957; background: rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.12),0 12px 28px rgba(0,0,0,.12); }
+.nyf-exercise-placeholder strong { max-width: 280px; font: 800 24px/1.08 'Outfit',sans-serif; }
 .nyf-player-counter { text-align: center; }
 .nyf-player-counter strong { display: block; font-family: 'Outfit', sans-serif; font-size: 58px; line-height: 1; color: var(--forest); }
 .nyf-player-counter span { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; font-weight: 750; letter-spacing: .11em; }
@@ -1444,16 +1448,17 @@ function movementCue(name) {
 
 function ExerciseIllustration({ name }) {
   const value = name.toLowerCase();
-  let panel = 0;
-  if (["arm circle", "step jack", "shoulder roll"].some((word) => value.includes(word))) panel = 0;
-  else if (value.includes("squat") || value.includes("wall ball")) panel = 1;
-  else if (value.includes("lunge") || value.includes("split squat")) panel = 2;
-  else if (value.includes("push-up") || value.includes("press-up")) panel = 3;
-  else if (["plank", "mountain", "dead bug", "bird dog", "bridge", "bicycle", "core"].some((word) => value.includes(word))) panel = 4;
-  else if (["deadlift", "hinge", "good morning", "barbell", "dumbbell", "press", "clean", "thruster"].some((word) => value.includes(word))) panel = 5;
-  else if (["row", "pull", "lat", "trx"].some((word) => value.includes(word)) && !value.includes("rower")) panel = 6;
-  else if (["stretch", "fold", "opener", "release", "rotation", "mobility", "hip-flexor", "cobra", "child's"].some((word) => value.includes(word))) panel = 7;
-  else if (["cardio", "march", "jog", "run", "treadmill", "bike", "rower", "ski", "walk", "step", "shuttle", "skip", "high knee"].some((word) => value.includes(word))) panel = 8;
+  let panel = null;
+  if (["arm circles", "arm circle"].some((word) => value === word || value.startsWith(`${word} and`))) panel = 0;
+  else if (["squat", "bodyweight squat"].includes(value)) panel = 1;
+  else if (["reverse lunge", "supported reverse lunge"].includes(value)) panel = 2;
+  else if (["push-up", "press-up", "incline push-up"].includes(value)) panel = 3;
+  else if (["forearm plank", "plank"].includes(value)) panel = 4;
+  else if (["hip hinge", "hip hinge and reach", "romanian deadlift", "dumbbell romanian deadlift"].includes(value)) panel = 5;
+  else if (["dumbbell row", "one-arm dumbbell row", "supported dumbbell row"].includes(value)) panel = 6;
+  else if (["quad stretch", "standing quad stretch", "quadriceps stretch"].includes(value)) panel = 7;
+  else if (["treadmill walk", "incline treadmill walk", "treadmill incline walk", "incline treadmill"].includes(value)) panel = 8;
+  if (panel === null) return <div className="nyf-exercise-placeholder" role="img" aria-label={`${name} movement guide`}><div className="nyf-exercise-placeholder-icon"><Dumbbell size={42} strokeWidth={1.7} /></div><strong>{name}</strong></div>;
   const column = panel % 3;
   const row = Math.floor(panel / 3);
   return <div className="nyf-exercise-photo" role="img" aria-label={`Person demonstrating ${name}`} style={{ backgroundPosition: `${column * 50}% ${row * 50}%` }} />;
