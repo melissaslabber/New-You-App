@@ -837,6 +837,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   const [saveRetry, setSaveRetry] = useState(0);
   const saveTimer = useRef(null);
   const scrollRef = useRef(null);
+  const stravaSyncAttempted = useRef(false);
 
   function changeTab(nextTab) {
     setTab(nextTab);
@@ -899,6 +900,23 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     }, 500);
     return () => clearTimeout(saveTimer.current);
   }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, inbodyAssessments, loaded, saveRetry]);
+
+  useEffect(() => {
+    if (!loaded || stravaSyncAttempted.current) return;
+    stravaSyncAttempted.current = true;
+    (async () => {
+      try {
+        const statusResponse = await fetch("/api/strava", { credentials: "same-origin" });
+        const status = await statusResponse.json();
+        if (!statusResponse.ok || !status.connected) return;
+        const syncResponse = await fetch("/api/strava", { method: "POST", credentials: "same-origin" });
+        const result = await syncResponse.json();
+        if (syncResponse.ok && Array.isArray(result.activities)) importStravaActivities(result.activities);
+      } catch {
+        // Strava is optional; normal app use continues if an automatic sync is unavailable.
+      }
+    })();
+  }, [loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const previousDayLogs = useMemo(() => {
@@ -963,6 +981,10 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
       entries.forEach((item) => mergedStrava.set(String(item.stravaId || item.id), item));
       return [...prev.filter((item) => item.source !== "strava"), ...mergedStrava.values()];
     });
+    if (entries.some((item) => String(item.date || "").slice(0, 10) === todayStr())) {
+      const date = todayStr();
+      setDailyHabits((prev) => ({ ...prev, [date]: { ...(prev[date] || {}), training: true } }));
+    }
   }
   function removeExercise(id) {
     setExerciseLogs((prev) => prev.filter((item) => item.id !== id));
@@ -1759,7 +1781,7 @@ function ActivityHistoryCard({ entries }) {
     {!visible.length ? <div className="nyf-empty">Your logged and synced activities will appear here.</div> : visible.map((item) => <div className="nyf-log-item" key={item.id}>
       <div><div className="nyf-log-name">{item.activity || "Exercise"} {item.source === "strava" && <span style={{ background: "#FC4C02", color: "#fff", borderRadius: 999, padding: "2px 6px", fontSize: 9, fontWeight: 800, marginLeft: 5 }}>STRAVA</span>}</div>
       <div className="nyf-log-macro">{item.date || "No date"}{item.durationMinutes ? ` · ${item.durationMinutes} min` : ""}{item.distanceKm ? ` · ${item.distanceKm} km` : ""}</div></div>
-      <strong style={{ whiteSpace: "nowrap" }}>{Number(item.calories) || 0} kcal</strong>
+      <strong style={{ whiteSpace: "nowrap" }}>{item.calorieSource === "estimated" ? "~" : ""}{Number(item.calories) || 0} kcal</strong>
     </div>)}
     {sorted.length > 7 && <button className="nyf-btn ghost full" onClick={() => setShowAll((value) => !value)} style={{ marginTop: 10 }}>{showAll ? "Show recent only" : `View all ${sorted.length} activities`}</button>}
   </div>;
@@ -1838,7 +1860,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       </div>
       <div className="nyf-card"><div className="nyf-section-title"><TrendingUp size={17} /> Your calorie week</div><div style={{ color: "var(--ink-soft)", fontSize: 11.5 }}>Daily calories logged against your {profile.calorieGoal} kcal target.</div><div className="nyf-week-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={weeklyCalories} margin={{ top: 12, right: 12, left: -25, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4ECF4" /><XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748B" }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94A3B8" }} /><Tooltip formatter={(value) => [`${value} kcal`, "Calories"]} /><Line type="monotone" dataKey="calories" stroke="#0878C9" strokeWidth={3} dot={{ r: 3, fill: "#0878C9", strokeWidth: 0 }} activeDot={{ r: 5, fill: "#E2AE3D" }} /></LineChart></ResponsiveContainer></div></div>
       <div className={`nyf-card nyf-overview-card${todaySteps && todaySteps.steps >= todaySteps.goal ? " nyf-achievement" : ""}`}><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "0 steps"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} step goal` : "Add today's movement in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit" : "Add"}</button></div></div>
-      <div className="nyf-card nyf-overview-card"><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? `${exerciseCalories} kcal` : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => item.activity).join(", ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "Edit" : "Add"}</button></div></div>
+      <div className={`nyf-card nyf-overview-card${todayExercise.length ? " nyf-achievement" : ""}`}><div className="nyf-overview-head"><div style={{ display: "flex", alignItems: "center", gap: 11 }}><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div><div className="nyf-overview-value">{todayExercise.length ? "You exercised today" : "No exercise yet"}</div><div className="nyf-overview-label">{todayExercise.length ? todayExercise.map((item) => [item.activity, item.durationMinutes ? `${item.durationMinutes} min` : "", item.distanceKm ? `${item.distanceKm} km` : "", Number(item.calories) ? `${item.calories} kcal` : ""].filter(Boolean).join(" · ")).join(" | ") : "Log a class, walk or workout in Track"}</div></div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "View" : "Add"}</button></div></div>
       <WeeklyReport profile={profile} foodLogs={foodLogs} weightLogs={weightLogs} exerciseLogs={exerciseLogs} dailyHabits={dailyHabits} />
       <div className="nyf-card"><div className="nyf-section-title">Latest weight progress</div>{latestWeight ? <><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Latest</span></div><div className="nyf-progress-tile"><strong>{formatChange(change7)}</strong><span>Last 7 days</span></div><div className="nyf-progress-tile"><strong>{formatChange(change30)}</strong><span>Last 30 days</span></div></div>{latestWeight.bodyFat && <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Latest body fat: {latestWeight.bodyFat}%</div>}</> : <div className="nyf-empty">No weight logged yet.</div>}<button className="nyf-btn ghost full" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight in Track" : "Add starting weight in Track"}</button></div>
       <div className="nyf-card gold" style={{ background: "linear-gradient(145deg, #ffffff, #fff8e6)" }}><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
