@@ -81,14 +81,13 @@ const STYLE = `
 }
 .nyf-logo-strip img { display: block; width: 132px; height: 72px; object-fit: contain; }
 
-.nyf-review-card { overflow: hidden; padding: 14px 15px; background: linear-gradient(145deg, #FFFFFF, #F4FAFF); color: var(--ink); border-left: 3px solid var(--gold); }
+.nyf-review-card { overflow: hidden; margin: 4px 8px 10px; padding: 10px 8px 4px; color: var(--ink); text-align: center; }
 .nyf-review-stars { color: #F5B928; font-size: 14px; letter-spacing: 1px; margin: 5px 0 7px; }
-.nyf-review-quote { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; color: #0B1F33; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 650; line-height: 1.35; min-height: 0; margin: 0; }
+.nyf-review-quote { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; color: #0B1F33; font-family: 'Outfit', sans-serif; font-size: 14px; font-style: italic; font-weight: 650; line-height: 1.4; min-height: 0; margin: 0 auto; max-width: 500px; }
 .nyf-review-meta { color: #64748B; font-size: 10.5px; margin-top: 8px; }
-.nyf-review-dots { display: flex; justify-content: center; gap: 6px; margin: 9px 0 8px; }
+.nyf-review-dots { display: flex; justify-content: center; gap: 6px; margin: 9px 0 2px; }
 .nyf-review-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: #CBD5E1; }
 .nyf-review-dot.active { width: 22px; border-radius: 8px; background: var(--gold); }
-.nyf-review-link { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid #C9D8E8; border-radius: 10px; padding: 8px; background: #F7FAFD; color: var(--forest); font-weight: 750; font-size: 11px; text-decoration: none; }
 .nyf-workout-menu { display: grid; gap: 14px; }
 .nyf-workout-choice { position: relative; min-height: 150px; width: 100%; overflow: hidden; border: 0; border-radius: 18px; padding: 0; color: #fff; text-align: left; cursor: pointer; box-shadow: 0 12px 28px rgba(3,29,58,.16); }
 .nyf-workout-choice::after { content: ""; position: absolute; width: 170px; height: 170px; right: -50px; top: -60px; border-radius: 50%; background: rgba(255,255,255,.10); }
@@ -1821,7 +1820,7 @@ function CommunityReviews() {
     return () => window.clearInterval(timer);
   }, []);
   const review = COMMUNITY_REVIEWS[active];
-  return <div className="nyf-card nyf-review-card"><div className="nyf-step" style={{ color: "#C58B13" }}>NEW YOU COMMUNITY WINS</div><div className="nyf-review-stars" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div><p className="nyf-review-quote">“{review.text}”</p><div className="nyf-review-meta"><strong>{review.name}</strong><br />Google review · <a href={review.url} target="_blank" rel="noopener noreferrer" style={{ color: "#07356B", fontWeight: 700 }}>View review</a></div><div className="nyf-review-dots">{COMMUNITY_REVIEWS.map((item, index) => <button key={item.url} className={`nyf-review-dot${active === index ? " active" : ""}`} aria-label={`Show review ${index + 1}`} onClick={() => setActive(index)} />)}</div><a className="nyf-review-link" href="https://g.page/r/CT1RPs6YPPb-EAE/review" target="_blank" rel="noopener noreferrer">Leave New You a Google review</a></div>;
+  return <div className="nyf-review-card"><div className="nyf-step" style={{ color: "#C58B13" }}>NEW YOU COMMUNITY WINS</div><div className="nyf-review-stars" aria-label={`${review.stars} out of 5 stars`}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</div><p className="nyf-review-quote">“{review.text}”</p><div className="nyf-review-meta"><strong>{review.name}</strong><br />Google review · <a href={review.url} target="_blank" rel="noopener noreferrer" style={{ color: "#07356B", fontWeight: 700 }}>View review</a></div><div className="nyf-review-dots">{COMMUNITY_REVIEWS.map((item, index) => <button key={item.url} className={`nyf-review-dot${active === index ? " active" : ""}`} aria-label={`Show review ${index + 1}`} onClick={() => setActive(index)} />)}</div></div>;
 }
 
 function ProgressPhotosCard({ photos, onAdd, onRemove }) {
