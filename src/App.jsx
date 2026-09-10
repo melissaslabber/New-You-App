@@ -5,7 +5,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Dumbbell, UtensilsCrossed, BookOpen, User, Plus, X, Sparkles, ChevronDown, ChevronLeft, Check, Barcode, Search, ChefHat, Camera, CameraOff, RefreshCw, Lock, Settings, UserPlus, Trash2, LogOut, ShieldCheck, Calculator, Heart, ShoppingCart, Flame, PersonStanding, Pencil, TrendingUp, CalendarDays } from "lucide-react";
 
 // Consolidated New You release: 08 September 2026, barcode-first meal logging.
-const APP_RELEASE = "2026-09-08-barcode-first-meal-logging";
+const APP_RELEASE = "2026-09-10-rise-onboarding-v2";
+const ONBOARDING_VERSION = "2026-09-rise-profile-setup-v2";
 
 const STYLE = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -49,11 +50,15 @@ const STYLE = `
   box-shadow: 0 8px 24px rgba(3, 29, 58, 0.20);
 }
 .nyf-header::after { content: ""; position: absolute; width: 190px; height: 190px; right: -75px; bottom: -115px; border-radius: 50%; background: rgba(255,255,255,.055); pointer-events: none; }
+.nyf-header.home-header { padding-bottom: 24px; background: radial-gradient(circle at 88% 72%, rgba(20,139,218,.35), transparent 36%), linear-gradient(135deg, #02172F 0%, #063B75 58%, #0878BE 100%); border-bottom-width: 4px; }
+.nyf-header.home-header::before { content: ""; position: absolute; width: 230px; height: 230px; right: -120px; top: 68px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255,255,255,.025), 0 0 0 68px rgba(255,255,255,.018); pointer-events: none; }
 .nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -18px 16px; padding: 9px 16px; min-height: 68px; background: #fff; box-shadow: 0 7px 20px rgba(1,18,38,.16); }
+.nyf-header.home-header .nyf-header-top { min-height: 82px; margin-bottom: 21px; border-bottom: 1px solid rgba(7,53,107,.12); }
 .nyf-header.has-back .nyf-header-top { padding-left: 46px; }
 .nyf-header-action { position: absolute; z-index: 3; left: 12px; top: 16px; width: 36px; height: 36px; border: 1px solid #D4E1ED; border-radius: 12px; background: #EEF6FD; color: var(--forest); display: grid; place-items: center; cursor: pointer; }
 .nyf-header-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .nyf-header-logo { width: 112px; height: 50px; object-fit: contain; object-position: left center; }
+.nyf-header.home-header .nyf-header-logo { width: 146px; height: 62px; filter: drop-shadow(0 4px 7px rgba(4,44,89,.12)); }
 .nyf-header-menu { display: flex; gap: 6px; flex-shrink: 0; }
 .nyf-header-menu button { min-height: 36px; border: 1px solid #D4E1ED; border-radius: 11px; background: #F3F8FC; color: var(--forest); padding: 0 8px; display: flex; align-items: center; gap: 4px; font: 750 9px/1 'Inter',sans-serif; cursor: pointer; }
 .nyf-settings-list { display: grid; gap: 9px; }
@@ -63,6 +68,9 @@ const STYLE = `
 .nyf-settings-row-copy strong { display: block; font-size: 13.5px; }
 .nyf-settings-row-copy span { display: block; margin-top: 2px; color: var(--ink-soft); font-size: 11.5px; line-height: 1.35; }
 .nyf-header-kicker, .nyf-greeting, .nyf-sub, .nyf-save-state { position: relative; z-index: 2; }
+.nyf-header.home-header .nyf-header-kicker { display: inline-flex; width: auto; margin-bottom: 9px; padding: 6px 10px; border: 1px solid rgba(245,207,115,.45); border-radius: 999px; background: rgba(226,174,61,.12); color: #F6D77F; font-size: 10px; letter-spacing: .12em; }
+.nyf-header.home-header .nyf-greeting { max-width: 420px; font-size: clamp(31px,8.4vw,40px); line-height: 1.01; text-shadow: 0 3px 16px rgba(0,0,0,.18); }
+.nyf-header.home-header .nyf-sub { margin-top: 8px; font-size: 14px; color: #E7F2FC; }
 .nyf-greeting { max-width: 100%; font-size: clamp(25px,7vw,33px); line-height: 1.04; font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere; }
 .nyf-sub { color: #D7E7F7; font-size: 13px; margin-top: 4px; }
 .nyf-logo-strip {
@@ -928,7 +936,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
         if (!r.ok) throw new Error("Could not load member data");
         const d = await r.json();
         if (d && Object.keys(d).length) {
-          if (d.profile) setProfile({ goalType: "fatloss", ...d.profile, onboardingComplete: d.profile.onboardingComplete ?? true });
+          if (d.profile) setProfile({ goalType: "fatloss", ...d.profile, onboardingComplete: d.profile.onboardingVersion === ONBOARDING_VERSION });
           if (d.weightLogs) setWeightLogs(d.weightLogs);
           if (d.foodLogs) setFoodLogs(d.foodLogs);
           if (d.favoriteMeals) setFavoriteMeals(d.favoriteMeals);
@@ -1238,7 +1246,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className={`nyf-header${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
+      <div className={`nyf-header${tab === "home" ? " home-header" : ""}${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
         {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={20} /></button>}
         <div className="nyf-header-top">
           <div className="nyf-header-brand"><img className="nyf-header-logo" src="/header-logo-blue.png" alt="RISE by New You" /></div>
@@ -1337,7 +1345,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
           />
         )}
         {tab === "restaurant" && <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />}
-        {tab === "settings" && <SettingsTab profile={profile} setProfile={setProfile} setTab={changeTab} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
+        {tab === "settings" && <SettingsTab profile={profile} setProfile={setProfile} setTab={changeTab} likedFoods={likedFoods} toggleLikedFood={toggleLikedFood} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
       </div>
 
       <FooterLogo />
@@ -1704,7 +1712,7 @@ function FoodLogReminder({ onLogFood }) {
 function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
   const [step, setStep] = useState(1);
   const [foods, setFoods] = useState(initialFoods);
-  const [form, setForm] = useState({ name: profile.name || "", email: profile.email || "", phone: profile.phone || "", sex: "female", age: "", height: "", weight: "", goalWeight: "", goalType: profile.goalType || "fatloss", activity: "1.375", mealsPerDay: "3-plus-snack", cookingLevel: "simple", consent: false });
+  const [form, setForm] = useState({ name: profile.name || "", email: profile.email || "", phone: profile.phone || "", sex: profile.sex || "female", age: profile.age || "", height: profile.height || "", weight: profile.weight || "", goalWeight: profile.goalWeight || "", goalType: profile.goalType || "fatloss", activity: profile.activity || "1.375", mealsPerDay: profile.mealsPerDay || "3-plus-snack", cookingLevel: profile.cookingLevel || "simple", consent: false });
   const calculate = () => {
     const weight = Number(form.weight); const bmr = 10 * weight + 6.25 * Number(form.height) - 5 * Number(form.age) + (form.sex === "male" ? 5 : -161);
     const maintenance = Math.round(bmr * Number(form.activity));
@@ -1715,13 +1723,13 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
   const toggleFood = (item) => setFoods((items) => items.includes(item) ? items.filter((food) => food !== item) : [...items, item]);
   function finish() {
     const { consent, ...details } = form;
-    onComplete({ ...profile, ...details, age: Number(form.age), height: Number(form.height), ...targets, goalWeight: Number(form.goalWeight), privacyConsentAt: new Date().toISOString(), onboardingComplete: true }, foods);
+    onComplete({ ...profile, ...details, age: Number(form.age), height: Number(form.height), ...targets, goalWeight: Number(form.goalWeight), privacyConsentAt: new Date().toISOString(), onboardingVersion: ONBOARDING_VERSION, onboardingComplete: true }, foods);
   }
   const next = () => setStep((value) => Math.min(6, value + 1)); const back = () => setStep((value) => Math.max(1, value - 1));
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className="nyf-header"><div className="nyf-step">Step {step} of 6</div><div className="nyf-greeting">{["Let's get to know you", "Choose your goal", "Your starting targets", "Foods you enjoy", "Set up your meals", "How to use New You"][step - 1]}</div><div className="nyf-sub">{Math.round((step / 6) * 100)}% of setup complete</div></div>
+      <div className="nyf-header home-header"><div className="nyf-header-top"><div className="nyf-header-brand"><img className="nyf-header-logo" src="/header-logo-blue.png" alt="RISE by New You" /></div><div className="nyf-step" style={{ color: "var(--forest)", margin: 0 }}>PROFILE SETUP</div></div><div className="nyf-step">Step {step} of 6</div><div className="nyf-greeting">{["Let's personalise RISE", "Choose your goal", "Your starting targets", "Foods you enjoy", "Set up your meals", "You're ready to RISE"][step - 1]}</div><div className="nyf-sub">{Math.round((step / 6) * 100)}% of setup complete · You only do this once</div></div>
       <div className="nyf-scroll">
         {step === 1 && (
           <div className="nyf-card gold">
@@ -1750,7 +1758,7 @@ function Onboarding({ profile, initialFoods = [], onComplete, onLogout }) {
         {step === 3 && targets && <div className="nyf-card gold"><div className="nyf-section-title"><Sparkles size={17} /> Your daily starting targets</div><div className="nyf-product-card"><strong>Goal: {GOAL_SPLITS[form.goalType].label}</strong><br />Protein 2.2g per kg · Fat 25% of calories · Carbs use the calories left</div><div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{targets.maintenance}</strong><span>Maintenance kcal</span></div><div className="nyf-progress-tile"><strong>{targets.calorieGoal}</strong><span>Daily kcal</span></div><div className="nyf-progress-tile"><strong>{targets.proteinGoal}g</strong><span>Protein</span></div></div><div className="nyf-product-card"><strong>Macros:</strong> P{targets.proteinGoal}g · C{targets.carbGoal}g · F{targets.fatGoal}g</div><p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5 }}>These are sensible starting estimates. Your coach can review and lock them later.</p><button className="nyf-btn full" onClick={next}>These look good</button><button className="nyf-link-btn" onClick={back}>Back and change details</button></div>}
         {step === 4 && <div className="nyf-card"><div className="nyf-section-title"><Heart size={17} /> Choose foods you actually like</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Tap everything you would happily eat. Meal suggestions will use these choices first.</p>{FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${foods.includes(item) ? " selected" : ""}`} onClick={() => toggleFood(item)}>{item}</button>)}</div></div>)}<div className="nyf-product-card">{foods.length} foods selected</div><button className="nyf-btn full" onClick={next} disabled={foods.length < 3}>Continue</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         {step === 5 && <div className="nyf-card gold"><div className="nyf-section-title"><ChefHat size={17} /> Make meals fit your real life</div><label className="nyf-field-label">Which routine suits you?</label><select className="nyf-select" value={form.mealsPerDay} onChange={(e) => setForm({ ...form, mealsPerDay: e.target.value })}><option value="3-plus-snack">3 meals + 1 snack</option><option value="3-meals">3 meals</option><option value="2-plus-snacks">2 larger meals + snacks</option><option value="small-frequent">4-5 smaller meals</option></select><label className="nyf-field-label">How much cooking do you want?</label><select className="nyf-select" value={form.cookingLevel} onChange={(e) => setForm({ ...form, cookingLevel: e.target.value })}><option value="simple">Very simple / quick</option><option value="some">I can cook basic meals</option><option value="enjoy">I enjoy cooking</option></select><div className="nyf-product-card"><strong>Your simple starting structure</strong><br />Breakfast: eggs and toast<br />Lunch: protein yoghurt bowl<br />Snack: lean biltong<br />Dinner: chicken and salad<br /><span style={{ fontSize: 11 }}>The Meals tab will show portions and alternatives matched to your targets and chosen foods.</span></div><button className="nyf-btn full" onClick={next}>Show me how the app works</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
-        {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your five main areas</div>{[["Today","See remaining calories, steps and today's simple plan."],["Track","Log food, weight, body fat, measurements, steps and photos."],["Meals","Get ideas from foods you like and help with restaurant choices."],["Train","Choose home or gym training and Level 1, 2 or 3."],["Goals","Review targets, privacy, installation and account settings."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal under Track.<br />2. Add today's steps under Track.<br />3. Record your starting weight under Track.</div>{"Notification" in window && Notification.permission === "default" && <button className="nyf-btn ghost full" style={{ marginBottom: 9 }} onClick={async () => { const permission = await Notification.requestPermission(); if (permission === "granted") window.alert("Food-log reminders are on for 07:30, 12:00 and 17:30 when your phone allows New You to run notifications."); }}>Allow food-log reminders</button>}<button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my New You plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
+        {step === 6 && <div className="nyf-card"><div className="nyf-section-title"><BookOpen size={17} /> Your RISE app</div>{[["Today","Your complete daily overview: calories, macros, exercise, steps and progress."],["Track","Log food, weight, measurements, steps, exercise, photos and InBody reports."],["Meals","Get practical meal ideas from the foods you selected and use Restaurant Help."],["Train","Choose your training style and workout level for today."],["Settings","Your contact details, goals, food preferences, Strava and app controls."],["Learn","Short, practical guides about calories, macros, training and lasting fat loss."]].map(([title,text]) => <div className="nyf-log-item" key={title}><div><div className="nyf-log-name">{title}</div><div className="nyf-log-macro">{text}</div></div></div>)}<div className="nyf-product-card"><strong>Remember the Learn section</strong><br />Tap <b>Learn</b> at the top of the app whenever you want clear guidance. You can update any of these choices later under <b>Settings</b>.</div><div className="nyf-product-card"><strong>Your first three actions:</strong><br />1. Log your first meal under Track.<br />2. Add today's steps under Track.<br />3. Record your starting weight under Track.</div><button className="nyf-btn gold full" onClick={finish}><Sparkles size={15} /> Open my personalised RISE plan</button><button className="nyf-link-btn" onClick={back}>Back</button></div>}
         <button className="nyf-link-btn" onClick={onLogout}>Sign out</button>
       </div>
       <FooterLogo />
@@ -2598,7 +2606,7 @@ function ProfileTab({ profile, setProfile, setTab }) {
   );
 }
 
-function SettingsTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide, onImportStrava }) {
+function SettingsTab({ profile, setProfile, setTab, likedFoods, toggleLikedFood, onLogout, onSwitchToStaff, onExport, onDeleteData, onShowInstallGuide, onImportStrava }) {
   const [account, setAccount] = useState({ name: profile.name || "", email: profile.email || "", phone: profile.phone || "" });
   const [saved, setSaved] = useState(false);
   function saveAccount() {
@@ -2616,6 +2624,12 @@ function SettingsTab({ profile, setProfile, setTab, onLogout, onSwitchToStaff, o
       <label className="nyf-field-label">WhatsApp number</label>
       <input className="nyf-input" type="tel" inputMode="tel" autoComplete="tel" value={account.phone} onChange={(e) => { setAccount({ ...account, phone: e.target.value }); setSaved(false); }} placeholder="073 123 4567" />
       <button className="nyf-btn full" onClick={saveAccount}><Check size={15} /> {saved ? "Account saved" : "Save account"}</button>
+    </div>
+    <div className="nyf-card">
+      <div className="nyf-section-title"><Heart size={17} /> Food preferences</div>
+      <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>These choices personalise meal ideas. Change them whenever your tastes or routine change.</p>
+      {FOOD_PREFERENCE_LIST.map((group) => <div className="nyf-chip-group" key={group.category}><div className="nyf-chip-heading">{group.category}</div><div className="nyf-chips">{group.items.map((item) => <button key={item} className={`nyf-chip${likedFoods.includes(item) ? " selected" : ""}`} onClick={() => toggleLikedFood(item)}>{item}</button>)}</div></div>)}
+      <div className="nyf-product-card"><strong>{likedFoods.length} foods selected</strong><br /><span style={{ fontSize: 11 }}>Changes save automatically and will personalise future meal suggestions.</span></div>
     </div>
     <StravaCard onImport={onImportStrava} />
     <div className="nyf-card">
