@@ -50,6 +50,9 @@ const STYLE = `
 }
 .nyf-header::after { content: ""; position: absolute; width: 190px; height: 190px; right: -75px; bottom: -115px; border-radius: 50%; background: rgba(255,255,255,.055); pointer-events: none; }
 .nyf-header.home-header { padding: 10px 18px 24px; background: radial-gradient(circle at 86% 52%, rgba(27,188,245,.48), transparent 38%), radial-gradient(circle at 8% 92%, rgba(20,105,205,.36), transparent 40%), linear-gradient(135deg, #02172F 0%, #063D7A 54%, #0785C9 100%); border-bottom-width: 4px; box-shadow: 0 14px 35px rgba(3,47,93,.25); }
+.nyf-home-toolbar { flex-shrink: 0; padding: 10px 18px 0; background: #F2F5F9; }
+.nyf-home-toolbar .nyf-header-top { min-height: 72px; margin: 0; padding: 7px 12px; border: 1px solid rgba(117,183,226,.34); border-radius: 18px; background: linear-gradient(135deg,#FFFFFF 0%,#F7FCFF 70%,#EAF8FF 100%); box-shadow: 0 8px 22px rgba(3,47,93,.12); }
+.nyf-home-toolbar .nyf-header-logo { width: 138px; height: 56px; filter: drop-shadow(0 4px 7px rgba(4,70,130,.13)); }
 .nyf-header.home-header::before { content: ""; position: absolute; width: 230px; height: 230px; right: -120px; top: 68px; border: 1px solid rgba(255,255,255,.12); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255,255,255,.025), 0 0 0 68px rgba(255,255,255,.018); pointer-events: none; }
 .nyf-header-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -18px 16px; padding: 9px 16px; min-height: 68px; background: #fff; box-shadow: 0 7px 20px rgba(1,18,38,.16); }
 .nyf-header.home-header .nyf-header-top { min-height: 78px; margin: 0 0 22px; padding: 8px 12px; border: 1px solid rgba(117,183,226,.34); border-radius: 19px; background: linear-gradient(135deg,#FFFFFF 0%,#F7FCFF 70%,#EAF8FF 100%); box-shadow: 0 12px 28px rgba(1,24,52,.24), inset 0 -2px 0 rgba(5,130,199,.08); }
@@ -1112,7 +1115,11 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
   function importStravaActivities(entries) {
     setExerciseLogs((prev) => {
       const mergedStrava = new Map(prev.filter((item) => item.source === "strava").map((item) => [String(item.stravaId || item.id), item]));
-      entries.forEach((item) => mergedStrava.set(String(item.stravaId || item.id), item));
+      entries.forEach((item) => {
+        const key = String(item.stravaId || item.id);
+        const previous = mergedStrava.get(key);
+        mergedStrava.set(key, item.calorieSource === "estimated" && previous?.calorieSource === "strava" ? { ...item, calories: previous.calories, calorieSource: "strava" } : item);
+      });
       return [...prev.filter((item) => item.source !== "strava"), ...mergedStrava.values()];
     });
   }
@@ -1319,7 +1326,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
   return (
     <div className="nyf">
       <style>{STYLE}</style>
-      <div className={`nyf-header${tab === "home" ? " home-header" : ""}${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
+      <div className={tab === "home" ? "nyf-home-toolbar" : `nyf-header${tab === "settings" || tab === "restaurant" ? " has-back" : ""}`}>
         {(tab === "settings" || tab === "restaurant") && <button className="nyf-header-action" onClick={() => window.history.back()} aria-label="Back to previous screen"><ChevronLeft size={20} /></button>}
         <div className="nyf-header-top">
           <div className="nyf-header-brand"><img className="nyf-header-logo" src="/header-logo-blue.png" alt="RISE by New You" /></div>
@@ -1328,10 +1335,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             {tab !== "settings" && <button onClick={() => changeTab("settings")}><Settings size={14} /> Settings</button>}
           </div>
         </div>
-        <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "Member dashboard"}</div>
-        <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div>
-        {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
-        <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
+        {tab !== "home" && <><div className="nyf-header-kicker">Member dashboard</div><div className="nyf-greeting">{tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div><div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div></>}
       </div>
 
       <div className="nyf-scroll" ref={scrollRef}>
@@ -2046,7 +2050,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
           <div className="nyf-dashboard-copy"><div className="nyf-goal-pill"><Sparkles size={11} /> {goalLabel}</div><strong style={{ marginTop: 16 }}>{Math.max(0, remaining)} kcal</strong><span>{remaining >= 0 ? "left from your food target today" : `${Math.abs(remaining)} kcal over today's food target`}</span></div>
           <div className="nyf-ring" style={{ "--value": calorieProgress }}><div className="nyf-ring-inner"><strong>{calorieProgress}%</strong><span>calories used</span></div></div>
         </div>
-        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Food target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories in</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Exercise out</span></div><div className="nyf-dashboard-tile"><TrendingUp size={14} /><strong>{Math.max(0, remaining)}</strong><span>Food left</span></div></div>
+        <div className="nyf-dashboard-grid"><div className="nyf-dashboard-tile"><Flame size={14} /><strong>{available}</strong><span>Food target</span></div><div className="nyf-dashboard-tile"><UtensilsCrossed size={14} /><strong>{totals.cal}</strong><span>Calories in</span></div><div className="nyf-dashboard-tile"><Dumbbell size={14} /><strong>{exerciseCalories || 0}</strong><span>Total calories burned</span></div><div className="nyf-dashboard-tile"><TrendingUp size={14} /><strong>{Math.max(0, remaining)}</strong><span>Food left</span></div></div>
         <Bar label="Protein" value={totals.protein} goal={profile.proteinGoal} unit="g" />
         <Bar label="Carbs" value={totals.carb} goal={profile.carbGoal} unit="g" />
         <Bar label="Fat" value={totals.fat} goal={profile.fatGoal} unit="g" />
