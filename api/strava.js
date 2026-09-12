@@ -49,15 +49,18 @@ async function detailedActivities(accessToken, summaries) {
   for (let index = 0; index < summaries.length; index += 5) {
     const batch = summaries.slice(index, index + 5);
     const detailed = await Promise.all(batch.map(async (summary) => {
-      try {
-        const response = await fetch(`https://www.strava.com/api/v3/activities/${summary.id}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!response.ok) return summary;
-        return { ...summary, ...(await response.json()) };
-      } catch {
-        return summary;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const response = await fetch(`https://www.strava.com/api/v3/activities/${summary.id}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (response.ok) return { ...summary, ...(await response.json()), stravaDetailLoaded: true };
+          if (response.status === 401 || response.status === 403 || response.status === 429) break;
+        } catch {
+          // Retry once for a short-lived network failure.
+        }
       }
+      return { ...summary, stravaDetailLoaded: false };
     }));
     results.push(...detailed);
   }
@@ -113,8 +116,10 @@ export default async function handler(req, res) {
       const memberData = !savedData ? {} : typeof savedData === "string" ? JSON.parse(savedData) : savedData;
       const weightKg = Number(memberData?.profile?.weight) || 70;
       const activities = detailed.map((item) => {
-        const stravaCalories = Number(item.calories) || ((Number(item.kilojoules) || 0) / 4.184);
-        const hasStravaCalories = stravaCalories > 0;
+        // Strava's `kilojoules` is mechanical work, not the calorie total shown
+        // in the Strava app. Only its detailed `calories` field is an exact match.
+        const hasStravaCalories = item.stravaDetailLoaded && Object.prototype.hasOwnProperty.call(item, "calories") && Number.isFinite(Number(item.calories));
+        const stravaCalories = hasStravaCalories ? Number(item.calories) : null;
         return {
         id: `strava-${item.id}`,
         stravaId: String(item.id),
@@ -135,7 +140,15 @@ export default async function handler(req, res) {
       }).filter((item) => item.date);
       const existingExercise = Array.isArray(memberData.exerciseLogs) ? memberData.exerciseLogs : [];
       const mergedStrava = new Map(existingExercise.filter((item) => item.source === "strava").map((item) => [String(item.stravaId || item.id), item]));
-      activities.forEach((item) => mergedStrava.set(String(item.stravaId || item.id), item));
+      activities.forEach((item) => {
+        const key = String(item.stravaId || item.id);
+        const previous = mergedStrava.get(key);
+        if (item.calorieSource === "estimated" && previous?.calorieSource === "strava") {
+          mergedStrava.set(key, { ...item, calories: previous.calories, calorieSource: "strava" });
+        } else {
+          mergedStrava.set(key, item);
+        }
+      });
       const exerciseLogs = [...existingExercise.filter((item) => item.source !== "strava"), ...mergedStrava.values()];
       await redis.set(`nyf:data:${session.code}`, JSON.stringify({ ...memberData, exerciseLogs, schemaVersion: 2, updatedAt: new Date().toISOString() }));
       return res.status(200).json({ activities, syncedAt: new Date().toISOString(), latestActivity: activities[0] || null });
