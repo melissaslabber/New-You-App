@@ -41,7 +41,7 @@ export default function StravaCard({ onImport }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Sync failed");
       onImport(data.activities || []);
-      setMessage(`${data.activities?.length || 0} Strava activities synced without duplicates.`);
+      setMessage(data.latestActivity ? `Synced successfully. Latest: ${data.latestActivity.activity} on ${data.latestActivity.date}.` : "Strava synced successfully, but no recent activities were returned.");
     } catch (error) {
       setMessage(error.message || "Could not sync Strava activities.");
     } finally { setBusy(false); }

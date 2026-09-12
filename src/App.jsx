@@ -757,6 +757,7 @@ const FOOD_PREFERENCE_LIST = [
 
 const localDateStr = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const todayStr = () => localDateStr();
+const exerciseLogDate = (item) => String(item?.startDateLocal || "").slice(0, 10) || item?.date || "";
 const dateForWeekday = (weekday) => { const date = new Date(); date.setDate(date.getDate() + Number(weekday) - date.getDay()); return localDateStr(date); };
 const uid = () => Math.random().toString(36).slice(2, 10);
 const GOAL_SPLITS = {
@@ -1071,7 +1072,7 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     },
     [todayLogs]
   );
-  const todayExercise = useMemo(() => exerciseLogs.filter((item) => item.date === todayStr()), [exerciseLogs]);
+  const todayExercise = useMemo(() => exerciseLogs.filter((item) => exerciseLogDate(item) === todayStr()), [exerciseLogs]);
   const todaySteps = stepLogs.find((item) => item.date === todayStr()) || null;
   const exerciseCalories = useMemo(() => todayExercise.reduce((sum, item) => sum + (Number(item.calories) || 0), 0), [todayExercise]);
   // Exercise is tracked for progress, but never increases the member's food allowance.
