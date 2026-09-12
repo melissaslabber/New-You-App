@@ -419,6 +419,14 @@ const STYLE = `
 .nyf-home-status .nyf-overview-value { font-size: 19px; line-height: 1.08; overflow-wrap: anywhere; }
 .nyf-home-status .nyf-overview-label { min-height: 27px; font-size: 10px; line-height: 1.35; }
 .nyf-home-status .nyf-link-btn { padding: 5px 0 0; font-size: 11.5px; }
+.nyf-home-exercise { grid-column: 1 / -1; }
+.nyf-home-exercise .nyf-overview-head { height: auto; }
+.nyf-home-exercise-list { display: grid; gap: 8px; margin-top: 11px; }
+.nyf-home-exercise-item { padding: 10px 11px; border-radius: 13px; background: rgba(234,246,254,.78); }
+.nyf-home-exercise-name { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: 12.5px; font-weight: 800; }
+.nyf-home-exercise-meta { margin-top: 3px; color: var(--ink-soft); font-size: 11px; font-weight: 650; }
+.nyf-home-exercise-source { padding: 2px 6px; border-radius: 999px; color: #B43800; background: #FFF0E9; font-size: 8px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.nyf-home-exercise-total { margin-top: 9px; color: var(--forest); font-size: 11px; font-weight: 800; }
 .nyf-home-progress { position: relative; overflow: hidden; margin: 0 -5px 18px; padding: 19px 18px 17px; border-radius: 22px; color: #fff; background: radial-gradient(circle at 100% 0,rgba(59,198,245,.32),transparent 42%),linear-gradient(135deg,#032A55,#075C9C); box-shadow: 0 14px 30px rgba(3,53,107,.18); }
 .nyf-home-progress::after { content: ""; position: absolute; width: 115px; height: 115px; right: -52px; bottom: -70px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; }
 .nyf-home-progress .nyf-section-title { position: relative; z-index: 1; color: #fff; }
@@ -747,8 +755,8 @@ const FOOD_PREFERENCE_LIST = [
   },
 ];
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
 const localDateStr = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const todayStr = () => localDateStr();
 const dateForWeekday = (weekday) => { const date = new Date(); date.setDate(date.getDate() + Number(weekday) - date.getDay()); return localDateStr(date); };
 const uid = () => Math.random().toString(36).slice(2, 10);
 const GOAL_SPLITS = {
@@ -1007,6 +1015,40 @@ function MainApp({ onLogout, onSwitchToStaff, memberName, onInstall, showInstall
     }, 500);
     return () => clearTimeout(saveTimer.current);
   }, [profile, weightLogs, foodLogs, favoriteMeals, checkedGroceryItems, likedFoods, weeklyCheckIns, measurementLogs, dailyHabits, progressPhotos, exerciseLogs, stepLogs, savedMeals, inbodyAssessments, loaded, saveRetry]);
+
+  useEffect(() => {
+    if (!loaded) return undefined;
+    let active = true;
+    let syncing = false;
+
+    async function syncStrava() {
+      if (syncing || document.visibilityState === "hidden") return;
+      syncing = true;
+      try {
+        const statusResponse = await fetch("/api/strava", { credentials: "same-origin", cache: "no-store" });
+        if (!statusResponse.ok) return;
+        const status = await statusResponse.json();
+        if (!status.connected) return;
+        const response = await fetch("/api/strava", { method: "POST", credentials: "same-origin", cache: "no-store" });
+        const data = await response.json();
+        if (active && response.ok) importStravaActivities(data.activities || []);
+      } catch {
+        // Automatic sync is best-effort; Settings still has an immediate sync control.
+      } finally {
+        syncing = false;
+      }
+    }
+
+    syncStrava();
+    const interval = window.setInterval(syncStrava, 5 * 60 * 1000);
+    const syncWhenVisible = () => { if (document.visibilityState === "visible") syncStrava(); };
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", syncWhenVisible);
+    };
+  }, [loaded]);
 
   const todayLogs = useMemo(() => foodLogs.filter((f) => f.date === todayStr()), [foodLogs]);
   const previousDayLogs = useMemo(() => {
@@ -1375,7 +1417,7 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
             toggleLikedFood={toggleLikedFood}
           />
         )}
-        {tab === "restaurant" && <RestaurantHelper profile={profile} totals={totals} creditedExerciseCalories={creditedExerciseCalories} />}
+        {tab === "restaurant" && <RestaurantHelper profile={profile} totals={totals} onAddFood={addFood} />}
         {tab === "settings" && <SettingsTab profile={profile} setProfile={setProfile} setTab={changeTab} likedFoods={likedFoods} toggleLikedFood={toggleLikedFood} onLogout={onLogout} onSwitchToStaff={onSwitchToStaff} onExport={exportProgress} onDeleteData={deleteProgressData} onShowInstallGuide={onShowInstallGuide} onImportStrava={importStravaActivities} />}
       </div>
 
@@ -1934,9 +1976,10 @@ function ProgressPhotosCard({ photos, onAdd, onRemove }) {
 
 function ExerciseCard({ entries, calories, onAdd, onRemove }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ activity: "New You class", calories: "" });
-  function save() { if (!form.calories) return; onAdd({ activity: form.activity || "Exercise", calories: Number(form.calories) }); setForm({ activity: "New You class", calories: "" }); setOpen(false); }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">Exercise calories</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="From your watch or machine" /><button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
+  const [form, setForm] = useState({ activity: "New You class", calories: "", durationMinutes: "", distanceKm: "" });
+  function save() { if (!form.calories) return; onAdd({ activity: form.activity || "Exercise", calories: Number(form.calories), durationMinutes: Number(form.durationMinutes) || 0, distanceKm: Number(form.distanceKm) || 0 }); setForm({ activity: "New You class", calories: "", durationMinutes: "", distanceKm: "" }); setOpen(false); }
+  const distanceActivity = /running|cycling/i.test(form.activity);
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Dumbbell size={17} /> Today's exercise</div>{entries.length ? entries.map((item) => <div className="nyf-log-item" key={item.id}><div><div className="nyf-log-name">{item.activity}</div><div className="nyf-log-macro">{item.durationMinutes ? `${item.durationMinutes} min · ` : ""}{item.distanceKm ? `${item.distanceKm} km · ` : ""}Exercise calories</div></div><div style={{ display: "flex", alignItems: "center", gap: 8 }}><strong>{item.calories} kcal</strong><button className="nyf-close-btn" onClick={() => onRemove(item.id)}><X size={13} /></button></div></div>) : <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Did you train or complete another activity today?</p>}{!open ? <button className="nyf-btn gold full" style={{ marginTop: 10 }} onClick={() => setOpen(true)}><Plus size={15} /> Log exercise</button> : <><label className="nyf-field-label" style={{ marginTop: 10 }}>Exercise</label><select className="nyf-select" value={form.activity} onChange={(e) => setForm({ ...form, activity: e.target.value, distanceKm: /running|cycling/i.test(e.target.value) ? form.distanceKm : "" })}><option>New You class</option><option>Strength training</option><option>Walking</option><option>Running</option><option>Cycling</option><option>Other exercise</option></select><div className="nyf-grid2"><div><label className="nyf-field-label">Time exercised (minutes)</label><input className="nyf-input" type="number" inputMode="numeric" min="0" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} /></div><div><label className="nyf-field-label">Calories burned</label><input className="nyf-input" type="number" inputMode="numeric" min="0" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="Watch or machine" /></div></div>{distanceActivity && <><label className="nyf-field-label">Distance (km)</label><input className="nyf-input" type="number" inputMode="decimal" min="0" step="0.1" value={form.distanceKm} onChange={(e) => setForm({ ...form, distanceKm: e.target.value })} /></>}<button className="nyf-btn full" onClick={save} disabled={!form.calories}>Add exercise</button></>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", marginTop: 9 }}>Watch and machine estimates vary, so treat this as an approximate adjustment.</p></div>;
 }
 
 function WeeklyReport({ profile, foodLogs, weightLogs, exerciseLogs, dailyHabits }) {
@@ -1984,6 +2027,18 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
   const allWeights = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
   const startingWeight = allWeights[0]?.weight;
   const totalWeightChange = allWeights.length >= 2 ? Number(allWeights.at(-1).weight) - Number(allWeights[0].weight) : null;
+  const exerciseMinutes = todayExercise.reduce((sum, item) => sum + (Number(item.durationMinutes) || 0), 0);
+  const exerciseMeta = (item) => {
+    const details = [];
+    const duration = Number(item.durationMinutes) || 0;
+    const calories = Math.round(Number(item.calories) || 0);
+    const distance = Number(item.distanceKm) || 0;
+    const activityType = `${item.sportType || ""} ${item.activity || ""}`.toLowerCase();
+    if (duration) details.push(`${duration} min`);
+    details.push(`${calories} kcal burned`);
+    if (distance && /(run|running|ride|cycling|cycle)/.test(activityType)) details.push(`${distance} km`);
+    return details.join(" · ");
+  };
   return (
     <>
       <div className={`nyf-card nyf-dashboard-card${totals.protein >= profile.proteinGoal ? " nyf-achievement" : ""}`}>
@@ -2001,7 +2056,7 @@ function HomeTab({ profile, totals, latestWeight, aiText, aiLoading, getAiInsigh
       <button className="nyf-home-restaurant" onClick={() => setTab("restaurant")}><ChefHat size={22} /><span className="nyf-settings-row-copy"><strong>Eating out?</strong><span>Open Restaurant Help for choices that fit today’s remaining calories and protein.</span></span><ChevronRightIcon /></button>
       <div className="nyf-home-status-grid">
         <div className={`nyf-home-status${todaySteps && todaySteps.steps >= todaySteps.goal ? " nyf-achievement" : ""}`}><div className="nyf-overview-head"><div className="nyf-home-status-main"><div className="nyf-overview-icon"><PersonStanding size={20} /></div><div className="nyf-overview-value">{todaySteps ? todaySteps.steps.toLocaleString() : "0 steps"}</div><div className="nyf-overview-label">{todaySteps ? `${Math.min(100, Math.round(todaySteps.steps / todaySteps.goal * 100))}% of ${todaySteps.goal.toLocaleString()} goal` : "Add today's movement"}</div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todaySteps ? "Edit steps" : "Add steps"}</button></div></div>
-        <div className="nyf-home-status"><div className="nyf-overview-head"><div className="nyf-home-status-main"><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div className="nyf-overview-value">{todayExercise.length ? `${todayExercise.length} workout${todayExercise.length === 1 ? "" : "s"}` : "No exercise"}</div><div className="nyf-overview-label">{todayExercise.length ? `${exerciseCalories} kcal · ${todayExercise.map((item) => item.activity).join(", ")}` : "Log today's training"}</div></div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "View exercise" : "Add exercise"}</button></div></div>
+        <div className="nyf-home-status nyf-home-exercise"><div className="nyf-overview-head"><div className="nyf-home-status-main"><div className="nyf-overview-icon"><Dumbbell size={20} /></div><div className="nyf-overview-value">Your exercise today</div>{todayExercise.length ? <><div className="nyf-home-exercise-list">{todayExercise.map((item) => <div className="nyf-home-exercise-item" key={item.id}><div className="nyf-home-exercise-name"><span>{item.activity || item.sportType || "Exercise"}</span>{item.source === "strava" && <span className="nyf-home-exercise-source">Strava</span>}</div><div className="nyf-home-exercise-meta">{exerciseMeta(item)}</div></div>)}</div><div className="nyf-home-exercise-total">Today’s total: {exerciseMinutes} min · {exerciseCalories} kcal burned</div></> : <div className="nyf-overview-label">No exercise logged yet today.</div>}</div><button className="nyf-link-btn" onClick={() => setTab("track")}>{todayExercise.length ? "View exercise" : "Add exercise"}</button></div></div>
       </div>
       <div className="nyf-home-progress"><div className="nyf-section-title"><TrendingUp size={17} /> Progress since you started</div>{latestWeight ? <div className="nyf-progress-summary"><div className="nyf-progress-tile"><strong>{startingWeight}kg</strong><span>Starting</span></div><div className="nyf-progress-tile"><strong>{latestWeight.weight}kg</strong><span>Current</span></div><div className="nyf-progress-tile"><strong>{totalWeightChange === null ? "-" : `${Math.abs(totalWeightChange).toFixed(1)}kg`}</strong><span>{totalWeightChange === null ? "Change" : totalWeightChange <= 0 ? "Lost" : "Gained"}</span></div></div> : <div className="nyf-empty">Add your first weight in Track to begin your progress overview.</div>}<button className="nyf-link-btn" onClick={() => setTab("track")}>{latestWeight ? "Log a new weight" : "Add starting weight"}</button></div>
       <div className="nyf-home-coach"><div className="nyf-section-title"><Sparkles size={18} color="var(--gold)" /> Your daily Coach Insight</div>{!aiText && <><div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1.25, marginBottom: 7 }}>Want to know how you’re really doing today?</div><p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: "0 0 10px" }}>Get a supportive check-in using the time of day, meals, sleep, feelings, steps and exercise-with a simple tip for what to do next.</p><div className="nyf-product-card" style={{ fontSize: 11.5 }}>Sleep · Mood · Food · Steps · Exercise</div></>}{aiText && <div className="nyf-ai-box"><p>{aiText}</p></div>}<button className="nyf-btn gold full" style={{ marginTop: 12 }} onClick={getAiInsight} disabled={aiLoading}>{aiLoading ? "Coach is checking your day…" : aiText ? "Update my Coach Insight" : "Check how I’m doing today"}</button></div>
@@ -2270,12 +2325,13 @@ function LearnTab({ openArticle, setOpenArticle }) {
   );
 }
 
-function RestaurantHelper({ profile, totals = {} }) {
+function RestaurantHelper({ profile, totals = {}, onAddFood }) {
   const [restaurant, setRestaurant] = useState("");
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [answer, setAnswer] = useState("");
+  const [choices, setChoices] = useState([]);
+  const [added, setAdded] = useState("");
   const [error, setError] = useState("");
   const remaining = {
     cal: Math.max(0, profile.calorieGoal - (totals.cal || 0)),
@@ -2300,24 +2356,27 @@ function RestaurantHelper({ profile, totals = {} }) {
   }
   async function analyse() {
     if (!restaurant.trim() && !notes.trim() && !photos.length) { setError("Enter the restaurant name, add menu details or take a menu photo."); return; }
-    setLoading(true); setError(""); setAnswer("");
+    setLoading(true); setError(""); setChoices([]); setAdded("");
     const prompt = `You are the practical restaurant meal assistant for New You Fitness in South Africa. The member has approximately ${remaining.cal} kcal, ${remaining.protein}g protein, ${remaining.carb}g carbs and ${remaining.fat}g fat remaining today after their logged food. Exercise calories must not increase the food allowance.
 
 Restaurant: ${restaurant.trim() || "Not provided"}
 Member's menu notes: ${notes.trim() || "None"}
 ${photos.length ? "Read the attached menu photo(s) carefully." : "No menu photo was supplied, so clearly label suggestions as typical options that the member must confirm are available."}
 
-Recommend the best 3 realistic menu choices that fit the remaining allowance. For each give: dish name, estimated calories and protein/carbs/fat, why it fits, and one exact ordering modification such as sauce on the side or swapping chips for salad. Put the strongest choice first. Do not invent certainty: menu nutrition is an estimate unless the menu supplies values. If the allowance is very small, recommend a smaller portion or taking half home. End with one short reminder that restaurant portions and cooking oil vary. Keep the response concise, clear and easy to scan.`;
+Return only JSON in this exact format: {"choices":[{"name":"","cal":0,"protein":0,"carb":0,"fat":0,"why":"","modification":""}]}. Recommend exactly 3 realistic menu choices that fit the remaining allowance. Prioritise high protein and low calories, and put the strongest protein-per-calorie choice first. Nutrition must describe the suggested serving after the modification. Do not invent certainty: values are estimates unless the supplied menu shows them. If the allowance is very small, suggest a smaller portion or taking half home.`;
     try {
       const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 18000);
-      const response = await fetch("/api/ai", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ prompt, maxTokens: 1200, images: photos.map(({ data, mimeType }) => ({ data, mimeType })) }) });
+      const response = await fetch("/api/ai", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, signal: controller.signal, body: JSON.stringify({ prompt, jsonMode: true, maxTokens: 1200, images: photos.map(({ data, mimeType }) => ({ data, mimeType })) }) });
       clearTimeout(timeout); const data = await response.json();
       if (!response.ok || !data.text) throw new Error(data.error || "Could not analyse the menu");
-      setAnswer(data.text);
+      const parsed = JSON.parse(String(data.text).replace(/```json|```/g, "").trim());
+      const ranked = (parsed.choices || []).map((item) => ({ ...item, cal: Math.max(0, Math.round(Number(item.cal) || 0)), protein: Math.max(0, Math.round(Number(item.protein) || 0)), carb: Math.max(0, Math.round(Number(item.carb) || 0)), fat: Math.max(0, Math.round(Number(item.fat) || 0)) })).sort((a, b) => (b.protein / Math.max(1, b.cal)) - (a.protein / Math.max(1, a.cal)) || b.protein - a.protein || a.cal - b.cal).slice(0, 3);
+      if (!ranked.length) throw new Error("No choices returned");
+      setChoices(ranked);
     } catch (e) { setError(e?.name === "AbortError" ? "The menu analysis took too long. Try one clear photo or type the menu items." : "Couldn't analyse this menu right now. Please try again."); }
     setLoading(false);
   }
-  return <div className="nyf-card gold"><div className="nyf-section-title"><Search size={17} /> What should I order?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>At a restaurant? Enter its name or photograph the menu and get choices based on what you have left today.</p><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Remaining today:</strong> {remaining.cal} kcal · P{remaining.protein}g · C{remaining.carb}g · F{remaining.fat}g</div><label className="nyf-field-label">Restaurant name</label><input className="nyf-input" value={restaurant} onChange={(e) => setRestaurant(e.target.value)} placeholder="e.g. Spur, Ocean Basket or restaurant name" /><label className="nyf-field-label">Menu items or preferences (optional)</label><textarea className="nyf-input" rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Paste menu items, or say what you feel like eating…" />{photos.length > 0 && <div className="nyf-photo-grid" style={{ marginTop: 10 }}>{photos.map((photo, index) => <div className="nyf-photo" key={index}><img src={photo.preview} alt={`Menu ${index + 1}`} /><button onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))} aria-label="Remove menu photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer", marginTop: 10 }}><Camera size={15} /> {photos.length ? "Add another menu photo" : "Take or upload menu photo"}<input type="file" accept="image/*" capture="environment" multiple onChange={addPhotos} disabled={photos.length >= 2} style={{ display: "none" }} /></label><button className="nyf-btn gold full" style={{ marginTop: 9 }} onClick={analyse} disabled={loading}>{loading ? "Reading the menu…" : "Find my best choices"}</button>{error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}{answer && <div className="nyf-ai-box" style={{ marginTop: 12, whiteSpace: "pre-wrap" }}><p>{answer}</p></div>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.4, marginTop: 10 }}>Suggestions are estimates, not verified restaurant nutrition. Ingredients, portions and cooking oil can change the actual values.</p></div>;
+  return <div className="nyf-card gold"><div className="nyf-section-title"><Search size={17} /> What should I order?</div><p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>At a restaurant? Enter its name or photograph the menu. RISE ranks the highest-protein, lower-calorie choice first.</p><div className="nyf-product-card" style={{ marginBottom: 12 }}><strong>Remaining today:</strong> {remaining.cal} kcal · P{remaining.protein}g · C{remaining.carb}g · F{remaining.fat}g</div><label className="nyf-field-label">Restaurant name</label><input className="nyf-input" value={restaurant} onChange={(e) => setRestaurant(e.target.value)} placeholder="e.g. Spur, Ocean Basket or restaurant name" /><label className="nyf-field-label">Menu items or preferences (optional)</label><textarea className="nyf-input" rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Paste menu items, or say what you feel like eating…" />{photos.length > 0 && <div className="nyf-photo-grid" style={{ marginTop: 10 }}>{photos.map((photo, index) => <div className="nyf-photo" key={index}><img src={photo.preview} alt={`Menu ${index + 1}`} /><button onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))} aria-label="Remove menu photo"><X size={13} /></button></div>)}</div>}<label className="nyf-btn ghost full" style={{ cursor: "pointer", marginTop: 10 }}><Camera size={15} /> {photos.length ? "Add another menu photo" : "Take or upload menu photo"}<input type="file" accept="image/*" capture="environment" multiple onChange={addPhotos} disabled={photos.length >= 2} style={{ display: "none" }} /></label><button className="nyf-btn gold full" style={{ marginTop: 9 }} onClick={analyse} disabled={loading}>{loading ? "Reading the menu…" : "Find my best choices"}</button>{error && <div className="nyf-lookup-error" style={{ marginTop: 10 }}>{error}</div>}{choices.length > 0 && <div style={{ marginTop: 12 }}>{choices.map((choice, index) => <div className="nyf-product-card" key={`${choice.name}-${index}`} style={{ marginBottom: 10, borderColor: index === 0 ? "var(--gold)" : undefined }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><strong>{index === 0 ? "Best option · " : `${index + 1}. `}{choice.name}</strong><strong style={{ whiteSpace: "nowrap" }}>{choice.cal} kcal</strong></div><div style={{ fontSize: 11.5, color: "var(--ink-soft)", marginTop: 5 }}>P{choice.protein}g · C{choice.carb}g · F{choice.fat}g</div><div style={{ fontSize: 11.5, marginTop: 6 }}>{choice.why}</div>{choice.modification && <div style={{ fontSize: 11.5, marginTop: 4 }}><strong>Order it:</strong> {choice.modification}</div>}<button className="nyf-btn gold full" style={{ marginTop: 9 }} onClick={() => { const hour = new Date().getHours(); onAddFood?.({ mealType: hour < 14 ? "Lunch" : hour < 18 ? "Snack" : "Dinner", name: `${restaurant.trim() ? `${restaurant.trim()} · ` : ""}${choice.name}`, qty: 1, unit: "serving", kj: Math.round(choice.cal * 4.184), cal: choice.cal, protein: choice.protein, carb: choice.carb, fat: choice.fat }); setAdded(choice.name); }}>Add this meal to today</button></div>)}</div>}{added && <div className="nyf-product-card" role="status"><Check size={14} /> {added} was added to today’s food log.</div>}<p style={{ fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.4, marginTop: 10 }}>Suggestions are estimates, not verified restaurant nutrition. Ingredients, portions and cooking oil can change the actual values.</p></div>;
 }
 
 const QUICK_CHOICE_GROUPS = {
@@ -2798,7 +2857,7 @@ function FoodSubmissionForm({ initialName = "", initialBarcode = "", prominent =
 function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMeals = [], onSaveMeal }) {
   const [mode, setMode] = useState("barcode");
   const defaultMealType = new Date().getHours() < 10 ? "Breakfast" : new Date().getHours() < 14 ? "Lunch" : new Date().getHours() < 18 ? "Snack" : "Dinner";
-  const [form, setForm] = useState({ mealType: defaultMealType, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" });
+  const [form, setForm] = useState({ mealType: defaultMealType, name: "", qty: "100", unit: "g", kj: "", cal: "", protein: "", carb: "", fat: "" });
   const [barcode, setBarcode] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -2883,7 +2942,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
       if (!response.ok) throw new Error(result.error || "Could not analyse the food photo");
       const estimate = JSON.parse(String(result.text || "{}").replace(/```json|```/g, "").trim());
       setProduct({ name: estimate.name || "Photo meal estimate", per100: null, photoEstimate: true });
-      setForm((value) => ({ ...value, name: estimate.name || "Photo meal estimate", qty: String(estimate.qty || 1), unit: ["g", "ml", "serving"].includes(estimate.unit) ? estimate.unit : "serving", cal: String(Math.round(Number(estimate.cal) || 0)), protein: String(Math.round(Number(estimate.protein) || 0)), carb: String(Math.round(Number(estimate.carb) || 0)), fat: String(Math.round(Number(estimate.fat) || 0)) }));
+      setForm((value) => ({ ...value, name: estimate.name || "Photo meal estimate", qty: String(estimate.qty || 1), unit: ["g", "ml", "serving"].includes(estimate.unit) ? estimate.unit : "serving", kj: String(Math.round((Number(estimate.cal) || 0) * 4.184)), cal: String(Math.round(Number(estimate.cal) || 0)), protein: String(Math.round(Number(estimate.protein) || 0)), carb: String(Math.round(Number(estimate.carb) || 0)), fat: String(Math.round(Number(estimate.fat) || 0)) }));
       setMealPhotoStatus(`Estimated from photo (${estimate.confidence || "low"} confidence). Check and adjust the portion and values before adding.`);
     } catch (error) { setMealPhotoStatus(""); setCameraError(error.message || "The food photo could not be analysed. Try a clearer photo or add it manually."); }
   }
@@ -2986,6 +3045,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
       name: item.name,
       qty: String(qty),
       unit: item.unit || "g",
+      kj: String(Math.round(item.cal * factor * 4.184)),
       cal: String(Math.round(item.cal * factor)),
       protein: String(Math.round(item.protein * factor * 10) / 10),
       carb: String(Math.round(item.carb * factor * 10) / 10),
@@ -3021,6 +3081,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
           name: p.name || "Unnamed product",
           qty: String(qty),
           unit: "g",
+          kj: String(Math.round(Number(per100.cal) * 4.184)),
           cal: String(per100.cal),
           protein: String(per100.protein),
           carb: String(per100.carb),
@@ -3049,6 +3110,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
         ...f,
         qty: newQty,
         unit: unitOverride,
+        kj: String(Math.round(product.per100.cal * factor * 4.184)),
         cal: String(Math.round(product.per100.cal * factor)),
         protein: String(Math.round(product.per100.protein * factor * 10) / 10),
         carb: String(Math.round(product.per100.carb * factor * 10) / 10),
@@ -3064,7 +3126,7 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
   }
 
   function currentEntry() {
-    return { mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, cal: Math.round(Number(form.cal) || 0), protein: Math.round(Number(form.protein) || 0), carb: Math.round(Number(form.carb) || 0), fat: Math.round(Number(form.fat) || 0) };
+    return { mealType: form.mealType, name: form.name, qty: form.qty || null, unit: form.unit, kj: Math.round(Number(form.kj) || (Number(form.cal) || 0) * 4.184), cal: Math.round(Number(form.cal) || 0), protein: Math.round(Number(form.protein) || 0), carb: Math.round(Number(form.carb) || 0), fat: Math.round(Number(form.fat) || 0) };
   }
 
   return (
@@ -3212,10 +3274,13 @@ function FoodModal({ onAdd, onAddAndContinue, onClose, recentFoods = [], savedMe
                 <option value="serving">servings</option>
               </select>
             </div>
-            {product && <>{product.per100 && <div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>}{product.per100 && ["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit))}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{Math.round(Number(form.cal) || 0)} kcal · P{Math.round(Number(form.protein) || 0)}g · C{Math.round(Number(form.carb) || 0)}g · F{Math.round(Number(form.fat) || 0)}g</strong>{product.photoEstimate && <div style={{ marginTop: 5, fontSize: 10.5, color: "var(--ink-soft)" }}>Photo estimates vary with hidden ingredients, oil and portion size.</div>}</div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setMealPhotoPreview(""); setMealPhotoStatus(""); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
+            {product && <>{product.per100 && <div className="nyf-portion-row">{(["tsp", "tbsp", "serving"].includes(form.unit) ? [1, 2, 3] : [50, 100, 150, 200]).map((amount) => <button key={amount} onClick={() => applyQty(String(amount))}>{amount}{form.unit === "ml" ? "ml" : form.unit === "g" ? "g" : ` ${form.unit}`}</button>)}</div>}{product.per100 && ["tsp", "tbsp", "serving"].includes(form.unit) && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "4px 0 10px" }}>{form.qty} {form.unit} = {Math.round(equivalentAmount(form.qty, form.unit))}g/ml. Nutrition is calculated from this converted weight.</p>}<div className="nyf-product-card"><strong>{Math.round(Number(form.cal) || 0)} kcal · P{Math.round(Number(form.protein) || 0)}g · C{Math.round(Number(form.carb) || 0)}g · F{Math.round(Number(form.fat) || 0)}g</strong>{product.photoEstimate && <div style={{ marginTop: 5, fontSize: 10.5, color: "var(--ink-soft)" }}>Photo estimates vary with hidden ingredients, oil and portion size.</div>}</div><button className="nyf-btn gold full" disabled={!valid} onClick={() => { onAddAndContinue(currentEntry()); setFoodQuery(""); setProduct(null); setMealPhotoPreview(""); setMealPhotoStatus(""); setForm((value) => ({ ...value, name: "", qty: "100", unit: "g", kj: "", cal: "", protein: "", carb: "", fat: "" })); }}><Plus size={15} /> Add and log another food</button></>}
 
-            <label className="nyf-field-label">Calories (kcal)</label>
-            <input className="nyf-input" type="number" value={form.cal} onChange={(e) => setForm({ ...form, cal: e.target.value })} />
+            <div className="nyf-grid2">
+              <div><label className="nyf-field-label">Energy (kJ)</label><input className="nyf-input" type="number" inputMode="decimal" value={form.kj} onChange={(e) => { const kj = e.target.value; setForm({ ...form, kj, cal: kj === "" ? "" : String(Math.round(Number(kj) / 4.184)) }); }} placeholder="e.g. 840" /></div>
+              <div><label className="nyf-field-label">Calories (kcal)</label><input className="nyf-input" type="number" inputMode="decimal" value={form.cal} onChange={(e) => { const cal = e.target.value; setForm({ ...form, cal, kj: cal === "" ? "" : String(Math.round(Number(cal) * 4.184)) }); }} /></div>
+            </div>
+            <p style={{ fontSize: 10.5, color: "var(--ink-soft)", margin: "-4px 0 8px" }}>Enter either value. RISE converts kJ and kcal automatically.</p>
             <div className="nyf-grid2">
               <div>
                 <label className="nyf-field-label">Protein (g)</label>

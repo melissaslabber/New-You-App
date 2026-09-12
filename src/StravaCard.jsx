@@ -8,7 +8,7 @@ export default function StravaCard({ onImport }) {
 
   async function loadStatus() {
     try {
-      const response = await fetch("/api/strava", { credentials: "same-origin" });
+      const response = await fetch("/api/strava", { credentials: "same-origin", cache: "no-store" });
       const data = await response.json();
       setStatus({ loading: false, connected: Boolean(data.connected), athlete: data.athlete || null });
     } catch {
@@ -20,7 +20,7 @@ export default function StravaCard({ onImport }) {
     const result = new URLSearchParams(window.location.search).get("strava");
     if (result) {
       const messages = {
-        connected: "Strava connected successfully. Tap Sync activities to import your workouts.",
+        connected: "Strava connected successfully. Activities now sync automatically every 5 minutes.",
         cancelled: "Strava connection was cancelled.",
         expired: "The Strava connection request expired. Please try again.",
         failed: "Strava could not be connected. Please try again.",
@@ -37,7 +37,7 @@ export default function StravaCard({ onImport }) {
   async function sync() {
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/strava", { method: "POST", credentials: "same-origin" });
+      const response = await fetch("/api/strava", { method: "POST", credentials: "same-origin", cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Sync failed");
       onImport(data.activities || []);
@@ -62,7 +62,8 @@ export default function StravaCard({ onImport }) {
     <div className="nyf-section-title" style={{ color: "#C63D00" }}><span style={{ fontWeight: 900 }}>STRAVA</span> Activity connection</div>
     {status.loading ? <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Checking your connection…</p> : status.connected ? <>
       <div className="nyf-product-card" style={{ marginBottom: 10 }}><Check size={15} style={{ color: "var(--success)", verticalAlign: "middle", marginRight: 6 }} />Connected{athleteName ? ` as ${athleteName}` : ""}</div>
-      <button className="nyf-btn full" onClick={sync} disabled={busy} style={{ background: "#FC4C02" }}><RefreshCw size={15} /> {busy ? "Syncing…" : "Sync Strava activities"}</button>
+      <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Activities sync automatically every 5 minutes while the app is open.</p>
+      <button className="nyf-btn full" onClick={sync} disabled={busy} style={{ background: "#FC4C02" }}><RefreshCw size={15} /> {busy ? "Syncing…" : "Sync now"}</button>
       <button className="nyf-btn ghost full" onClick={disconnect} disabled={busy} style={{ marginTop: 8 }}>Disconnect Strava</button>
     </> : <>
       <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Import your authorised Strava workouts into your New You exercise history.</p>
@@ -72,4 +73,3 @@ export default function StravaCard({ onImport }) {
     <p style={{ fontSize: 10.5, color: "var(--ink-soft)", margin: "9px 0 0" }}>Only activities you authorise are imported. You can disconnect at any time.</p>
   </div>;
 }
-
