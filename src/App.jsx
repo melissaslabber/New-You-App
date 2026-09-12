@@ -1331,7 +1331,6 @@ Use ordinary whole numbers without leading zeroes for every nutrition value. The
         <div className="nyf-header-kicker">{tab === "home" ? `${profile.goalType === "leanbulk" ? "Lean bulk" : profile.goalType === "maintenance" ? "Maintenance" : "Fat loss"} journey` : "Member dashboard"}</div>
         <div className="nyf-greeting">{tab === "home" ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${(profile.name || memberName || "there").trim().split(/\s+/)[0]}` : tab === "workout" ? "Train" : tab === "track" ? "Track" : tab === "meals" ? "Meals" : tab === "restaurant" ? "Restaurant help" : tab === "learn" ? "Learn" : "Settings"}</div>
         {tab === "home" && <div className="nyf-sub">{new Date().toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" })}</div>}
-        {tab === "home" && <div className="nyf-header-motivation"><Sparkles size={15} /> {DAILY_MOTIVATION[Math.floor(Date.now() / 86400000) % DAILY_MOTIVATION.length]}</div>}
         <div className={`nyf-save-state${saveStatus === "error" ? " error" : ""}`}>{saveStatus === "saving" ? "Saving changes…" : saveStatus === "error" ? <span>Could not save · <button onClick={() => setSaveRetry((value) => value + 1)} style={{ color: "inherit", background: "none", border: 0, padding: 0, textDecoration: "underline", font: "inherit" }}>Retry</button></span> : "✓ Changes saved"}</div>
       </div>
 
