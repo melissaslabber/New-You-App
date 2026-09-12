@@ -20,6 +20,14 @@ function johannesburgDate(value) {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+function activityDate(item) {
+  // Strava supplies the athlete's local calendar time separately. Prefer its
+  // date portion so a South African activity always lands on the day shown in Strava.
+  const local = String(item?.start_date_local || "").slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(local)) return local;
+  return johannesburgDate(item?.start_date);
+}
+
 function estimatedCalories(item, weightKg) {
   const minutes = Math.max(0, Number(item.moving_time || item.elapsed_time || 0) / 60);
   const weight = Math.max(35, Number(weightKg) || 70);
@@ -95,7 +103,11 @@ export default async function handler(req, res) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Could not load Strava activities");
-      const detailed = await detailedActivities(token.access_token, data.slice(0, 50));
+      // Detail calls are only needed mainly for calories and can be slow on a
+      // serverless request. Enrich the newest ten, then use summaries for older history.
+      const newest = data.slice(0, 10);
+      const detailedNewest = await detailedActivities(token.access_token, newest);
+      const detailed = [...detailedNewest, ...data.slice(10)];
       const redis = getRedis();
       const savedData = await redis.get(`nyf:data:${session.code}`);
       const memberData = !savedData ? {} : typeof savedData === "string" ? JSON.parse(savedData) : savedData;
@@ -109,7 +121,9 @@ export default async function handler(req, res) {
         source: "strava",
         // Strava's start_date is UTC. Convert it to South African time so an
         // evening workout is not stored against the previous calendar day.
-        date: johannesburgDate(item.start_date) || String(item.start_date_local || "").slice(0, 10),
+        date: activityDate(item),
+        startDateLocal: String(item.start_date_local || ""),
+        startDateUtc: String(item.start_date || ""),
         activity: activityName(item),
         sportType: item.sport_type || item.type || "Activity",
         calories: hasStravaCalories ? Math.round(stravaCalories) : estimatedCalories(item, weightKg),
@@ -119,7 +133,12 @@ export default async function handler(req, res) {
         syncedAt: new Date().toISOString(),
       };
       }).filter((item) => item.date);
-      return res.status(200).json({ activities, syncedAt: new Date().toISOString() });
+      const existingExercise = Array.isArray(memberData.exerciseLogs) ? memberData.exerciseLogs : [];
+      const mergedStrava = new Map(existingExercise.filter((item) => item.source === "strava").map((item) => [String(item.stravaId || item.id), item]));
+      activities.forEach((item) => mergedStrava.set(String(item.stravaId || item.id), item));
+      const exerciseLogs = [...existingExercise.filter((item) => item.source !== "strava"), ...mergedStrava.values()];
+      await redis.set(`nyf:data:${session.code}`, JSON.stringify({ ...memberData, exerciseLogs, schemaVersion: 2, updatedAt: new Date().toISOString() }));
+      return res.status(200).json({ activities, syncedAt: new Date().toISOString(), latestActivity: activities[0] || null });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
